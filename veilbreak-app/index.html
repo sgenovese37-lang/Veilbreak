@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VEILBREAK</title>
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./app.mjs"></script>
+</head>
+<body>
+  <header class="masthead">
+    <h1>VEILBREAK</h1>
+    <nav aria-label="Sezioni">
+      <button id="match" aria-controls="table">Partita</button>
+      <button id="library" aria-controls="catalogue">Carte</button>
+      <button id="decks" aria-controls="deck-editor">Mazzi</button>
+      <button id="missions" aria-controls="tutorial">Tutorial</button>
+    </nav>
+  </header>
+  <main>
+    <section id="setup" class="sheet">
+      <h2>Nuova partita</h2>
+      <form id="settings">
+        <label>Modalità <select name="mode"><option value="cpu">Contro il computer</option><option value="local">Due giocatori sullo stesso dispositivo</option></select></label>
+        <label id="difficulty">Difficoltà <select name="level"><option>Facile</option><option selected>Normale</option><option>Difficile</option></select></label>
+        <label>Prima fazione <select name="first"></select></label>
+        <label>Seconda fazione <select name="second"></select></label>
+        <button class="primary">Inizia partita</button>
+      </form>
+    </section>
+    <section id="table" hidden aria-label="Tavolo di gioco"></section>
+    <section id="deck-editor" class="sheet" hidden aria-label="Costruisci un mazzo"></section>
+    <section id="tutorial" class="sheet" hidden aria-label="Tutorial a missioni"></section>
+    <section id="catalogue" hidden aria-labelledby="catalogue-title">
+      <div class="section-head">
+        <h2 id="catalogue-title">Carte</h2>
+        <label>Fazione <select id="filter"><option value="">Tutte</option></select></label>
+      </div>
+      <div id="cards" class="cards catalogue"></div>
+    </section>
+  </main>
+</body>
+</html>

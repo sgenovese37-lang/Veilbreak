@@ -1,0 +1,7 @@
+VEILBREAK — Carte illustrate 31–60
+
+Trenta carte complete, in formato WebP a 900 × 1350. Il pacchetto affianca VEILBREAK-illustrazioni-01-30.zip. I file seguono la numerazione e le fazioni del catalogo GitHub: Senza Santi (31–45) e Sottocittà (46–60). Le cornici richiamano i colori delle rarità originali.
+
+Integrazione: estrai i due archivi in cartelle separate per conservare entrambi i file mappa-carte.csv. Abbina le immagini alle carte usando la colonna id_prototipo. Usa il catalogo del repository come riferimento per le regole di gioco.
+
+Nota per il codice: nel prototipo, alcuni valori scritti come “5/5” o “4/4” sono finiti nel campo type invece di essere interpretati come Attacco e Difesa. Per queste carte illustrate sono stati applicati i valori del catalogo. Controlla che le carte 1, 2, 3, 5, 18, 20, 31 e 46 abbiano type: Creatura e i campi attack e health corretti prima di provarle in partita.
