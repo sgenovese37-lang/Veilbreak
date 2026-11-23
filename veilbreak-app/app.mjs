@@ -7,6 +7,7 @@ import {
 
 import { renderTutorial } from "./tutorial.mjs";
 import { heroFor, heroPowerCost } from "./heroes.mjs";
+import { illustrationFor } from "./illustrations.mjs";
 
 const get = id => document.getElementById(id);
 const form = get("settings");
@@ -54,6 +55,15 @@ function drawCard(c, options = {}) {
   e.className = `card ${c.rarity ?? ""}${options.target ? " target" : ""}`;
   if (options.action) e.disabled = options.disabled ?? false;
   if (options.pressed !== undefined) e.setAttribute("aria-pressed", options.pressed);
+  const art = options.art !== false && illustrationFor(c.id);
+  if (art) {
+    const img = element("img", undefined, options.art === "full" ? "art full" : "art");
+    img.src = art.thumb;
+    img.alt = "";
+    img.loading = "lazy";
+    img.decoding = "async";
+    e.append(img);
+  }
   const head = element("div", undefined, "card-head");
   head.append(element("strong", c.name));
   if (c.cost !== undefined && options.cost !== false) head.append(element("span", options.cost ?? c.cost, "cost"));
@@ -66,11 +76,45 @@ function drawCard(c, options = {}) {
     strip.append(element("span", `ATT ${options.attack ?? c.attack}`, "att"), element("span", `DIF ${options.health ?? c.health}`, "dif"));
     e.append(strip);
   }
+  if (options.meta && art?.differences.length) e.append(element("small", "⚠ L’illustrazione differisce dal catalogo", "warning"));
   return e;
 }
 
+const viewer = get("card-viewer");
+function showCard(c) {
+  const art = illustrationFor(c.id);
+  const body = element("div", undefined, "viewer-body");
+  if (art) {
+    const img = element("img", undefined, "viewer-art");
+    img.src = art.src;
+    img.alt = `Illustrazione di ${c.name}`;
+    body.append(img);
+  }
+  const rules = element("div", undefined, "viewer-rules");
+  rules.append(element("h2", c.name));
+  rules.append(element("p", [c.faction, c.type, rarity[c.rarity], `${c.cost} Essenza`].join(" · "), "muted"));
+  if (c.type === "Creatura") rules.append(element("p", `Attacco ${c.attack} · Difesa ${c.health}`));
+  rules.append(element("h3", "Regole in partita (catalogo)"));
+  rules.append(element("p", c.text || "Nessun effetto."));
+  if (art?.differences.length) {
+    rules.append(element("h3", "Differenze dell’illustrazione"));
+    const list = element("ul", undefined, "differences");
+    for (const text of art.differences) list.append(element("li", text));
+    rules.append(list);
+  } else if (art) {
+    rules.append(element("p", "L’illustrazione coincide con il catalogo.", "muted"));
+  }
+  const close = button("Chiudi", () => viewer.close(), "primary");
+  rules.append(close);
+  body.append(rules);
+  viewer.replaceChildren(body);
+  viewer.showModal();
+  close.focus();
+}
+viewer.addEventListener("click", event => { if (event.target === viewer) viewer.close(); });
+
 function drawCatalogue() {
-  get("cards").replaceChildren(...cards.filter(c => !filter.value || c.faction === filter.value).map(c => drawCard(c, { meta: true })));
+  get("cards").replaceChildren(...cards.filter(c => !filter.value || c.faction === filter.value).map(c => drawCard(c, { meta: true, art: "full", action: () => showCard(c) })));
 }
 
 function renderDeckEditor(message = "", focus) {

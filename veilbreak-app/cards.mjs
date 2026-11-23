@@ -5,7 +5,9 @@ export const cards = [
     "faction": "Corte di Hollow",
     "rarity": "Legendary",
     "cost": 7,
-    "type": "6/6  ",
+    "type": "Creatura",
+    "attack": 6,
+    "health": 6,
     "text": "Quando entra in gioco, prendi il controllo di una creatura nemica fino alla fine del turno. Quella creatura ha Rapidità."
   },
   {
@@ -14,7 +16,9 @@ export const cards = [
     "faction": "Corte di Hollow",
     "rarity": "Epic",
     "cost": 6,
-    "type": "5/4  ",
+    "type": "Creatura",
+    "attack": 5,
+    "health": 4,
     "text": "Le creature nemiche costano 1 Essenza in più."
   },
   {
@@ -23,7 +27,9 @@ export const cards = [
     "faction": "Corte di Hollow",
     "rarity": "Rare",
     "cost": 3,
-    "type": "2/3  ",
+    "type": "Creatura",
+    "attack": 2,
+    "health": 3,
     "text": "Urlo di battaglia: Cura 4 punti vita al tuo eroe."
   },
   {
@@ -43,7 +49,9 @@ export const cards = [
     "faction": "Corte di Hollow",
     "rarity": "Uncommon",
     "cost": 3,
-    "type": "2/2  ",
+    "type": "Creatura",
+    "attack": 2,
+    "health": 2,
     "text": "Urlo di battaglia: Pesca 1 carta."
   },
   {
@@ -52,7 +60,7 @@ export const cards = [
     "faction": "Corte di Hollow",
     "rarity": "Rare",
     "cost": 2,
-    "type": "Artefatto  ",
+    "type": "Artefatto",
     "text": "Alla fine del tuo turno, infliggi 1 danno a tutte le creature nemiche."
   },
   {
@@ -61,7 +69,7 @@ export const cards = [
     "faction": "Corte di Hollow",
     "rarity": "Uncommon",
     "cost": 2,
-    "type": "Artefatto  ",
+    "type": "Artefatto",
     "text": "Rivela la prima carta del mazzo avversario."
   },
   {
@@ -150,7 +158,7 @@ export const cards = [
     "faction": "Patto Neon",
     "rarity": "Legendary",
     "cost": 8,
-    "type": "Incantesimo  ",
+    "type": "Incantesimo",
     "text": "Distruggi tutte le creature. Ogni giocatore pesca 2 carte."
   },
   {
@@ -159,7 +167,7 @@ export const cards = [
     "faction": "Patto Neon",
     "rarity": "Epic",
     "cost": 4,
-    "type": "Incantesimo  ",
+    "type": "Incantesimo",
     "text": "Infliggi 4 danni a una creatura. Se muore, guadagni 2 Essenze questo turno."
   },
   {
@@ -168,7 +176,9 @@ export const cards = [
     "faction": "Patto Neon",
     "rarity": "Rare",
     "cost": 4,
-    "type": "4/2  ",
+    "type": "Creatura",
+    "attack": 4,
+    "health": 2,
     "text": "Quando infligge danno all’eroe nemico, l’avversario scarta 1 carta."
   },
   {
@@ -177,7 +187,7 @@ export const cards = [
     "faction": "Patto Neon",
     "rarity": "Epic",
     "cost": 5,
-    "type": "Incantesimo  ",
+    "type": "Incantesimo",
     "text": "Tutte le creature nemiche hanno -3 attacco fino alla fine del turno."
   },
   {
@@ -186,7 +196,9 @@ export const cards = [
     "faction": "Patto Neon",
     "rarity": "Rare",
     "cost": 4,
-    "type": "3/2  ",
+    "type": "Creatura",
+    "attack": 3,
+    "health": 2,
     "text": "Può attaccare l’eroe nemico ignorando la Provocazione."
   },
   {
@@ -204,7 +216,7 @@ export const cards = [
     "faction": "Patto Neon",
     "rarity": "Rare",
     "cost": 3,
-    "type": "Artefatto  ",
+    "type": "Artefatto",
     "text": "Una volta per turno riduci di 1 il costo di un incantesimo."
   },
   {
@@ -293,7 +305,9 @@ export const cards = [
     "faction": "Senza Santi",
     "rarity": "Legendary",
     "cost": 6,
-    "type": "5/5  ",
+    "type": "Creatura",
+    "attack": 5,
+    "health": 5,
     "text": "Le tue altre creature hanno +1/+1. Quando muore, pesca 3 carte."
   },
   {
@@ -305,7 +319,7 @@ export const cards = [
     "type": "Creatura",
     "attack": 3,
     "health": 5,
-    "text": "Provocazione   · Alla fine del tuo turno cura 2 punti vita al tuo eroe."
+    "text": "Provocazione · Alla fine del tuo turno cura 2 punti vita al tuo eroe."
   },
   {
     "id": 33,
@@ -440,7 +454,9 @@ export const cards = [
     "faction": "Sottocittà",
     "rarity": "Legendary",
     "cost": 5,
-    "type": "4/4  ",
+    "type": "Creatura",
+    "attack": 4,
+    "health": 4,
     "text": "Rapidità. Quando entra in gioco, pesca 1 carta per ogni creatura nemica."
   },
   {

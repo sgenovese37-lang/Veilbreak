@@ -11,7 +11,7 @@ Le regole del catalogo e del tutorial hanno priorità. Per i casi che i document
 - Telecamera di Sicurezza rivela la carta una volta, quando entra in gioco. Telefono Vincolante sconta il primo incantesimo del turno per ogni copia in campo. ATM di Sangue si attiva alla fine del turno di entrambi i giocatori.
 - L’Attacco ha un minimo di zero. Quando il mazzo è vuoto, ogni pesca obbligatoria di inizio turno infligge un danno al proprio eroe in più rispetto alla volta precedente.
 
-Il gioco completo richiede ancora le illustrazioni nel catalogo dell’app, il multiplayer online, la storia, le missioni e le ricompense.
+Il gioco completo richiede ancora il multiplayer online, la storia, le missioni giornaliere e settimanali e un sistema di ricompense reale.
 
 ## Regole di partita
 
@@ -33,3 +33,21 @@ I nomi degli eroi e i poteri sono proposte per il playtest.
 Aggiungi o modifica le schede in `cards.mjs`. Ogni scheda usa un ID numerico stabile, nome, fazione, rarità, costo, tipo, testo e, per le creature, Attacco e Difesa. Il catalogo, l’editor e la selezione della partita derivano le fazioni dalle schede. Una nuova fazione deve avere almeno 15 carte per giocare con un mazzo predefinito. Gli effetti si risolvono in `game.mjs`; le nuove meccaniche richiedono una regola nel motore. Le sei carte segnate Legendary nel catalogo sono tutte incluse.
 
 Per assegnare un eroe e un tavolo a una nuova fazione, aggiungi una voce in `heroes.mjs` e uno stile in `style.css` per il relativo tema. Il motore riusa i tipi di potere già supportati (danno, cura, Attacco e Difesa).
+
+## Illustrazioni
+
+Le 60 illustrazioni stanno in due cartelle separate, ognuna con il proprio `mappa-carte.csv`: `assets/illustrazioni-01-30/` e `assets/illustrazioni-31-60/`. Le carte sono collegate alle immagini tramite la colonna `id_prototipo`. Le differenze trovate controllando a vista le immagini sono in `assets/note-verifica.csv` e nel resoconto `DIFFERENZE-ILLUSTRAZIONI.md`.
+
+Dopo aver cambiato le immagini o le note, rigenera `illustrations.mjs` e le miniature in `assets/miniature/` (serve Pillow):
+
+    python3 -I tools/build_illustrations.py .
+
+In partita valgono sempre testo, fazione e statistiche del catalogo (`cards.mjs`). Nel catalogo dell’app tocca una carta per vedere l’illustrazione intera, le regole del catalogo e le eventuali differenze.
+
+Per una nuova fazione aggiungi anche le sue righe in un nuovo `assets/illustrazioni-<intervallo>/mappa-carte.csv`; lo script le raccoglie automaticamente.
+
+## Test
+
+    node --test tests/*.test.mjs
+
+I test controllano le creature corrette, il collegamento delle 60 immagini, artefatti, Sindaco, poteri degli eroi e 48 partite complete computer contro computer.
