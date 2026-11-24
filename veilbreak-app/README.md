@@ -2,7 +2,7 @@
 
 Avvia un server statico dalla radice del repository, per esempio con `python3 -m http.server 8000`, e apri http://localhost:8000/veilbreak-app/.
 
-Il gioco include le 60 carte del catalogo con le illustrazioni, la sfida contro il computer a tre difficoltà, una partita in due sullo stesso dispositivo, la modalità Storia in 8 capitoli, missioni giornaliere e settimanali, Schegge, buste e collezione. Si può installare sul telefono e funziona anche offline. Ogni fazione parte da un mazzo predefinito da 15 carte. L’editor salva un mazzo personale per fazione, con un massimo di due copie per carta e una per ciascuna Leggendaria. La modalità contro il computer usa il mazzo predefinito per l’avversario. Il tutorial riprende i dieci capitoli del repository come prove a scelta multipla, con un gettone per il primo completamento di ciascuna missione e il distintivo Primo Binder al termine. I progressi sono salvati nel browser. Ogni missione del tutorial dà anche 20 Schegge e il completamento 100 Schegge e il titolo Primo Binder.
+Il gioco include le 60 carte del catalogo con le illustrazioni, la sfida contro il computer a tre difficoltà, una partita in due sullo stesso dispositivo, la modalità Storia in 8 capitoli, missioni giornaliere e settimanali, Schegge, buste e collezione. Si può installare sul telefono e funziona anche offline. Ogni fazione parte da un mazzo predefinito da 15 carte, definito in `decks.mjs` e composto per bilanciare gli scontri. L’editor salva un mazzo personale per fazione, con un massimo di due copie per carta e una per ciascuna Leggendaria. La modalità contro il computer usa il mazzo predefinito per l’avversario. Il tutorial riprende i dieci capitoli del repository come prove a scelta multipla, con un gettone per il primo completamento di ciascuna missione e il distintivo Primo Binder al termine. I progressi sono salvati nel browser. Ogni missione del tutorial dà anche 20 Schegge e il completamento 100 Schegge e il titolo Primo Binder.
 
 Le regole del catalogo e del tutorial hanno priorità. Per i casi che i documenti lasciano aperti, il prototipo usa queste convenzioni di playtest.
 
@@ -30,7 +30,7 @@ I nomi degli eroi e i poteri sono proposte per il playtest.
 
 ## Ampliare il catalogo
 
-Aggiungi o modifica le schede in `cards.mjs`. Ogni scheda usa un ID numerico stabile, nome, fazione, rarità, costo, tipo, testo e, per le creature, Attacco e Difesa. Il catalogo, l’editor e la selezione della partita derivano le fazioni dalle schede. Una nuova fazione deve avere almeno 15 carte per giocare con un mazzo predefinito. Gli effetti si risolvono in `game.mjs`; le nuove meccaniche richiedono una regola nel motore. Le sei carte segnate Legendary nel catalogo sono tutte incluse.
+Aggiungi o modifica le schede in `cards.mjs`. Ogni scheda usa un ID numerico stabile, nome, fazione, rarità, costo, tipo, testo e, per le creature, Attacco e Difesa. Il catalogo, l’editor e la selezione della partita derivano le fazioni dalle schede. Una nuova fazione deve avere almeno 15 carte per giocare con un mazzo predefinito; se non ha una voce in `decks.mjs` usa le sue prime 15 carte. Gli effetti si risolvono in `game.mjs`; le nuove meccaniche richiedono una regola nel motore. Le sei carte segnate Legendary nel catalogo sono tutte incluse.
 
 Per assegnare un eroe e un tavolo a una nuova fazione, aggiungi una voce in `heroes.mjs` e uno stile in `style.css` per il relativo tema. Il motore riusa i tipi di potere già supportati: `damage` (danno a una creatura), `heal` (cura), `attack` e `defense` (temporanei), `buff` (+X/+X permanente), `summon` (evoca la carta con quell’ID) e `heroDamage` (danno all’eroe nemico). Le nuove fazioni entrano automaticamente in collezione (una copia per carta), nelle missioni «Vinci con…» e nell’analisi del bilanciamento.
 
@@ -54,7 +54,7 @@ Per una nuova fazione aggiungi anche le sue righe in un nuovo `assets/illustrazi
 
     node --test tests/*.test.mjs
 
-I 20 test controllano carte, immagini, regole, poteri degli eroi, partite complete a ogni livello, collezione e buste, missioni, Storia e la forza del computer Difficile.
+I 22 test controllano carte, immagini, regole, poteri degli eroi, partite complete a ogni livello, collezione e buste, missioni, Storia e la forza del computer Difficile.
 
 Prove su schermo mobile (iPhone 13 simulato, richiede Playwright e il server avviato su `127.0.0.1:8000`):
 
@@ -78,7 +78,7 @@ Si parte con una copia di ogni carta e una busta. Una busta costa 100 Schegge e 
 
 ## Computer e bilanciamento
 
-A Difficile il computer prova ogni mossa possibile su una copia della partita e sceglie quella che migliora di più la posizione (`ai.mjs`); batte il livello Normale in circa due partite su tre. L’analisi delle fazioni si rilancia con `node tools/bilanciamento.mjs` e i risultati sono commentati in `BILANCIAMENTO.md`.
+A Difficile il computer prova ogni mossa possibile su una copia della partita e sceglie quella che migliora di più la posizione (`ai.mjs`); batte il livello Normale in circa due partite su tre. L’analisi delle fazioni si rilancia con `node tools/bilanciamento.mjs` e i risultati sono commentati in `BILANCIAMENTO.md`. Per comporre mazzi predefiniti più equilibrati, anche per una nuova fazione, c’è `node tools/cerca_mazzi.mjs`.
 
 ## Installazione e offline
 

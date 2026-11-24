@@ -125,3 +125,22 @@ test("runComputer termina le partite a ogni livello", () => {
     assert.equal(g.phase, "finished");
   }
 });
+
+test("i due scontri sbilanciati restano vicini al 50% con i mazzi predefiniti", () => {
+  const share = (a, b, games = 120) => {
+    let aw = 0, decided = 0;
+    for (let k = 0; k < games; k++) {
+      const names = k % 2 ? [b, a] : [a, b];
+      const g = createGame(names, seeded(9000 + k));
+      for (let t = 0; t < 400 && g.phase !== "finished"; t++) smartTurn(g);
+      if (g.winner === "draw") continue;
+      decided++;
+      if (names[g.winner] === a) aw++;
+    }
+    return aw / decided;
+  };
+  for (const [a, b] of [["Corte di Hollow", "Patto Neon"], ["Corte di Hollow", "Senza Santi"]]) {
+    const value = share(a, b);
+    assert.ok(value > 0.35 && value < 0.65, `${a} contro ${b}: ${Math.round(value * 100)}%`);
+  }
+});
