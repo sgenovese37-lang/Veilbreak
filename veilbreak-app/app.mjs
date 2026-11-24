@@ -14,7 +14,8 @@ import {
 } from "./profile.mjs";
 import { currentMissions, recordEvent, claimMission } from "./missions.mjs";
 import { chapters, storyTitle, storyProgress, isUnlocked, completeChapter, finalReward } from "./story.mjs";
-import { sound, soundEnabled, setSound, buzz } from "./audio.mjs";
+import { sound, soundEnabled, setSound, buzz, cardSound, startAmbience, stopAmbience } from "./audio.mjs";
+import { environments, environmentFor } from "./environments.mjs";
 
 const get = id => document.getElementById(id);
 const form = get("settings");
@@ -40,6 +41,7 @@ let lastPack = null;
 let outcome = null;
 let previous = new Map();
 let replaying = false;     // il computer sta mostrando le sue mosse una alla volta
+let matchEnv = null;       // ambientazione della partita in corso
 let replayRun = 0;         // cambia quando si esce dalla partita: ferma l'animazione in corso
 let lastTurnKey = null;    // per annunciare il cambio di turno
 let logSeenKey = null;     // turno in cui il registro è stato aperto l'ultima volta
@@ -70,7 +72,13 @@ function updateWallet() {
   toggle.setAttribute("aria-pressed", soundEnabled());
 }
 get("wallet").onclick = () => showSection("shop-nav");
-get("sound-toggle").onclick = () => { setSound(!soundEnabled()); updateWallet(); sound("play"); };
+get("sound-toggle").onclick = () => {
+  setSound(!soundEnabled());
+  updateWallet();
+  sound("play");
+  if (!soundEnabled()) stopAmbience();
+  else if (game && document.body.classList.contains("in-match")) startAmbience(matchEnv);
+};
 
 // I mazzi salvati valgono solo se usano carte possedute nella collezione.
 function deckOwned(deck) {
@@ -312,7 +320,8 @@ form.onsubmit = event => {
   mode = form.elements.mode.value;
   level = form.elements.level.value;
   const names = [form.elements.first.value, form.elements.second.value];
-  startMatch(names, names.map((name, side) => side === 1 && mode === "cpu" ? null : playableDeck(name)));
+  const env = form.elements.env.value;
+  startMatch(names, names.map((name, side) => side === 1 && mode === "cpu" ? null : playableDeck(name)), env === "auto" ? {} : { env });
 };
 
 function startMatch(names, decks, options = {}) {
@@ -320,6 +329,9 @@ function startMatch(names, decks, options = {}) {
   replaying = false;
   lastTurnKey = null;
   game = createGame(names, Math.random, decks, options);
+  // ambientazione: scelta nella partita, altrimenti quella della fazione avversaria
+  matchEnv = environmentFor(options.env) ?? environmentFor(heroFor(names[1])?.theme) ?? environmentFor(heroFor(names[0])?.theme);
+  startAmbience(matchEnv);
   handover = false;
   selected = null;
   outcome = null;
@@ -335,6 +347,8 @@ function reset() {
   replaying = false;
   lastTurnKey = null;
   document.body.classList.remove("in-match");
+  stopAmbience();
+  hidePeek();
   const fromStory = storyChapter !== null;
   game = null;
   storyChapter = null;
@@ -408,7 +422,7 @@ async function playComputer() {
 
 async function showAction(action) {
   if (action.kind === "play") {
-    sound("select");
+    cardSound(byId.get(action.card), "enter");
     await castPreview(byId.get(action.card), "L’avversario gioca", 1100);
   } else if (action.kind === "attack") {
     await lunge(action.side, action.uid, action.target);
@@ -479,8 +493,8 @@ function chooseCard(index) {
 
 function playedFx(c) {
   sound("mana");
-  if (c.type === "Creatura") sound("summon");
-  else { sound("cast"); castPreview(c, "Hai giocato", 800); }
+  cardSound(c, "enter");
+  if (c.type !== "Creatura") { sound("cast"); castPreview(c, "Hai giocato", 800); }
 }
 
 // ---------- Effetti ----------
@@ -502,7 +516,8 @@ async function lunge(side, uid, targetChoice) {
   const to = targetChoice?.uid == null
     ? document.querySelector(`.hero-portrait[data-side="${targetChoice?.side}"]`)
     : document.querySelector(`.token[data-side="${targetChoice.side}"][data-uid="${targetChoice.uid}"]`);
-  sound("attack");
+  const attacker = game.players[side]?.board.find(u => u.uid === uid);
+  if (attacker?.card) cardSound(byId.get(attacker.card), "attack"); else sound("attack");
   if (!from || !to || !from.animate) { await wait(200); return; }
   const a = from.getBoundingClientRect();
   const b = to.getBoundingClientRect();
@@ -511,7 +526,7 @@ async function lunge(side, uid, targetChoice) {
   from.style.zIndex = 20;
   const go = from.animate([{ transform: "none" }, { transform: `translate(${dx}px, ${dy}px) scale(1.12)` }], { duration: 230, easing: "cubic-bezier(.5,0,.9,.5)", fill: "forwards" });
   await go.finished;
-  sound("hit");
+  if (targetChoice?.uid == null) sound("hit"); // le creature colpite hanno il loro suono (vedi track)
   buzz(25);
   to.animate([{ transform: "none" }, { transform: "translateX(-5px)" }, { transform: "translateX(5px)" }, { transform: "none" }], { duration: 240 });
   await from.animate([{ transform: `translate(${dx}px, ${dy}px) scale(1.12)` }, { transform: "none" }], { duration: 200, easing: "ease-out", fill: "forwards" }).finished;
@@ -520,7 +535,8 @@ async function lunge(side, uid, targetChoice) {
 // Tenere premuto: anteprima ingrandita della carta con le regole del catalogo.
 const peekLayer = element("div", undefined, "peek-layer");
 peekLayer.hidden = true;
-peekLayer.setAttribute("aria-hidden", "true");
+peekLayer.setAttribute("role", "dialog");
+peekLayer.setAttribute("aria-label", "Anteprima della carta");
 document.body.append(peekLayer);
 function showPeek(c, current) {
   const art = illustrationFor(c.id);
@@ -531,20 +547,37 @@ function showPeek(c, current) {
   rulesBox.append(element("strong", `${c.name} · ${c.cost} Essenza`));
   if (c.type === "Creatura") rulesBox.append(element("span", current ? `Ora: Attacco ${current.attack} · Difesa ${current.health}` : `Attacco ${c.attack} · Difesa ${c.health}`));
   rulesBox.append(element("p", c.text || "Nessun effetto."));
-  box.append(rulesBox);
+  box.append(rulesBox, element("small", "Tocca lo schermo per chiudere", "peek-hint"));
   peekLayer.replaceChildren(box);
   peekLayer.hidden = false;
 }
-function hidePeek() { peekLayer.hidden = true; }
+function hidePeek() { peekLayer.hidden = true; peekLayer.dataset.open = ""; }
+// Resta aperta dopo aver alzato il dito: si chiude con un nuovo tocco in qualunque punto.
+peekLayer.addEventListener("pointerdown", e => {
+  if (peekLayer.dataset.open !== "ready") return;
+  e.preventDefault();
+  e.stopPropagation();
+  hidePeek();
+});
+peekLayer.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); });
 function attachPeek(el, c, current) {
   let timerId = null, shown = false, x = 0, y = 0;
   el.addEventListener("pointerdown", e => {
     shown = false; x = e.clientX; y = e.clientY;
-    timerId = setTimeout(() => { shown = true; showPeek(c, current); buzz(12); }, 380);
+    timerId = setTimeout(() => {
+      shown = true;
+      showPeek(c, current);
+      peekLayer.dataset.open = "holding";
+      buzz(15);
+    }, 420);
   });
-  el.addEventListener("pointermove", e => { if (!shown && Math.hypot(e.clientX - x, e.clientY - y) > 12) clearTimeout(timerId); });
-  const end = () => { clearTimeout(timerId); if (shown) hidePeek(); };
-  for (const ev of ["pointerup", "pointercancel", "pointerleave"]) el.addEventListener(ev, end);
+  el.addEventListener("pointermove", e => { if (!shown && Math.hypot(e.clientX - x, e.clientY - y) > 14) clearTimeout(timerId); });
+  // dito alzato (o gesto annullato dal sistema): l'anteprima resta e da ora un tocco la chiude
+  const release = () => {
+    clearTimeout(timerId);
+    if (shown && peekLayer.dataset.open === "holding") setTimeout(() => { peekLayer.dataset.open = "ready"; }, 60);
+  };
+  for (const ev of ["pointerup", "pointercancel", "pointerleave"]) el.addEventListener(ev, release);
   el.addEventListener("click", e => { if (shown) { e.stopImmediatePropagation(); e.preventDefault(); shown = false; } }, true);
   el.addEventListener("contextmenu", e => e.preventDefault());
 }
@@ -563,11 +596,12 @@ function floatNumber(node, delta) {
   node.append(n);
 }
 
-function track(key, value, node) {
+function track(key, value, node, card) {
   const old = previous.get(key);
   previous.set(key, value);
   if (old === undefined) return true;
   if (old !== value) {
+    if (card && value < old) cardSound(card, "hurt");
     floatNumber(node, value - old);
     node.classList.add(value < old ? "hit" : "healed");
   }
@@ -697,7 +731,8 @@ function token(side, unit, own, allow) {
   t.append(face);
   if (kw.rush) t.append(element("span", "⚡", "badge-rush"));
   t.append(element("span", current.attack, "att"), element("span", current.health, `dif${current.health < current.maxHealth ? " wounded" : ""}`));
-  if (track(unit.uid, current.health, t)) t.classList.add("summoned");
+  t.dataset.card = unit.card;
+  if (track(unit.uid, current.health, t, unit.card ? c : null)) t.classList.add("summoned");
   return t;
 }
 
@@ -744,7 +779,8 @@ function handCard(side, id, i) {
   if (art) {
     // l'illustrazione è già una carta completa: si aggiunge il costo solo se è cambiato
     const img = element("img", undefined, "mini-art"); img.src = art.thumb; img.alt = ""; card.append(img);
-    if (cost !== c.cost) card.append(element("span", cost, `gem ${cost < c.cost ? "cheaper" : "pricier"}`));
+    // gemma grande con il costo attuale: verde se scontato, rossa se aumentato
+    card.append(element("span", cost, `gem big${cost < c.cost ? " cheaper" : cost > c.cost ? " pricier" : ""}`));
   } else {
     card.append(element("span", cost, "gem"), element("span", c.name, "mini-name"));
     if (c.type === "Creatura") card.append(element("span", c.attack, "att"), element("span", c.health, "dif"));
@@ -774,18 +810,22 @@ function captureTokens() {
   return map;
 }
 function fadeDestroyed(before) {
-  let died = false;
+  let died = 0;
+  let voiced = 0;
   for (const [key, { rect, node }] of before) {
     const [side, uid] = key.split(":");
     if (table.querySelector(`.token[data-side="${side}"][data-uid="${uid}"]`)) continue;
-    died = true;
+    died++;
     node.classList.add("ghost");
     node.removeAttribute("data-uid");
+    // ogni carta ha il suo suono di morte (al massimo due insieme, per non coprire tutto)
+    const card = byId.get(Number(node.dataset.card));
+    if (card && voiced < 2) { cardSound(card, "death"); voiced++; }
     Object.assign(node.style, { position: "fixed", left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px`, margin: 0 });
     document.body.append(node);
     setTimeout(() => node.remove(), 750);
   }
-  if (died) sound("death");
+  if (died && !voiced) sound("death");
 }
 
 // Annuncio grande al cambio di turno.
@@ -839,6 +879,14 @@ function renderTable() {
   const view = mode === "cpu" ? 0 : active;
   const allow = !cpu && !finished;
   const arena = element("div", undefined, `arena ${cpu ? "enemy-turn" : "my-turn"}${busy ? " busy" : ""}`);
+  if (matchEnv) {
+    arena.dataset.env = matchEnv;
+    const amb = element("div", undefined, "ambience");
+    amb.setAttribute("aria-hidden", "true");
+    for (let i = 0; i < 3; i++) amb.append(element("i"));
+    arena.append(amb);
+    if (mull) arena.append(element("div", `Ambientazione · ${environments[matchEnv].name}`, "env-name"));
+  }
   const top = element("div", undefined, "topbar");
   top.append(button("☰ Menu", () => {
     if (finished || confirm("Abbandonare la partita?")) reset();
@@ -964,7 +1012,7 @@ function renderStory() {
     storyChapter = storyPick;
     mode = "cpu";
     level = chapter.level;
-    startMatch([storyFaction, chapter.opponent], [playableDeck(storyFaction), null], { lives: chapter.lives });
+    startMatch([storyFaction, chapter.opponent], [playableDeck(storyFaction), null], { lives: chapter.lives, env: heroFor(chapter.opponent)?.theme });
   }, "primary");
   detail.append(pickFaction, start);
   const final = element("p", cleared === chapters.length

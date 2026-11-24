@@ -27,7 +27,11 @@ const shots = (process.env.SHOTS ?? require('os').tmpdir()) + '/';
   console.log('anteprima visibile:', await page.locator('.peek-layer:not([hidden])').count() === 1);
   await page.screenshot({ path: shots + '61-anteprima.png' });
   await page.mouse.up();
-  console.log('anteprima chiusa:', await page.locator('.peek-layer[hidden]').count() === 1);
+  await page.waitForTimeout(500);
+  console.log('anteprima resta aperta dopo aver alzato il dito:', await page.locator('.peek-layer:not([hidden])').count() === 1);
+  await page.mouse.click(30, 300);
+  await page.waitForTimeout(200);
+  console.log('anteprima chiusa con un tocco:', await page.locator('.peek-layer[hidden]').count() === 1);
   // giocare una carta: l'Essenza cala con animazione
   const before = await page.locator('.hero-strip.mine .crystals .count b').innerText();
   const playable = page.locator('.hand .hand-card.playable');

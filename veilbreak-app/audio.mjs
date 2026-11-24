@@ -92,3 +92,136 @@ export function sound(name) {
 export function buzz(ms = 30) {
   try { if (enabled) navigator.vibrate?.(ms); } catch { /* nessuna vibrazione */ }
 }
+
+// ---------- Suoni delle carte ----------
+// Ogni carta ha la sua voce: il timbro dipende dalla fazione, l'altezza e il ritmo dall'ID della carta.
+const timbres = {
+  "Corte di Hollow": { wave: "sine", overtone: 2.76, noise: 0, vibrato: 0 },      // campane e ottoni lontani
+  "Patto Neon": { wave: "square", overtone: 1.5, noise: 0.08, vibrato: 0, glitch: true }, // elettronica che sfrigola
+  "Senza Santi": { wave: "triangle", overtone: 1.5, noise: 0, vibrato: 6 },      // voci da coro
+  "Sottocittà": { wave: "sawtooth", overtone: 0.5, noise: 0.25, vibrato: 0 },    // ringhi e gocce
+};
+const semitone = n => Math.pow(2, n / 12);
+function seedOf(id) { let h = 2166136261; for (const ch of String(id)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return h >>> 0; }
+
+function voice(ctx, at, freq, length, t, volume, glide = 1) {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = t.wave;
+  osc.frequency.setValueAtTime(freq, at);
+  osc.frequency.exponentialRampToValueAtTime(Math.max(30, freq * glide), at + length);
+  if (t.vibrato) {
+    const lfo = ctx.createOscillator(); const depth = ctx.createGain();
+    lfo.frequency.value = t.vibrato; depth.gain.value = freq * 0.02;
+    lfo.connect(depth).connect(osc.frequency); lfo.start(at); lfo.stop(at + length + 0.05);
+  }
+  gain.gain.setValueAtTime(0.0001, at);
+  gain.gain.exponentialRampToValueAtTime(volume, at + 0.015);
+  gain.gain.exponentialRampToValueAtTime(0.0001, at + length);
+  osc.connect(gain).connect(master);
+  osc.start(at); osc.stop(at + length + 0.05);
+  if (t.overtone) {
+    const o2 = ctx.createOscillator(); const g2 = ctx.createGain();
+    o2.type = "sine"; o2.frequency.setValueAtTime(freq * t.overtone, at);
+    o2.frequency.exponentialRampToValueAtTime(Math.max(30, freq * t.overtone * glide), at + length);
+    g2.gain.setValueAtTime(0.0001, at); g2.gain.exponentialRampToValueAtTime(volume * 0.35, at + 0.01);
+    g2.gain.exponentialRampToValueAtTime(0.0001, at + length * 0.7);
+    o2.connect(g2).connect(master); o2.start(at); o2.stop(at + length);
+  }
+}
+
+let lastCardSound = 0;
+// event: "enter" (entra in gioco), "attack" (attacca), "hurt" (subisce danni), "death" (muore)
+export function cardSound(card, event) {
+  if (!enabled || !card) return;
+  try {
+    const ctx = audio();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    if (event === "hurt" && now - lastCardSound < 0.08) return; // niente valanghe di suoni
+    lastCardSound = now;
+    const t = timbres[card.faction] ?? { wave: "triangle", overtone: 2, noise: 0, vibrato: 0 };
+    const seed = seedOf(card.id);
+    const base = 110 * semitone(seed % 14) * (card.type === "Creatura" ? 1 : 2);
+    const step = [3, 4, 5, 7][seed % 4];
+    const big = card.rarity === "Legendary" || card.rarity === "Epic";
+    let at = now + 0.01;
+    if (event === "enter") {
+      const notes = big ? [0, step, 12, 12 + step] : [0, step, 12];
+      for (const n of notes) { voice(ctx, at, base * semitone(n), 0.16, t, 0.28); at += t.glitch ? 0.05 : 0.09; }
+      if (big) voice(ctx, at, base * 2, 0.6, t, 0.22);
+    } else if (event === "attack") {
+      voice(ctx, at, base * 2.2, 0.16, t, 0.3, 0.45);
+      if (t.glitch) voice(ctx, at + 0.05, base * 3, 0.06, t, 0.18);
+    } else if (event === "hurt") {
+      voice(ctx, at, base * 0.9, 0.14, t, 0.3, 0.6);
+    } else if (event === "death") {
+      voice(ctx, at, base * 1.5, 0.55, t, 0.3, 0.25);
+      voice(ctx, at + 0.12, base * semitone(-step), 0.6, t, 0.2, 0.3);
+    }
+    if (t.noise && (event === "attack" || event === "death" || event === "hurt")) noise(ctx, at, event === "death" ? 0.35 : 0.12, t.noise);
+  } catch { /* audio non disponibile */ }
+}
+
+// ---------- Sottofondo delle ambientazioni ----------
+let ambience = null;
+export function startAmbience(theme) {
+  stopAmbience();
+  if (!enabled) return;
+  try {
+    const ctx = audio();
+    if (!ctx) return;
+    const bus = ctx.createGain();
+    bus.gain.setValueAtTime(0.0001, ctx.currentTime);
+    bus.gain.exponentialRampToValueAtTime(0.5, ctx.currentTime + 2);
+    bus.connect(master);
+    const nodes = [];
+    const drone = (freq, type, vol) => {
+      const o = ctx.createOscillator(); const g = ctx.createGain(); const f = ctx.createBiquadFilter();
+      o.type = type; o.frequency.value = freq; f.type = "lowpass"; f.frequency.value = 400; g.gain.value = vol;
+      o.connect(f).connect(g).connect(bus); o.start(); nodes.push(o);
+    };
+    const loopNoise = (vol, filterType, freq) => {
+      const len = ctx.sampleRate * 2; const buf = ctx.createBuffer(1, len, ctx.sampleRate); const d = buf.getChannelData(0);
+      let last = 0;
+      for (let i = 0; i < len; i++) { last = (last + (Math.random() * 2 - 1) * 0.08) * 0.98; d[i] = filterType === "lowpass" ? last * 3 : Math.random() * 2 - 1; }
+      const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+      const f = ctx.createBiquadFilter(); f.type = filterType; f.frequency.value = freq; const g = ctx.createGain(); g.gain.value = vol;
+      src.connect(f).connect(g).connect(bus); src.start(); nodes.push(src);
+    };
+    const ping = (freq, length, vol, type = "sine") => {
+      const at = ctx.currentTime; const o = ctx.createOscillator(); const g = ctx.createGain();
+      o.type = type; o.frequency.value = freq;
+      g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(vol, at + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, at + length);
+      o.connect(g).connect(bus); o.start(at); o.stop(at + length + 0.05);
+    };
+    let tick = null;
+    if (theme === "hollow") {            // sala d'archivio: bordone grave e una campana lontana
+      drone(55, "sine", 0.12); drone(82.4, "sine", 0.05);
+      tick = () => { ping(220, 4, 0.05); ping(220 * 2.76, 2.5, 0.015); };
+    } else if (theme === "neon") {       // stazione elettrica: ronzio e pioggia
+      drone(60, "sawtooth", 0.03); loopNoise(0.05, "highpass", 3000);
+      tick = () => { if (Math.random() < 0.6) ping(1200 + Math.random() * 800, 0.08, 0.02, "square"); };
+    } else if (theme === "saints") {     // cappella: accordo da coro che respira
+      drone(196, "triangle", 0.025); drone(246.9, "triangle", 0.02); drone(293.7, "triangle", 0.015);
+      tick = () => ping(587.3, 3, 0.02, "triangle");
+    } else if (theme === "undercity") {  // galleria: rombo e gocce
+      loopNoise(0.12, "lowpass", 180); drone(41, "sine", 0.08);
+      tick = () => { ping(900 + Math.random() * 600, 0.12, 0.05); };
+    }
+    const timer = tick ? setInterval(() => { if (enabled) tick(); }, theme === "undercity" ? 2300 : theme === "neon" ? 1700 : 7000) : null;
+    ambience = { bus, nodes, timer, ctx };
+  } catch { ambience = null; }
+}
+export function stopAmbience() {
+  if (!ambience) return;
+  const { bus, nodes, timer, ctx } = ambience;
+  clearInterval(timer);
+  try {
+    bus.gain.cancelScheduledValues(ctx.currentTime);
+    bus.gain.setValueAtTime(Math.max(bus.gain.value, 0.0001), ctx.currentTime);
+    bus.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.8);
+    setTimeout(() => { for (const n of nodes) { try { n.stop(); } catch { /* già fermo */ } } bus.disconnect(); }, 900);
+  } catch { /* audio non disponibile */ }
+  ambience = null;
+}

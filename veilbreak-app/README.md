@@ -112,3 +112,17 @@ L'interfaccia riprende lo stile delle carte: cornici di rame smussate, fondo scu
 Il **Negozio** (nel menu, o toccando il saldo in alto) mostra Schegge e buste e permette di comprarle e aprirle. Le Schegge sono le monete del gioco.
 
 **Attacco multiplo:** tocca una o più creature pronte (o «Tutte»), poi il bersaglio: attaccano una dopo l'altra finché il bersaglio resta in piedi. Durante l'animazione il tavolo è bloccato. Le mosse dell'avversario non compaiono più in un riquadro sul tavolo: il pulsante «Registro» mostra quante sono nuove.
+
+## Ambientazioni, suoni delle carte, costo e anteprima
+
+**Ambientazioni:** quattro, una per fazione (`environments.mjs`), con lo sfondo ricavato dalle illustrazioni (`python3 -I tools/build_environments.py .`), effetti animati e un sottofondo sonoro sintetizzato:
+- Sala del Consiglio (Corte di Hollow): archivio, nebbia, lampade che tremano, campana lontana.
+- Centrale delle Frequenze (Patto Neon): stazione allagata, pioggia, neon che sfarfalla, ronzio elettrico.
+- Cappella dell’Aureola Spezzata (Senza Santi): corsia abbandonata, candele, cenere che sale, coro.
+- Deposito Sotto le Rotaie (Sottocittà): bus sotto la pioggia, gocce, foschia verde, rombo.
+
+Si scelgono in «Nuova partita»; «Automatica» usa quella della fazione avversaria, e nella Storia vale quella del capitolo.
+
+**Suoni delle carte:** ogni carta ha la sua voce quando entra in gioco, attacca, subisce danni e muore (`cardSound` in `audio.mjs`). Il timbro dipende dalla fazione e l'altezza dall'ID della carta; le Leggendarie e le Epiche hanno un'entrata più lunga.
+
+**Costo:** ogni carta in mano mostra il costo attuale in una gemma grande (verde se scontato, rossa se aumentato). **Anteprima:** tenendo premuta una carta si apre l'anteprima con le regole, che resta aperta finché non si tocca di nuovo lo schermo.

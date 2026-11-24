@@ -666,3 +666,71 @@ main { padding-top: 1.4rem; }
 .hero-choice { align-items: start; }
 .masthead { padding-bottom: 1.9rem; }
 .masthead::after { bottom: -.5rem; }
+
+/* ================= Costo leggibile e anteprima ================= */
+.hand-card .gem.big {
+  top: -.55rem; left: -.5rem; width: 1.95rem; height: 1.95rem; font-size: 1.15rem; font-weight: 800; z-index: 2;
+  background: radial-gradient(circle at 40% 30%, #bcd8ff, #2a5fc0 60%, #183a7a); border: 2px solid #e6f0ff;
+  text-shadow: 0 1px 2px #000; box-shadow: 0 0 .5rem #4f8fff;
+}
+.hand-card .gem.big.cheaper { background: radial-gradient(circle at 40% 30%, #d2ffdb, #23934a 60%, #145a2c); }
+.hand-card .gem.big.pricier { background: radial-gradient(circle at 40% 30%, #ffd2d2, #b62a2a 60%, #6e1414); }
+.hand.mulligan .hand-card .gem.big { width: 2.4rem; height: 2.4rem; font-size: 1.4rem; }
+.peek-layer { pointer-events: auto; cursor: pointer; }
+.peek-hint { color: var(--muted); font-size: .8rem; letter-spacing: .04em; }
+
+/* ================= Ambientazioni ================= */
+.arena[data-env] { background: #08070a; }
+.arena[data-env]::before {
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: linear-gradient(#08070acc, #08070a55 30%, #08070a55 70%, #08070add), var(--env-image) center / cover no-repeat;
+}
+.arena[data-env="hollow"] { --env-image: url("assets/ambientazioni/hollow.webp"); }
+.arena[data-env="neon"] { --env-image: url("assets/ambientazioni/neon.webp"); }
+.arena[data-env="saints"] { --env-image: url("assets/ambientazioni/saints.webp"); }
+.arena[data-env="undercity"] { --env-image: url("assets/ambientazioni/undercity.webp"); }
+.arena > .topbar, .arena > .zone, .arena > .veil-line, .arena > .hand, .arena > .recap, .arena > .result, .arena > .turn-bar, .arena > .env-name { position: relative; z-index: 2; }
+.arena[data-env] .zone { background-color: transparent !important; background-image: linear-gradient(#0b090dcc, #0b090d99) !important; background-size: auto !important; }
+.ambience { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+.ambience i, .ambience::before, .ambience::after { content: ""; position: absolute; }
+.env-name { justify-self: center; margin: .2rem 0 .4rem; font-style: italic; color: var(--brass); letter-spacing: .05em; text-shadow: 0 1px 3px #000; }
+
+/* Sala del Consiglio: nebbia e lampade che tremano */
+.arena[data-env="hollow"] .ambience::before { inset: -20%; background: radial-gradient(ellipse at 30% 40%, #c9b29a22, transparent 45%), radial-gradient(ellipse at 70% 65%, #c9b29a1c, transparent 40%); animation: drift 26s linear infinite alternate; }
+.arena[data-env="hollow"] .ambience::after { inset: 0; background: radial-gradient(circle at 12% 18%, #ffb35a33, transparent 25%), radial-gradient(circle at 88% 22%, #ffb35a2a, transparent 22%); animation: flicker 5s steps(1) infinite; }
+.arena[data-env="hollow"] .ambience i { width: 140%; height: 30%; left: -20%; border-radius: 50%; background: radial-gradient(ellipse, #d8c7b322, transparent 70%); filter: blur(8px); animation: fog 18s ease-in-out infinite alternate; }
+.arena[data-env="hollow"] .ambience i:nth-child(1) { top: 20%; } .arena[data-env="hollow"] .ambience i:nth-child(2) { top: 55%; animation-duration: 24s; animation-delay: -6s; } .arena[data-env="hollow"] .ambience i:nth-child(3) { top: 80%; animation-duration: 30s; }
+
+/* Centrale delle Frequenze: pioggia e neon che sfarfalla */
+.arena[data-env="neon"] .ambience::before { inset: -50% 0 0; background: repeating-linear-gradient(105deg, transparent 0 14px, #9fd8ff2a 14px 15px, transparent 15px 38px); animation: rain .7s linear infinite; }
+.arena[data-env="neon"] .ambience::after { inset: 0; background: radial-gradient(circle at 85% 12%, #ff3fd033, transparent 30%), radial-gradient(circle at 10% 70%, #2fe0ff2a, transparent 30%); animation: neon 3.7s steps(1) infinite; }
+.arena[data-env="neon"] .ambience i { bottom: 0; width: 3px; height: 3px; border-radius: 50%; background: #bfe8ff; box-shadow: 0 0 6px #9fd8ff; animation: splash 1.3s ease-out infinite; }
+.arena[data-env="neon"] .ambience i:nth-child(1) { left: 22%; } .arena[data-env="neon"] .ambience i:nth-child(2) { left: 55%; animation-delay: -.5s; } .arena[data-env="neon"] .ambience i:nth-child(3) { left: 80%; animation-delay: -.9s; }
+
+/* Cappella dell'Aureola Spezzata: candele e cenere che sale */
+.arena[data-env="saints"] .ambience::before { inset: 0; background: radial-gradient(ellipse at 8% 100%, #ffb04a44, transparent 30%), radial-gradient(ellipse at 92% 100%, #ffb04a3a, transparent 28%); animation: candle 2.2s ease-in-out infinite alternate; }
+.arena[data-env="saints"] .ambience::after { inset: 0; background: radial-gradient(ellipse at 50% 0%, #7fffe41a, transparent 40%); }
+.arena[data-env="saints"] .ambience i { bottom: -10px; width: 4px; height: 4px; border-radius: 50%; background: #ffcf8a; box-shadow: 30px -40px 0 -1px #ffb55a, -60px -90px 0 0 #ffd9a0, 90px -150px 0 -1px #ffb55a, -20px -220px 0 0 #ffcf8a, 50px -300px 0 -1px #ffe1b0; filter: drop-shadow(0 0 3px #ff9d3a); animation: embers 9s linear infinite; }
+.arena[data-env="saints"] .ambience i:nth-child(1) { left: 20%; } .arena[data-env="saints"] .ambience i:nth-child(2) { left: 52%; animation-delay: -3s; animation-duration: 11s; } .arena[data-env="saints"] .ambience i:nth-child(3) { left: 78%; animation-delay: -6s; animation-duration: 13s; }
+
+/* Deposito Sotto le Rotaie: gocce e foschia verde */
+.arena[data-env="undercity"] .ambience::before { left: -10%; right: -10%; bottom: 0; height: 35%; background: radial-gradient(ellipse at 50% 100%, #4fae8c33, transparent 70%); filter: blur(6px); animation: drift 14s ease-in-out infinite alternate; }
+.arena[data-env="undercity"] .ambience::after { inset: 0; background: radial-gradient(circle at 75% 15%, #ffcf7a22, transparent 18%); animation: flicker 7s steps(1) infinite; }
+.arena[data-env="undercity"] .ambience i { top: -20px; width: 2px; height: 14px; border-radius: 2px; background: linear-gradient(transparent, #bfe9dccc); animation: drip 2.6s cubic-bezier(.55,0,1,.45) infinite; }
+.arena[data-env="undercity"] .ambience i:nth-child(1) { left: 18%; } .arena[data-env="undercity"] .ambience i:nth-child(2) { left: 47%; animation-delay: -1.1s; animation-duration: 3.4s; } .arena[data-env="undercity"] .ambience i:nth-child(3) { left: 83%; animation-delay: -2s; animation-duration: 2.9s; }
+
+@keyframes drift { from { transform: translateX(-6%); } to { transform: translateX(6%); } }
+@keyframes fog { from { transform: translateX(-12%); opacity: .5; } to { transform: translateX(12%); opacity: 1; } }
+@keyframes flicker { 0%, 100% { opacity: 1; } 47% { opacity: .55; } 49% { opacity: 1; } 71% { opacity: .7; } 73% { opacity: 1; } }
+@keyframes rain { from { transform: translateY(0); } to { transform: translateY(38px); } }
+@keyframes neon { 0%, 100% { opacity: 1; } 12% { opacity: .3; } 14% { opacity: 1; } 15% { opacity: .5; } 17% { opacity: 1; } 63% { opacity: .6; } 64% { opacity: 1; } }
+@keyframes splash { 0% { transform: scale(.5); opacity: .9; } 100% { transform: scale(4); opacity: 0; } }
+@keyframes candle { from { opacity: .7; } to { opacity: 1; } }
+@keyframes embers { from { transform: translateY(0); opacity: 0; } 10% { opacity: 1; } to { transform: translateY(-110vh) translateX(30px); opacity: 0; } }
+@keyframes drip { 0% { transform: translateY(0); opacity: 0; } 10% { opacity: 1; } 100% { transform: translateY(110vh); opacity: .8; } }
+@media (prefers-reduced-motion: reduce) { .ambience, .ambience * { animation: none !important; } .ambience::before, .ambience::after { animation: none !important; } }
+/* lo sfondo dell'ambientazione deve vedersi; il pulsante Fine turno sta sopra i campi */
+.arena[data-env]::before { background: linear-gradient(#08070a99, #08070a22 30%, #08070a22 70%, #08070acc), var(--env-image) center / cover no-repeat; }
+.arena[data-env] .zone { background-image: linear-gradient(#0b090d70, #0b090d40) !important; }
+.arena > .veil-line { z-index: 5; }
+.arena[data-env] .hero-info, .arena[data-env] .board .empty { text-shadow: 0 1px 3px #000, 0 0 8px #000; }
