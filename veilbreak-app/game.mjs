@@ -1,5 +1,6 @@
 import { cards } from "./cards.mjs";
 import { heroFor, heroPowerCost } from "./heroes.mjs";
+import { starterDecks } from "./decks.mjs";
 
 export const rules = Object.freeze({ maxLife: 30, openingHand: 6, mulliganLimit: 2, maxEssence: 10, handLimit: 10 });
 
@@ -36,7 +37,9 @@ function draw(p, count, g) {
 }
 
 export const deckSize = 15;
-export const defaultDeck = name => cards.filter(card => card.faction === name).slice(0, deckSize).map(card => card.id);
+export const defaultDeck = name => validDeck(name, starterDecks[name])
+  ? [...starterDecks[name]]
+  : cards.filter(card => card.faction === name).slice(0, deckSize).map(card => card.id);
 export const copyLimit = card => card.rarity === "Legendary" ? 1 : 2;
 
 export function validDeck(name, deck) {

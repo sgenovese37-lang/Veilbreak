@@ -1,6 +1,7 @@
 // Profilo del giocatore: Schegge (valuta di gioco), collezione, buste, titoli e statistiche.
 // Si salva nel browser. Senza memoria locale (per esempio nei test) resta in memoria.
 import { cards } from "./cards.mjs";
+import { starterDecks } from "./decks.mjs";
 
 const storageKey = "veilbreak-profile";
 export const packPrice = 100;
@@ -44,11 +45,20 @@ export function saveProfile(profile = loadProfile()) {
 
 export function resetProfileForTests() { memory = null; }
 
-// Ogni carta del catalogo, comprese quelle di fazioni aggiunte in futuro, parte con una copia.
+// Ogni carta del catalogo, comprese quelle di fazioni aggiunte in futuro, parte con una copia;
+// le carte doppie dei mazzi predefiniti partono con due copie, così il mazzo predefinito è sempre tuo.
+const starterCopies = new Map();
+for (const deck of Object.values(starterDecks)) {
+  const counts = new Map();
+  for (const id of deck) counts.set(id, (counts.get(id) ?? 0) + 1);
+  for (const [id, n] of counts) starterCopies.set(id, Math.max(starterCopies.get(id) ?? 1, n));
+}
+export const startingCopies = id => starterCopies.get(id) ?? 1;
+
 export function owned(id, profile = loadProfile()) {
   const card = byId.get(id);
   if (!card) return 0;
-  return Math.min(copyLimit(card), 1 + (profile.extra[id] ?? 0));
+  return Math.min(copyLimit(card), startingCopies(id) + (profile.extra[id] ?? 0));
 }
 
 export function addShards(amount, reason, profile = loadProfile()) {
