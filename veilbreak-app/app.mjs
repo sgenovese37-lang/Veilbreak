@@ -106,7 +106,7 @@ function heroChoices(current, onPick, id) {
     const choice = button(undefined, () => onPick(faction), "hero-choice");
     choice.dataset.faction = faction;
     choice.setAttribute("aria-pressed", current === faction);
-    if (hero?.theme) { const img = element("img", undefined, "emblem"); img.src = `assets/eroi/${hero.theme}.webp`; img.alt = ""; choice.append(img); }
+    if (hero?.theme || hero?.portrait) { const img = element("img", undefined, "emblem"); img.src = hero.portrait ?? `assets/eroi/${hero.theme}.webp`; img.alt = ""; choice.append(img); }
     else choice.append(element("span", faction.slice(0, 1), "emblem initial"));
     const text = element("span", undefined, "hero-choice-text");
     text.append(element("strong", hero?.name ?? faction), element("small", faction));
@@ -615,9 +615,9 @@ function heroPortrait(side, allow) {
   const portrait = isTarget ? button(undefined, () => target(side, null), "hero-portrait target") : element("div", undefined, "hero-portrait");
   portrait.setAttribute("aria-label", `${hero?.name ?? p.name}: ${p.life} punti vita su ${p.maxLife}`);
   portrait.dataset.side = side;
-  if (hero?.theme) {
+  if (hero?.theme || hero?.portrait) {
     const img = element("img", undefined, "emblem");
-    img.src = `assets/eroi/${hero.theme}.webp`;
+    img.src = hero.portrait ?? `assets/eroi/${hero.theme}.webp`;
     img.alt = "";
     portrait.append(img);
   } else {

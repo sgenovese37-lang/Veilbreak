@@ -3,6 +3,7 @@ export const heroPowerCost = 1;
 export const heroes = {
   "Corte di Hollow": {
     name: "Prefetta Ada Vesper",
+    portrait: "assets/eroi/ritratti/ada-vesper.webp",
     table: "Sala del Consiglio",
     theme: "hollow",
     power: {
@@ -16,6 +17,7 @@ export const heroes = {
   },
   "Patto Neon": {
     name: "Iona Volt, la Frequenza",
+    portrait: "assets/eroi/ritratti/iona-volt.webp",
     table: "Centrale delle Frequenze",
     theme: "neon",
     power: {
@@ -27,6 +29,7 @@ export const heroes = {
   },
   "Senza Santi": {
     name: "Elena Voss, il Contratto",
+    portrait: "assets/eroi/ritratti/elena-voss.webp",
     table: "Cappella dell’Aureola Spezzata",
     theme: "saints",
     power: {
@@ -37,6 +40,7 @@ export const heroes = {
   },
   "Sottocittà": {
     name: "Mara Sottorotaia",
+    portrait: "assets/eroi/ritratti/mara-sottorotaia.webp",
     table: "Deposito Sotto le Rotaie",
     theme: "undercity",
     power: {
@@ -51,3 +55,15 @@ export const heroes = {
 export function heroFor(faction) {
   return Object.hasOwn(heroes, faction) ? heroes[faction] : null;
 }
+
+// Eroi da sbloccare nella Storia (uno per fazione): ritratti pronti, regole e sblocco nelle prossime aggiunte.
+export const lockedHeroes = {
+  "Corte di Hollow": { name: "Cancelliere Orfeo Grimm", portrait: "assets/eroi/ritratti/orfeo-grimm.webp",
+    power: { name: "Sigillo d’Ufficio", text: "Evoca un Passerotto 1/1.", summon: 8 } },
+  "Patto Neon": { name: "Dex Halogen, il Glitch", portrait: "assets/eroi/ritratti/dex-halogen.webp",
+    power: { name: "Sovraccarico", text: "Infliggi 1 danno all’eroe nemico.", heroDamage: 1 } },
+  "Senza Santi": { name: "Suor Ottavia delle Ceneri", portrait: "assets/eroi/ritratti/ottavia.webp",
+    power: { name: "Lama Votiva", text: "Infliggi 1 danno a una creatura nemica.", target: "enemy", damage: 1 } },
+  "Sottocittà": { name: "Nonna Ines delle Gallerie", portrait: "assets/eroi/ritratti/nonna-ines.webp",
+    power: { name: "Richiamo dei Cunicoli", text: "Evoca un Frammento di Veil 1/1.", summon: 60 } },
+};

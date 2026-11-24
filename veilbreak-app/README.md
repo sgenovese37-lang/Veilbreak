@@ -126,3 +126,7 @@ Si scelgono in «Nuova partita»; «Automatica» usa quella della fazione avvers
 **Suoni delle carte:** ogni carta ha la sua voce quando entra in gioco, attacca, subisce danni e muore (`cardSound` in `audio.mjs`). Il timbro dipende dalla fazione e l'altezza dall'ID della carta; le Leggendarie e le Epiche hanno un'entrata più lunga.
 
 **Costo:** ogni carta in mano mostra il costo attuale in una gemma grande (verde se scontato, rossa se aumentato). **Anteprima:** tenendo premuta una carta si apre l'anteprima con le regole, che resta aperta finché non si tocca di nuovo lo schermo.
+
+## Ritratti degli eroi e dorso delle carte
+
+Le illustrazioni create con ChatGPT sono salvate in `assets/originali-chatgpt/` (ritratti degli 8 eroi, dorso delle carte, Frammento di Essenza con e senza testo). `python3 -I tools/build_portraits.py .` ritaglia i ritratti in tondo sul volto (`assets/eroi/ritratti/`) e prepara il dorso. I 4 eroi attuali usano già i ritratti; i 4 eroi da sbloccare sono descritti in `lockedHeroes` dentro `heroes.mjs`, in attesa dello sblocco nella Storia.
