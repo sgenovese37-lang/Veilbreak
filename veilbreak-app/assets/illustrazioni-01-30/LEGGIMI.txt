@@ -1,0 +1,7 @@
+VEILBREAK — 30 carte illustrate
+
+Il pacchetto contiene le prime 30 carte in WebP, alla risoluzione originale di 1024 × 1536. Le immagini mostrano le carte complete di cornice, titolo e testo. Per il Sindaco è inclusa la versione aggiornata con Attacco in verde e Difesa in rosso.
+
+Usa mappa-carte.csv per collegare i file agli ID del prototipo. Le colonne fazione_illustrata e fazione_catalogo indicano le differenze di assegnazione. Le note indicano due differenze di testo note. Nelle partite usa gli effetti del catalogo concordati per il motore. Prima di usare una carta illustrata come rappresentazione definitiva, verifica che fazione e testo coincidano con le regole adottate.
+
+Questo ZIP affianca VEILBREAK-prototipo.zip. Le restanti 30 carte del set non rientrano in questo pacchetto.
