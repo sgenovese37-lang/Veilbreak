@@ -238,6 +238,7 @@ function renderDeckEditor(message = "", focus) {
 const sections = ["match", "story-nav", "quests-nav", "library", "decks", "missions"];
 function showSection(name) {
   updateWallet();
+  document.body.classList.toggle("in-match", name === "match" && Boolean(game));
   get("story").hidden = name !== "story-nav";
   get("quests").hidden = name !== "quests-nav";
   catalogue.hidden = name !== "library";
@@ -280,6 +281,7 @@ function startMatch(names, decks, options = {}) {
 
 function reset() {
   clearTimeout(timer);
+  document.body.classList.remove("in-match");
   const fromStory = storyChapter !== null;
   game = null;
   storyChapter = null;
@@ -356,77 +358,188 @@ function chooseCard(index) {
   render();
 }
 
-function sidePanel(side, own, allow) {
+// ---------- Tavolo di gioco ----------
+const keywordOf = c => ({
+  taunt: /Provocazione/.test(c.text ?? ""),
+  rush: /Rapidità/.test(c.text ?? ""),
+});
+
+// Numero di danno o cura che compare sopra un elemento appena aggiornato.
+function floatNumber(node, delta) {
+  if (!delta) return;
+  const n = element("span", delta < 0 ? `${delta}` : `+${delta}`, delta < 0 ? "float damage" : "float heal");
+  n.setAttribute("aria-hidden", "true");
+  node.append(n);
+}
+
+function track(key, value, node) {
+  const old = previous.get(key);
+  previous.set(key, value);
+  if (old === undefined) return true;
+  if (old !== value) {
+    floatNumber(node, value - old);
+    node.classList.add(value < old ? "hit" : "healed");
+  }
+  return false;
+}
+
+function heroPortrait(side, allow) {
   const p = game.players[side];
   const hero = heroFor(p.name);
-  const section = element("section", undefined, "side");
-  section.dataset.theme = hero?.theme ?? "default";
-  const head = element("div", undefined, "hero");
-  const identity = element("div", undefined, "identity");
-  identity.append(element("small", hero ? `${p.name} · ${hero.table}` : p.name));
-  identity.append(element("h2", hero?.name ?? p.name));
-  head.append(identity);
-  const life = `${p.life}/${p.maxLife} PV`;
-  const lifeNode = allow && available(side, null) ? button(life, () => target(side, null), "target") : element("p", life);
-  const oldLife = previous.get(`hero-${side}`);
-  if (oldLife !== undefined && oldLife !== p.life) lifeNode.classList.add(p.life < oldLife ? "hit" : "healed");
-  previous.set(`hero-${side}`, p.life);
-  head.append(lifeNode);
-  head.append(element("p", `Essenza ${p.essence}/${p.capacity} · Mazzo ${p.deck.length} · Mano ${p.hand.length}/${rules.handLimit}`));
-  section.append(head);
-  if (hero) {
-    const power = element("div", undefined, "hero-power");
-    const activate = button(`${hero.power.name} · ${heroPowerCost} Essenza`, () => {
-      if (powerTargets(game).length) selected = { kind: "power" };
-      else if (useHeroPower(game)) sound("power");
-      render();
-    });
-    activate.disabled = !allow || !own || Boolean(selected) || !canUseHeroPower(game);
-    const text = element("p", hero.power.text);
-    power.append(activate, text);
-    section.append(power);
+  const isTarget = allow && available(side, null);
+  const portrait = isTarget ? button(undefined, () => target(side, null), "hero-portrait target") : element("div", undefined, "hero-portrait");
+  portrait.setAttribute("aria-label", `${hero?.name ?? p.name}: ${p.life} punti vita su ${p.maxLife}`);
+  if (hero?.theme) {
+    const img = element("img", undefined, "emblem");
+    img.src = `assets/eroi/${hero.theme}.webp`;
+    img.alt = "";
+    portrait.append(img);
+  } else {
+    portrait.append(element("span", p.name.slice(0, 1), "emblem initial"));
   }
-  const board = element("div", undefined, "cards");
-  for (const unit of p.board) {
-    const isTarget = allow && available(side, unit.uid);
-    const canAttack = allow && own && attackTargets(game, unit.uid).length;
-    const action = isTarget ? () => target(side, unit.uid) : canAttack ? () => {
-      selected = { kind: "attack", uid: unit.uid };
-      render();
-    } : undefined;
-    const current = stats(game, side, unit);
-    const drawn = drawCard(cardOf(unit), {
-      action, target: isTarget, cost: false, attack: current.attack, health: current.health,
-      text: !unit.silenced, remaining: unit.silenced ? "Silenziata" : undefined,
-      pressed: action && own ? selected?.uid === unit.uid : undefined,
-    });
-    const oldHealth = previous.get(unit.uid);
-    if (oldHealth === undefined) drawn.classList.add("summoned");
-    else if (current.health < oldHealth) drawn.classList.add("hit");
-    previous.set(unit.uid, current.health);
-    board.append(unit.card ? withDetails(drawn, cardOf(unit)) : drawn);
+  const life = element("span", p.life, "life");
+  portrait.append(life);
+  track(`hero-${side}`, p.life, portrait);
+  return portrait;
+}
+
+function powerButton(side, own, allow) {
+  const hero = heroFor(game.players[side].name);
+  if (!hero) return element("span");
+  const usable = allow && own && !selected && canUseHeroPower(game);
+  const used = game.players[side].powerUsed;
+  const b = button(undefined, () => {
+    if (powerTargets(game).length) selected = { kind: "power" };
+    else if (useHeroPower(game)) sound("power");
+    render();
+  }, `hero-power${used ? " used" : ""}${usable ? " ready" : ""}`);
+  b.disabled = !usable;
+  b.title = `${hero.power.name}: ${hero.power.text}`;
+  b.setAttribute("aria-label", `${hero.power.name}, ${heroPowerCost} Essenza: ${hero.power.text}`);
+  b.append(element("span", heroPowerCost, "gem"), element("span", "✦", "glyph"));
+  return b;
+}
+
+function crystals(p) {
+  const row = element("div", undefined, "crystals");
+  row.setAttribute("aria-label", `Essenza ${p.essence} su ${p.capacity}`);
+  row.append(element("span", `${p.essence}/${p.capacity}`, "count"));
+  for (let i = 0; i < rules.maxEssence; i++) {
+    row.append(element("i", undefined, i < p.essence ? "full" : i < p.capacity ? "spent" : "locked"));
   }
-  section.append(board);
-  if (p.artifacts.length) section.append(element("p", `Artefatti · ${p.artifacts.map(id => byId.get(id).name).join(", ")}`, "muted"));
-  if (p.secrets.length) section.append(element("p", own ? `Segreti · ${p.secrets.map(id => byId.get(id).name).join(", ")}` : `Segreti · ${p.secrets.length}`, "muted"));
-  if (own && allow) {
-    if (p.peek !== null && p.peek === p.deck[0]) section.append(element("p", `In cima al mazzo: ${byId.get(p.peek).name}.`, "muted"));
-    section.append(element("h3", "Mano"));
-    const hand = element("div", undefined, "cards hand");
-    p.hand.forEach((id, i) => hand.append(withDetails(drawCard(byId.get(id), {
-      action: () => {
-        if (game.phase !== "mulligan") return chooseCard(i);
-        if (replacements.has(i)) replacements.delete(i);
-        else if (replacements.size < rules.mulliganLimit) replacements.add(i);
-        render();
-      },
-      disabled: game.phase === "play" && !canPlay(game, i),
-      pressed: game.phase === "mulligan" ? replacements.has(i) : selected?.index === i,
-      cost: game.phase === "play" ? price(game, side, byId.get(id)) : undefined,
-    }), byId.get(id))));
-    section.append(hand);
+  return row;
+}
+
+function extras(p, own) {
+  const row = element("div", undefined, "extras");
+  for (const id of p.artifacts) {
+    const c = byId.get(id);
+    const icon = button(undefined, () => showCard(c), "relic");
+    icon.setAttribute("aria-label", `Artefatto: ${c.name}`);
+    icon.title = c.name;
+    const art = illustrationFor(id);
+    if (art) { const img = element("img"); img.src = art.thumb; img.alt = ""; icon.append(img); }
+    row.append(icon);
   }
-  return section;
+  p.secrets.forEach(id => {
+    const c = byId.get(id);
+    const icon = own ? button("?", () => showCard(c), "secret") : element("span", "?", "secret");
+    icon.setAttribute("aria-label", own ? `Segreto: ${c.name}` : "Segreto nascosto");
+    row.append(icon);
+  });
+  return row;
+}
+
+function heroStrip(side, own, allow) {
+  const p = game.players[side];
+  const hero = heroFor(p.name);
+  const strip = element("div", undefined, `hero-strip ${own ? "mine" : "enemy"}`);
+  const info = element("div", undefined, "hero-info");
+  info.append(element("strong", hero?.name ?? p.name), element("small", `${p.name} · Mazzo ${p.deck.length} · Mano ${p.hand.length}`));
+  if (!own) {
+    const backs = element("div", undefined, "card-backs");
+    backs.setAttribute("aria-hidden", "true");
+    for (let i = 0; i < p.hand.length; i++) backs.append(element("i"));
+    info.append(backs);
+  }
+  strip.append(extras(p, own), heroPortrait(side, allow), powerButton(side, own, allow), info);
+  if (own) strip.append(crystals(p));
+  else strip.append(element("span", `Essenza ${p.essence}/${p.capacity}`, "enemy-essence"));
+  return strip;
+}
+
+function token(side, unit, own, allow) {
+  const c = cardOf(unit);
+  const current = stats(game, side, unit);
+  const isTarget = allow && available(side, unit.uid);
+  const canAttack = allow && own && !selected && attackTargets(game, unit.uid).length > 0;
+  const details = unit.card ? () => showCard(c) : undefined;
+  const action = isTarget ? () => target(side, unit.uid)
+    : canAttack ? () => { selected = { kind: "attack", uid: unit.uid }; render(); }
+    : details;
+  const kw = unit.silenced ? {} : keywordOf(c);
+  const t = button(undefined, action, ["token", c.rarity ?? "", kw.taunt ? "taunt" : "", canAttack ? "can-attack" : "",
+    isTarget ? "target" : "", unit.silenced ? "silenced" : "", selected?.uid === unit.uid ? "attacking" : ""].filter(Boolean).join(" "));
+  t.setAttribute("aria-label", `${c.name}, Attacco ${current.attack}, Difesa ${current.health}${kw.taunt ? ", Provocazione" : ""}${canAttack ? ", può attaccare" : ""}`);
+  if (details) t.oncontextmenu = event => { event.preventDefault(); details(); };
+  const art = illustrationFor(c.id);
+  const face = element("span", undefined, "face");
+  if (art) { const img = element("img"); img.src = art.thumb; img.alt = ""; img.decoding = "async"; face.append(img); }
+  else face.append(element("span", c.name, "face-name"));
+  t.append(face);
+  if (kw.rush) t.append(element("span", "⚡", "badge-rush"));
+  t.append(element("span", current.attack, "att"), element("span", current.health, `dif${current.health < current.maxHealth ? " wounded" : ""}`));
+  if (track(unit.uid, current.health, t)) t.classList.add("summoned");
+  return t;
+}
+
+function boardRow(side, own, allow) {
+  const row = element("div", undefined, `board ${own ? "mine" : "enemy"}`);
+  row.setAttribute("aria-label", own ? "Il tuo campo" : "Campo avversario");
+  for (const unit of game.players[side].board) row.append(token(side, unit, own, allow));
+  if (!game.players[side].board.length) row.append(element("span", own ? "Il tuo campo è vuoto" : "", "empty"));
+  return row;
+}
+
+function handCard(side, id, i) {
+  const c = byId.get(id);
+  const mull = game.phase === "mulligan";
+  const wrap = element("div", undefined, "hand-slot");
+  const playable = !mull && canPlay(game, i);
+  const card = button(undefined, () => {
+    if (!mull) return chooseCard(i);
+    if (replacements.has(i)) replacements.delete(i);
+    else if (replacements.size < rules.mulliganLimit) replacements.add(i);
+    render();
+  }, `hand-card ${c.rarity}${playable ? " playable" : ""}`);
+  card.disabled = !mull && !playable;
+  card.setAttribute("aria-pressed", mull ? replacements.has(i) : selected?.index === i);
+  card.setAttribute("aria-label", `${c.name}, costo ${mull ? c.cost : price(game, side, c)}`);
+  const art = illustrationFor(id);
+  const cost = mull ? c.cost : price(game, side, c);
+  if (art) {
+    // l'illustrazione è già una carta completa: si aggiunge il costo solo se è cambiato
+    const img = element("img", undefined, "mini-art"); img.src = art.thumb; img.alt = ""; card.append(img);
+    if (cost !== c.cost) card.append(element("span", cost, `gem ${cost < c.cost ? "cheaper" : "pricier"}`));
+  } else {
+    card.append(element("span", cost, "gem"), element("span", c.name, "mini-name"));
+    if (c.type === "Creatura") card.append(element("span", c.attack, "att"), element("span", c.health, "dif"));
+    else card.append(element("span", c.type, "mini-type"));
+  }
+  if (mull && replacements.has(i)) card.append(element("span", "Da cambiare", "swap-mark"));
+  const info = button("i", () => showCard(c), "info");
+  info.setAttribute("aria-label", `Dettagli di ${c.name}`);
+  wrap.append(card, info);
+  wrap.style.setProperty("--tilt", `${(i - (game.players[side].hand.length - 1) / 2) * 1.5}deg`);
+  return wrap;
+}
+
+function handRow(side) {
+  const p = game.players[side];
+  const hand = element("div", undefined, `hand${game.phase === "mulligan" ? " mulligan" : ""}`);
+  hand.setAttribute("aria-label", "La tua mano");
+  p.hand.forEach((id, i) => hand.append(handCard(side, id, i)));
+  return hand;
 }
 
 function render() {
@@ -434,62 +547,112 @@ function render() {
   const cpu = mode === "cpu" && active === 1;
   const finished = game.phase === "finished";
   const mull = game.phase === "mulligan";
-  const controls = element("div", undefined, "actions turn-bar");
+  document.body.classList.add("in-match");
   table.replaceChildren();
   if (handover) {
-    controls.append(element("p", `Passa il dispositivo al giocatore di ${game.players[active].name}.`));
-    controls.append(button("Mostra la mia mano", () => { handover = false; render(); }, "primary"));
-    table.append(controls);
+    const box = element("div", undefined, "handover");
+    box.append(element("p", `Passa il dispositivo al giocatore di ${game.players[active].name}.`));
+    box.append(button("Mostra la mia mano", () => { handover = false; render(); }, "primary"));
+    table.append(box);
     return;
   }
-  let message = mull ? `Puoi sostituire fino a ${rules.mulliganLimit} carte.` : `Turno di ${game.players[active].name}`;
-  if (cpu) message = "Il computer sta giocando.";
-  if (selected) message = "Scegli un bersaglio evidenziato.";
+  let message = mull ? `Scegli fino a ${rules.mulliganLimit} carte da cambiare` : cpu ? "Turno avversario" : `Turno di ${game.players[active].name}`;
+  if (mode === "cpu" && !cpu && !mull) message = "Il tuo turno";
+  if (selected) message = "Scegli un bersaglio";
   if (finished) {
     settleOutcome();
     message = game.winner === "draw" ? "Pareggio" : mode === "cpu" ? (game.winner === 0 ? "Vittoria!" : "Sconfitta") : `Vince ${game.players[game.winner].name}!`;
   }
-  const status = element("strong", message);
-  status.setAttribute("role", "status");
-  controls.append(status);
-  if (finished) {
-    if (outcome?.lines.length) controls.append(element("span", outcome.lines.join(" · "), "reward-line"));
-    controls.append(button(storyChapter !== null ? "Torna alla Storia" : "Nuova partita", reset, "primary"));
-  }
-  else if (!cpu && selected) controls.append(button("Annulla", () => { selected = null; render(); }));
-  else if (!cpu && mull) controls.append(button("Conferma mano", () => { mulligan(game, [...replacements]); afterTurn(); }, "primary"));
-  else if (!cpu) controls.append(button("Fine turno", () => { endTurn(game); afterTurn(); }, "primary"));
   const view = mode === "cpu" ? 0 : active;
-  if (finished && outcome?.story) {
-    const box = element("div", undefined, "recap story-outro");
-    box.append(element("strong", chapters[storyChapter]?.title ?? "Storia"), element("p", outcome.story));
-    table.append(box);
-  }
+  const allow = !cpu && !finished;
+  const arena = element("div", undefined, "arena");
+  const top = element("div", undefined, "topbar");
+  top.append(button("☰ Menu", () => {
+    if (finished || confirm("Abbandonare la partita?")) reset();
+  }, "small menu-exit"));
+  const status = element("strong", message, `banner${selected ? " targeting" : ""}${cpu ? " waiting" : ""}`);
+  status.setAttribute("role", "status");
+  top.append(status);
+  const logButton = button("Registro", () => showLog(), "small");
+  top.append(logButton);
+  arena.append(top);
   if (storyChapter !== null && !finished && game.round <= 1) {
     const box = element("div", undefined, "recap");
     box.append(element("strong", `Capitolo ${storyChapter + 1} · ${chapters[storyChapter].title}`), element("p", chapters[storyChapter].intro));
-    table.append(box);
+    arena.append(box);
   }
+  const enemyTheme = heroFor(game.players[1 - view].name)?.theme ?? "default";
+  const myTheme = heroFor(game.players[view].name)?.theme ?? "default";
+  const enemyZone = element("section", undefined, "zone enemy");
+  enemyZone.dataset.theme = enemyTheme;
+  const myZone = element("section", undefined, "zone mine");
+  myZone.dataset.theme = myTheme;
+  if (!mull) {
+    enemyZone.append(heroStrip(1 - view, false, allow), boardRow(1 - view, false, allow));
+    myZone.append(boardRow(view, true, allow), heroStrip(view, true, allow));
+  } else {
+    myZone.append(heroStrip(view, true, false));
+  }
+  const veil = element("div", undefined, "veil-line");
+  if (mull) enemyZone.hidden = true;
   const recap = previousTurn();
-  if (!mull && recap.length) {
-    const box = element("div", undefined, "recap");
-    box.append(element("strong", "Turno precedente"));
+  if (!mull && recap.length && !finished) {
+    const last = element("div", undefined, "recap last-turn");
+    last.append(element("strong", "Turno precedente"));
     const list = element("ul");
     for (const entry of recap) list.append(element("li", entry));
-    box.append(list);
-    table.append(box);
+    last.append(list);
+    veil.append(last);
   }
-  if (!mull) table.append(sidePanel(1 - view, false, !cpu && !finished));
-  table.append(sidePanel(view, true, !cpu && !finished));
-  if (!mull && game.log.length) {
-    const log = element("details");
-    log.append(element("summary", "Registro della partita"));
-    const list = element("ol", undefined, "log");
-    for (const entry of game.log.slice(-12)) list.append(element("li", entry));
-    log.append(list);
-    table.append(log);
+  // Azione principale a destra del tavolo
+  const side = element("div", undefined, "turn-bar");
+  if (finished) {
+    const end = element("div", undefined, "result");
+    end.append(element("strong", message, "result-title"));
+    if (outcome?.lines.length) end.append(element("span", outcome.lines.join(" · "), "reward-line"));
+    if (outcome?.story) {
+      const box = element("div", undefined, "recap story-outro");
+      box.append(element("strong", chapters[storyChapter]?.title ?? "Storia"), element("p", outcome.story));
+      end.append(box);
+    }
+    end.append(button(storyChapter !== null ? "Torna alla Storia" : "Nuova partita", reset, "primary"));
+    arena.append(end);
+  } else if (!cpu && selected) side.append(button("Annulla", () => { selected = null; render(); }, "end-turn cancel"));
+  else if (!cpu && mull) side.append(button("Conferma mano", () => { mulligan(game, [...replacements]); afterTurn(); }, "end-turn primary"));
+  else if (!cpu) {
+    const anyMove = game.players[active].hand.some((_, i) => canPlay(game, i)) || canUseHeroPower(game)
+      || game.players[active].board.some(u => attackTargets(game, u.uid).length);
+    side.append(button("Fine turno", () => { endTurn(game); afterTurn(); }, `end-turn primary${anyMove ? "" : " done"}`));
+  } else side.append(button("Turno avversario", () => {}, "end-turn waiting"));
+  side.querySelector("button")?.toggleAttribute("disabled", cpu);
+  if (game.players[view].peek !== null && game.players[view].peek === game.players[view].deck[0] && !mull) {
+    myZone.append(element("p", `In cima al mazzo: ${byId.get(game.players[view].peek).name}`, "peek"));
   }
-  table.append(controls);
+  arena.append(enemyZone, veil, myZone);
+  arena.classList.toggle("mulligan", mull);
+  if (mull) {
+    if (!cpu) arena.append(handRow(view));
+    side.classList.add("inline");
+    arena.append(side);
+  } else {
+    if (!finished) veil.append(side);
+    if (allow) arena.append(handRow(view));
+  }
+  table.append(arena);
+}
+
+function showLog() {
+  const body = element("div", undefined, "viewer-rules");
+  body.append(element("h2", "Registro della partita"));
+  const list = element("ol", undefined, "log");
+  for (const entry of game.log.slice(-30)) list.append(element("li", entry));
+  const close = button("Chiudi", () => viewer.close(), "primary");
+  body.append(list, close);
+  const wrap = element("div", undefined, "viewer-body single");
+  wrap.append(body);
+  viewer.replaceChildren(wrap);
+  viewer.showModal();
+  close.focus();
 }
 
 function previousTurn() {
@@ -626,7 +789,8 @@ function drawShop() {
   shop.replaceChildren(...children);
 }
 
-if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+// Nell'app Android i file sono già sul telefono: il service worker serve solo nel browser.
+if (!window.Capacitor && "serviceWorker" in navigator && location.protocol.startsWith("http")) {
   navigator.serviceWorker.register("./sw.js").catch(() => {});
 }
 showSection("match");

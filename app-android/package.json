@@ -1,0 +1,17 @@
+{
+  "name": "veilbreak-android",
+  "private": true,
+  "version": "0.1.0",
+  "description": "VEILBREAK come app Android (Capacitor). Il gioco vero è in ../veilbreak-app.",
+  "scripts": {
+    "prepara": "node prepara-www.mjs",
+    "sync": "node prepara-www.mjs && cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "6.2.1",
+    "@capacitor/core": "6.2.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "6.2.1"
+  }
+}

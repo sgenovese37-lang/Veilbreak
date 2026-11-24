@@ -1,0 +1,74 @@
+name: APK Android
+
+# Compila VEILBREAK come app Android (debug, installabile a mano) e la pubblica
+# nella release «apk-ultima», da cui si scarica direttamente sul telefono.
+on:
+  push:
+    paths:
+      - "veilbreak-app/**"
+      - "app-android/**"
+      - ".github/workflows/apk.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: app-android
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app-android/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: Test del motore di gioco
+        working-directory: veilbreak-app
+        run: node --test tests/*.test.mjs
+
+      - name: Prepara i file del gioco
+        run: |
+          npm ci
+          node prepara-www.mjs
+          npx cap sync android
+
+      - name: Compila l'APK
+        working-directory: app-android/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace
+          cp app/build/outputs/apk/debug/app-debug.apk "$GITHUB_WORKSPACE/VEILBREAK.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: VEILBREAK-apk
+          path: VEILBREAK.apk
+          if-no-files-found: error
+
+      - name: Pubblica nella release apk-ultima
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete apk-ultima --yes --cleanup-tag || true
+          gh release create apk-ultima VEILBREAK.apk \
+            --target "$GITHUB_SHA" --prerelease \
+            --title "VEILBREAK · APK di prova" \
+            --notes "Compilato da ${GITHUB_REF_NAME} (${GITHUB_SHA::7}). Scarica VEILBREAK.apk sul telefono Android e aprilo per installarlo (consenti l'installazione da questa fonte quando richiesto)."

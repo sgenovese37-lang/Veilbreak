@@ -24,9 +24,9 @@ const shots = (process.env.SHOTS ?? require('os').tmpdir()) + '/';
   await page.click('text=Inizia partita');
   await page.screenshot({ path: shots + '02-mulligan.png', fullPage: true });
   // sostituisci due carte
-  const hand = page.locator('#table .side .cards').last().locator('button.card');
+  const hand = page.locator('.hand .hand-card');
   await hand.nth(0).click(); await hand.nth(1).click();
-  const pressed = await page.locator('#table button.card[aria-pressed=true]').count();
+  const pressed = await page.locator('.hand .hand-card[aria-pressed=true]').count();
   console.log('mulligan selezionate:', pressed);
   await page.click('text=Conferma mano');
   await page.waitForTimeout(900);
@@ -35,12 +35,12 @@ const shots = (process.env.SHOTS ?? require('os').tmpdir()) + '/';
   for (; turns < 40; turns++) {
     await page.waitForFunction(() => {
       const s = document.querySelector('#table [role=status]')?.textContent ?? '';
-      return !s.includes('computer');
+      return !s.includes('avversario');
     }, null, { timeout: 10000 });
     if (/^(Vince|Vittoria|Sconfitta|Pareggio)/.test(await status())) break;
     // gioca le carte disponibili
     for (let k = 0; k < 10; k++) {
-      const playable = page.locator('#table .side').last().locator('.cards').last().locator('button.card:not([disabled])');
+      const playable = page.locator('.hand .hand-card.playable');
       if (!(await playable.count())) break;
       await playable.first().click(); plays++;
       if ((await status()).includes('bersaglio')) {
@@ -49,7 +49,7 @@ const shots = (process.env.SHOTS ?? require('os').tmpdir()) + '/';
       }
     }
     // potere eroe
-    const power = page.locator('#table .side').last().locator('.hero-power button:not([disabled])');
+    const power = page.locator('.hero-strip.mine .hero-power:not([disabled])');
     if (await power.count()) {
       await power.click(); powers++;
       if ((await status()).includes('bersaglio')) {
@@ -59,12 +59,12 @@ const shots = (process.env.SHOTS ?? require('os').tmpdir()) + '/';
     }
     // attacchi
     for (let k = 0; k < 8; k++) {
-      const attacker = page.locator('#table .side').last().locator('.cards').first().locator('button.card:not([disabled])');
+      const attacker = page.locator('.board.mine .token.can-attack');
       if (!(await attacker.count()) || /^(Vince|Vittoria|Sconfitta)/.test(await status())) break;
       await attacker.first().click();
-      const heroTarget = page.locator('#table .hero button.target');
+      const heroTarget = page.locator('.hero-portrait.target');
       if (await heroTarget.count()) await heroTarget.click();
-      else if (await page.locator('#table .card.target').count()) await page.locator('#table .card.target').first().click();
+      else if (await page.locator('.token.target').count()) await page.locator('.token.target').first().click();
       else { await page.click('text=Annulla'); break; }
       attacks++;
     }
@@ -81,7 +81,9 @@ const shots = (process.env.SHOTS ?? require('os').tmpdir()) + '/';
   await page.locator('#table details summary').click().catch(() => {});
   await page.screenshot({ path: shots + '05-fine-partita.png', fullPage: true });
 
-  // Catalogo
+  // Uscita dalla partita e catalogo
+  page.once('dialog', d => d.accept());
+  await page.locator('.result button, .menu-exit').first().click();
   await page.click('#library');
   await page.waitForTimeout(500);
   const imgs = await page.locator('#cards img').count();

@@ -85,3 +85,20 @@ A Difficile il computer prova ogni mossa possibile su una copia della partita e 
 `manifest.webmanifest` e `sw.js` rendono il gioco installabile dal browser del telefono («Aggiungi a schermata Home»). Le miniature e i file del gioco vengono salvati per l’uso offline; le illustrazioni grandi restano disponibili dopo la prima apertura. Quando pubblichi una nuova versione, cambia `VERSION` in `sw.js`. Le icone si rigenerano con `python3 -I tools/build_icons.py .`.
 
 Animazioni (evocazione, danni, cure, apertura delle buste) e suoni sintetizzati si possono disattivare: i suoni dal pulsante in alto, le animazioni con l’impostazione di sistema «Riduci movimento».
+
+## Tavolo di gioco
+
+Durante la partita il tavolo occupa tutto lo schermo: eroe avversario e sue creature in alto, le tue in basso, divise dalla crepa del Velo. Ogni eroe ha il medaglione della sua fazione con i punti vita e, accanto, il potere da 1 Essenza. Sotto il tuo eroe ci sono i cristalli di Essenza; in fondo la mano a ventaglio, dove ogni carta mostra la sua illustrazione (il pulsante «i» apre i dettagli). Le creature in campo sono gettoni con Attacco e Difesa: un contorno verde indica chi può attaccare, quello rosso i bersagli possibili, il bordo spesso la Provocazione. Danni e cure compaiono come numeri animati. Il pulsante «Fine turno» diventa verde quando non restano mosse. «☰ Menu» abbandona la partita, «Registro» mostra le ultime mosse; tenendo premuta una creatura se ne vedono i dettagli. I ritratti degli eroi si rigenerano con `python3 -I tools/build_heroes.py .`.
+
+## App Android (APK)
+
+La cartella `app-android/` impacchetta il gioco come app Android con Capacitor. A ogni invio di modifiche GitHub Actions (`.github/workflows/apk.yml`) esegue i test, compila l'APK e lo pubblica nella release **apk-ultima** del repository: dal telefono apri la pagina delle release, scarica `VEILBREAK.apk` e installalo, consentendo l'installazione da quella fonte quando Android lo chiede. È una versione di prova (firmata con la chiave di debug), non adatta al Play Store.
+
+Per compilarla in locale servono Node, Java 17 e l’Android SDK:
+
+    cd app-android
+    npm ci
+    npm run sync
+    cd android && ./gradlew assembleDebug
+
+L’icona e la schermata di avvio Android si rigenerano con `python3 -I icone-android.py .` dentro `app-android/`.
