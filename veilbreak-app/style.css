@@ -445,3 +445,11 @@ body.in-match #table { display: block; }
 .hand-slot { margin: 0 -.25rem; }
 .hand-slot:hover, .hand-slot:focus-within { transform: rotate(var(--tilt)); z-index: auto; }
 .hand-slot:has([aria-pressed="true"]) { z-index: 3; }
+/* mulligan: carte grandi, tre per riga, raccolte al centro dello spazio libero */
+.arena.mulligan .hand { align-content: center; justify-content: center; gap: 1.1rem 4%; padding: 1rem .4rem; }
+.hand.mulligan .hand-slot { flex: 0 0 29%; max-width: 11rem; margin: 0; }
+.hand.mulligan .hand-slot:first-child, .hand.mulligan .hand-slot:last-child { margin: 0; }
+.hand.mulligan .hand-card { width: 100%; height: auto; aspect-ratio: 2 / 3; }
+.hand.mulligan .hand-card[aria-pressed="true"] { transform: none; box-shadow: 0 0 0 3px #ff6b5e, 0 0 1rem #ff6b5e; }
+.hand.mulligan .hand-card[aria-pressed="true"] .mini-art { filter: brightness(.55); }
+.swap-mark { inset: 42% 0 auto; font-size: .8rem; }
