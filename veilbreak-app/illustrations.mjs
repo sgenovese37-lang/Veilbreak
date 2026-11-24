@@ -3,13 +3,13 @@
 export const illustrations = {
   "1": {
     "card": "Il Sindaco di Hollow Street",
-    "src": "assets/illustrazioni-01-30/illustrazioni/01-il-sindaco-di-hollow-street.webp",
+    "src": "assets/illustrazioni-corrette/illustrazioni/01-il-sindaco-di-hollow-street.webp",
     "thumb": "assets/miniature/01-il-sindaco-di-hollow-street.webp",
     "pack": "illustrazioni-01-30",
     "illustratedFaction": "Corte di Hollow",
-    "differences": [
-      "Il testo illustrato dà Rapidità al Sindaco. Il catalogo la dà invece alla creatura presa in controllo."
-    ]
+    "differences": [],
+    "original": "assets/illustrazioni-01-30/illustrazioni/01-il-sindaco-di-hollow-street.webp",
+    "correction": "Testo delle regole corretto: Rapidità passa dal Sindaco alla creatura presa in controllo, come nel catalogo."
   },
   "2": {
     "card": "Il Locatore",
@@ -17,17 +17,19 @@ export const illustrations = {
     "thumb": "assets/miniature/02-il-locatore.webp",
     "pack": "illustrazioni-01-30",
     "illustratedFaction": "Corte di Hollow",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "3": {
     "card": "Chirurgo del Vicolo",
-    "src": "assets/illustrazioni-01-30/illustrazioni/03-chirurgo-del-vicolo.webp",
+    "src": "assets/illustrazioni-corrette/illustrazioni/03-chirurgo-del-vicolo.webp",
     "thumb": "assets/miniature/03-chirurgo-del-vicolo.webp",
     "pack": "illustrazioni-01-30",
     "illustratedFaction": "Sottocittà",
-    "differences": [
-      "L'immagine indica la fazione Sottocittà; il catalogo la assegna a Corte di Hollow. In partita vale il catalogo."
-    ]
+    "differences": [],
+    "original": "assets/illustrazioni-01-30/illustrazioni/03-chirurgo-del-vicolo.webp",
+    "correction": "Simboli e riga di fazione corretti: «Sottocitta • Creatura rara» → «Corte di Hollow • Creatura rara»."
   },
   "4": {
     "card": "Guardia del Turno di Notte",
@@ -35,7 +37,9 @@ export const illustrations = {
     "thumb": "assets/miniature/04-guardia-del-turno-di-notte.webp",
     "pack": "illustrazioni-01-30",
     "illustratedFaction": "Corte di Hollow",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "5": {
     "card": "Impiegato del Contratto",
@@ -43,57 +47,59 @@ export const illustrations = {
     "thumb": "assets/miniature/05-impiegato-del-contratto.webp",
     "pack": "illustrazioni-01-30",
     "illustratedFaction": "Corte di Hollow",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "6": {
     "card": "Specchio Incrinato",
-    "src": "assets/illustrazioni-01-30/illustrazioni/06-specchio-incrinato.webp",
+    "src": "assets/illustrazioni-corrette/illustrazioni/06-specchio-incrinato.webp",
     "thumb": "assets/miniature/06-specchio-incrinato.webp",
     "pack": "illustrazioni-01-30",
     "illustratedFaction": "Senza Santi",
-    "differences": [
-      "L'immagine indica la fazione Senza Santi; il catalogo la assegna a Corte di Hollow. In partita vale il catalogo."
-    ]
+    "differences": [],
+    "original": "assets/illustrazioni-01-30/illustrazioni/06-specchio-incrinato.webp",
+    "correction": "Simboli e riga di fazione corretti: «Senza Santi • Artefatto raro» → «Corte di Hollow • Artefatto raro»."
   },
   "7": {
     "card": "Telecamera di Sicurezza",
-    "src": "assets/illustrazioni-01-30/illustrazioni/07-telecamera-di-sicurezza.webp",
+    "src": "assets/illustrazioni-corrette/illustrazioni/07-telecamera-di-sicurezza.webp",
     "thumb": "assets/miniature/07-telecamera-di-sicurezza.webp",
     "pack": "illustrazioni-01-30",
     "illustratedFaction": "Patto Neon",
-    "differences": [
-      "L'immagine indica la fazione Patto Neon; il catalogo la assegna a Corte di Hollow. In partita vale il catalogo."
-    ]
+    "differences": [],
+    "original": "assets/illustrazioni-01-30/illustrazioni/07-telecamera-di-sicurezza.webp",
+    "correction": "Simboli e riga di fazione corretti: «Patto Neon • Artefatto non comune» → «Corte di Hollow • Artefatto non comune»."
   },
   "8": {
     "card": "Passerotto",
-    "src": "assets/illustrazioni-01-30/illustrazioni/08-passerotto.webp",
+    "src": "assets/illustrazioni-corrette/illustrazioni/08-passerotto.webp",
     "thumb": "assets/miniature/08-passerotto.webp",
     "pack": "illustrazioni-01-30",
     "illustratedFaction": "Sottocittà",
-    "differences": [
-      "L'immagine indica la fazione Sottocittà; il catalogo la assegna a Corte di Hollow. In partita vale il catalogo."
-    ]
+    "differences": [],
+    "original": "assets/illustrazioni-01-30/illustrazioni/08-passerotto.webp",
+    "correction": "Simboli e riga di fazione corretti: «Sottocitta • Creatura comune» → «Corte di Hollow • Creatura comune»."
   },
   "9": {
     "card": "Luce Tremolante",
-    "src": "assets/illustrazioni-01-30/illustrazioni/09-luce-tremolante.webp",
+    "src": "assets/illustrazioni-corrette/illustrazioni/09-luce-tremolante.webp",
     "thumb": "assets/miniature/09-luce-tremolante.webp",
     "pack": "illustrazioni-01-30",
     "illustratedFaction": "Patto Neon",
-    "differences": [
-      "L'immagine indica la fazione Patto Neon; il catalogo la assegna a Corte di Hollow. In partita vale il catalogo."
-    ]
+    "differences": [],
+    "original": "assets/illustrazioni-01-30/illustrazioni/09-luce-tremolante.webp",
+    "correction": "Simboli e riga di fazione corretti: «Patto Neon • Incantesimo comune» → «Corte di Hollow • Incantesimo comune»."
   },
   "10": {
     "card": "Contratto Minore",
-    "src": "assets/illustrazioni-01-30/illustrazioni/10-contratto-minore.webp",
+    "src": "assets/illustrazioni-corrette/illustrazioni/10-contratto-minore.webp",
     "thumb": "assets/miniature/10-contratto-minore.webp",
     "pack": "illustrazioni-01-30",
     "illustratedFaction": "Senza Santi",
-    "differences": [
-      "L'immagine indica la fazione Senza Santi; il catalogo la assegna a Corte di Hollow. In partita vale il catalogo."
-    ]
+    "differences": [],
+    "original": "assets/illustrazioni-01-30/illustrazioni/10-contratto-minore.webp",
+    "correction": "Simboli e riga di fazione corretti: «Senza Santi • Creatura comune» → «Corte di Hollow • Creatura comune»."
   },
   "11": {
     "card": "Assessore Corrotto",
@@ -101,7 +107,9 @@ export const illustrations = {
     "thumb": "assets/miniature/11-assessore-corrotto.webp",
     "pack": "illustrazioni-01-30",
     "illustratedFaction": "Corte di Hollow",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "12": {
     "card": "Ordine del Sindaco",
@@ -109,7 +117,9 @@ export const illustrations = {
     "thumb": "assets/miniature/12-ordine-del-sindaco.webp",
     "pack": "illustrazioni-01-30",
     "illustratedFaction": "Corte di Hollow",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "13": {
     "card": "Segretaria Notturna",
@@ -117,7 +127,9 @@ export const illustrations = {
     "thumb": "assets/miniature/13-segretaria-notturna.webp",
     "pack": "illustrazioni-01-30",
     "illustratedFaction": "Corte di Hollow",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "14": {
     "card": "Archivio Segreto",
@@ -125,27 +137,29 @@ export const illustrations = {
     "thumb": "assets/miniature/14-archivio-segreto.webp",
     "pack": "illustrazioni-01-30",
     "illustratedFaction": "Corte di Hollow",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "15": {
     "card": "Ultima Legge",
-    "src": "assets/illustrazioni-01-30/illustrazioni/15-ultima-legge.webp",
+    "src": "assets/illustrazioni-corrette/illustrazioni/15-ultima-legge.webp",
     "thumb": "assets/miniature/15-ultima-legge.webp",
     "pack": "illustrazioni-01-30",
     "illustratedFaction": "Corte di Hollow",
-    "differences": [
-      "L’immagine omette la durata del controllo, che nel catalogo termina a fine turno."
-    ]
+    "differences": [],
+    "original": "assets/illustrazioni-01-30/illustrazioni/15-ultima-legge.webp",
+    "correction": "Testo delle regole corretto: aggiunta la durata «fino alla fine del turno», come nel catalogo."
   },
   "16": {
     "card": "L’Ultimo Treno per Nessundove",
-    "src": "assets/illustrazioni-01-30/illustrazioni/16-lultimo-treno-per-nessundove.webp",
+    "src": "assets/illustrazioni-corrette/illustrazioni/16-lultimo-treno-per-nessundove.webp",
     "thumb": "assets/miniature/16-lultimo-treno-per-nessundove.webp",
     "pack": "illustrazioni-01-30",
     "illustratedFaction": "Sottocittà",
-    "differences": [
-      "L'immagine indica la fazione Sottocittà; il catalogo la assegna a Patto Neon. In partita vale il catalogo."
-    ]
+    "differences": [],
+    "original": "assets/illustrazioni-01-30/illustrazioni/16-lultimo-treno-per-nessundove.webp",
+    "correction": "Simboli e riga di fazione corretti: «Sottocitta • Incantesimo leggendario» → «Patto Neon • Incantesimo leggendario»."
   },
   "17": {
     "card": "Patto di Sangue Neon",
@@ -153,7 +167,9 @@ export const illustrations = {
     "thumb": "assets/miniature/17-patto-di-sangue-neon.webp",
     "pack": "illustrazioni-01-30",
     "illustratedFaction": "Patto Neon",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "18": {
     "card": "Demone dei Dati",
@@ -161,7 +177,9 @@ export const illustrations = {
     "thumb": "assets/miniature/18-demone-dei-dati.webp",
     "pack": "illustrazioni-01-30",
     "illustratedFaction": "Patto Neon",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "19": {
     "card": "Protocollo Blackout",
@@ -171,17 +189,19 @@ export const illustrations = {
     "illustratedFaction": "Patto Neon",
     "differences": [
       "Differenza solo grafica: «−3 Attacco» con la maiuscola; il catalogo scrive «-3 attacco». Nessun effetto sulle regole."
-    ]
+    ],
+    "original": null,
+    "correction": null
   },
   "20": {
     "card": "Cecchino sul Tetto",
-    "src": "assets/illustrazioni-01-30/illustrazioni/20-cecchino-sul-tetto.webp",
+    "src": "assets/illustrazioni-corrette/illustrazioni/20-cecchino-sul-tetto.webp",
     "thumb": "assets/miniature/20-cecchino-sul-tetto.webp",
     "pack": "illustrazioni-01-30",
     "illustratedFaction": "Senza Santi",
-    "differences": [
-      "L'immagine indica la fazione Senza Santi; il catalogo la assegna a Patto Neon. In partita vale il catalogo."
-    ]
+    "differences": [],
+    "original": "assets/illustrazioni-01-30/illustrazioni/20-cecchino-sul-tetto.webp",
+    "correction": "Simboli e riga di fazione corretti: «Senza Santi • Creatura rara» → «Patto Neon • Creatura rara»."
   },
   "21": {
     "card": "Glitch di Evocazione",
@@ -189,7 +209,9 @@ export const illustrations = {
     "thumb": "assets/miniature/21-glitch-di-evocazione.webp",
     "pack": "illustrazioni-01-30",
     "illustratedFaction": "Patto Neon",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "22": {
     "card": "Telefono Vincolante",
@@ -199,7 +221,9 @@ export const illustrations = {
     "illustratedFaction": "Patto Neon",
     "differences": [
       "Differenza solo grafica: virgola dopo «Una volta per turno». Nessun effetto sulle regole."
-    ]
+    ],
+    "original": null,
+    "correction": null
   },
   "23": {
     "card": "Luce Rossa",
@@ -207,27 +231,29 @@ export const illustrations = {
     "thumb": "assets/miniature/23-luce-rossa.webp",
     "pack": "illustrazioni-01-30",
     "illustratedFaction": "Patto Neon",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "24": {
     "card": "Spettro dell’Ufficio",
-    "src": "assets/illustrazioni-01-30/illustrazioni/24-spettro-dellufficio.webp",
+    "src": "assets/illustrazioni-corrette/illustrazioni/24-spettro-dellufficio.webp",
     "thumb": "assets/miniature/24-spettro-dellufficio.webp",
     "pack": "illustrazioni-01-30",
     "illustratedFaction": "Corte di Hollow",
-    "differences": [
-      "L'immagine indica la fazione Corte di Hollow; il catalogo la assegna a Patto Neon. In partita vale il catalogo."
-    ]
+    "differences": [],
+    "original": "assets/illustrazioni-01-30/illustrazioni/24-spettro-dellufficio.webp",
+    "correction": "Simboli e riga di fazione corretti: «Corte di Hollow • Creatura non comune» → «Patto Neon • Creatura non comune»."
   },
   "25": {
     "card": "ATM di Sangue",
-    "src": "assets/illustrazioni-01-30/illustrazioni/25-atm-di-sangue.webp",
+    "src": "assets/illustrazioni-corrette/illustrazioni/25-atm-di-sangue.webp",
     "thumb": "assets/miniature/25-atm-di-sangue.webp",
     "pack": "illustrazioni-01-30",
     "illustratedFaction": "Senza Santi",
-    "differences": [
-      "L'immagine indica la fazione Senza Santi; il catalogo la assegna a Patto Neon. In partita vale il catalogo."
-    ]
+    "differences": [],
+    "original": "assets/illustrazioni-01-30/illustrazioni/25-atm-di-sangue.webp",
+    "correction": "Simboli e riga di fazione corretti: «Senza Santi • Artefatto non comune» → «Patto Neon • Artefatto non comune»."
   },
   "26": {
     "card": "Commutatore d’Ombra",
@@ -235,17 +261,19 @@ export const illustrations = {
     "thumb": "assets/miniature/26-commutatore-dombra.webp",
     "pack": "illustrazioni-01-30",
     "illustratedFaction": "Patto Neon",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "27": {
     "card": "Chiamata Disperata",
-    "src": "assets/illustrazioni-01-30/illustrazioni/27-chiamata-disperata.webp",
+    "src": "assets/illustrazioni-corrette/illustrazioni/27-chiamata-disperata.webp",
     "thumb": "assets/miniature/27-chiamata-disperata.webp",
     "pack": "illustrazioni-01-30",
     "illustratedFaction": "Sottocittà",
-    "differences": [
-      "L'immagine indica la fazione Sottocittà; il catalogo la assegna a Patto Neon. In partita vale il catalogo."
-    ]
+    "differences": [],
+    "original": "assets/illustrazioni-01-30/illustrazioni/27-chiamata-disperata.webp",
+    "correction": "Simboli e riga di fazione corretti: «Sottocitta • Incantesimo non comune» → «Patto Neon • Incantesimo non comune»."
   },
   "28": {
     "card": "Neon Succube",
@@ -253,7 +281,9 @@ export const illustrations = {
     "thumb": "assets/miniature/28-neon-succube.webp",
     "pack": "illustrazioni-01-30",
     "illustratedFaction": "Patto Neon",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "29": {
     "card": "Schermo Rotto",
@@ -261,7 +291,9 @@ export const illustrations = {
     "thumb": "assets/miniature/29-schermo-rotto.webp",
     "pack": "illustrazioni-01-30",
     "illustratedFaction": "Patto Neon",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "30": {
     "card": "Impulso Elettrico",
@@ -269,7 +301,9 @@ export const illustrations = {
     "thumb": "assets/miniature/30-impulso-elettrico.webp",
     "pack": "illustrazioni-01-30",
     "illustratedFaction": "Patto Neon",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "31": {
     "card": "Elena Voss, il Contratto",
@@ -277,7 +311,9 @@ export const illustrations = {
     "thumb": "assets/miniature/31-elena-voss-il-contratto.webp",
     "pack": "illustrazioni-31-60",
     "illustratedFaction": "Senza Santi",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "32": {
     "card": "Santo della Metropolitana",
@@ -285,7 +321,9 @@ export const illustrations = {
     "thumb": "assets/miniature/32-santo-della-metropolitana.webp",
     "pack": "illustrazioni-31-60",
     "illustratedFaction": "Senza Santi",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "33": {
     "card": "Rito d’Emergenza",
@@ -293,7 +331,9 @@ export const illustrations = {
     "thumb": "assets/miniature/33-rito-demergenza.webp",
     "pack": "illustrazioni-31-60",
     "illustratedFaction": "Senza Santi",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "34": {
     "card": "Infermiera Stanca",
@@ -301,7 +341,9 @@ export const illustrations = {
     "thumb": "assets/miniature/34-infermiera-stanca.webp",
     "pack": "illustrazioni-31-60",
     "illustratedFaction": "Senza Santi",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "35": {
     "card": "Pulsante di Panico",
@@ -309,7 +351,9 @@ export const illustrations = {
     "thumb": "assets/miniature/35-pulsante-di-panico.webp",
     "pack": "illustrazioni-31-60",
     "illustratedFaction": "Senza Santi",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "36": {
     "card": "Clinica Abbandonata",
@@ -317,7 +361,9 @@ export const illustrations = {
     "thumb": "assets/miniature/36-clinica-abbandonata.webp",
     "pack": "illustrazioni-31-60",
     "illustratedFaction": "Senza Santi",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "37": {
     "card": "Prete Spezzato",
@@ -325,7 +371,9 @@ export const illustrations = {
     "thumb": "assets/miniature/37-prete-spezzato.webp",
     "pack": "illustrazioni-31-60",
     "illustratedFaction": "Senza Santi",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "38": {
     "card": "Maledizione della Città",
@@ -333,7 +381,9 @@ export const illustrations = {
     "thumb": "assets/miniature/38-maledizione-della-citta.webp",
     "pack": "illustrazioni-31-60",
     "illustratedFaction": "Senza Santi",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "39": {
     "card": "Testimone Finale",
@@ -341,7 +391,9 @@ export const illustrations = {
     "thumb": "assets/miniature/39-testimone-finale.webp",
     "pack": "illustrazioni-31-60",
     "illustratedFaction": "Senza Santi",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "40": {
     "card": "Offerta di Sangue",
@@ -349,7 +401,9 @@ export const illustrations = {
     "thumb": "assets/miniature/40-offerta-di-sangue.webp",
     "pack": "illustrazioni-31-60",
     "illustratedFaction": "Senza Santi",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "41": {
     "card": "Guaritrice del Vicolo",
@@ -357,7 +411,9 @@ export const illustrations = {
     "thumb": "assets/miniature/41-guaritrice-del-vicolo.webp",
     "pack": "illustrazioni-31-60",
     "illustratedFaction": "Senza Santi",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "42": {
     "card": "Candela Spenta",
@@ -365,7 +421,9 @@ export const illustrations = {
     "thumb": "assets/miniature/42-candela-spenta.webp",
     "pack": "illustrazioni-31-60",
     "illustratedFaction": "Senza Santi",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "43": {
     "card": "Preghiera Distorta",
@@ -373,7 +431,9 @@ export const illustrations = {
     "thumb": "assets/miniature/43-preghiera-distorta.webp",
     "pack": "illustrazioni-31-60",
     "illustratedFaction": "Senza Santi",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "44": {
     "card": "Reliquia Insanguinata",
@@ -381,7 +441,9 @@ export const illustrations = {
     "thumb": "assets/miniature/44-reliquia-insanguinata.webp",
     "pack": "illustrazioni-31-60",
     "illustratedFaction": "Senza Santi",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "45": {
     "card": "L’Ultimo Santo",
@@ -389,7 +451,9 @@ export const illustrations = {
     "thumb": "assets/miniature/45-lultimo-santo.webp",
     "pack": "illustrazioni-31-60",
     "illustratedFaction": "Senza Santi",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "46": {
     "card": "Creatura della Sottocittà",
@@ -397,7 +461,9 @@ export const illustrations = {
     "thumb": "assets/miniature/46-creatura-della-sottocitta.webp",
     "pack": "illustrazioni-31-60",
     "illustratedFaction": "Sottocittà",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "47": {
     "card": "Predatore del Vicolo",
@@ -405,7 +471,9 @@ export const illustrations = {
     "thumb": "assets/miniature/47-predatore-del-vicolo.webp",
     "pack": "illustrazioni-31-60",
     "illustratedFaction": "Sottocittà",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "48": {
     "card": "Gatto Spirituale del Vicolo",
@@ -413,7 +481,9 @@ export const illustrations = {
     "thumb": "assets/miniature/48-gatto-spirituale-del-vicolo.webp",
     "pack": "illustrazioni-31-60",
     "illustratedFaction": "Sottocittà",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "49": {
     "card": "Golem di Cemento",
@@ -421,7 +491,9 @@ export const illustrations = {
     "thumb": "assets/miniature/49-golem-di-cemento.webp",
     "pack": "illustrazioni-31-60",
     "illustratedFaction": "Sottocittà",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "50": {
     "card": "Imboscata",
@@ -429,7 +501,9 @@ export const illustrations = {
     "thumb": "assets/miniature/50-imboscata.webp",
     "pack": "illustrazioni-31-60",
     "illustratedFaction": "Sottocittà",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "51": {
     "card": "Lurker della Metro",
@@ -437,7 +511,9 @@ export const illustrations = {
     "thumb": "assets/miniature/51-lurker-della-metro.webp",
     "pack": "illustrazioni-31-60",
     "illustratedFaction": "Sottocittà",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "52": {
     "card": "Profeta di Strada",
@@ -445,7 +521,9 @@ export const illustrations = {
     "thumb": "assets/miniature/52-profeta-di-strada.webp",
     "pack": "illustrazioni-31-60",
     "illustratedFaction": "Sottocittà",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "53": {
     "card": "Ascensore Rotto",
@@ -453,7 +531,9 @@ export const illustrations = {
     "thumb": "assets/miniature/53-ascensore-rotto.webp",
     "pack": "illustrazioni-31-60",
     "illustratedFaction": "Sottocittà",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "54": {
     "card": "Bus Notturno",
@@ -461,7 +541,9 @@ export const illustrations = {
     "thumb": "assets/miniature/54-bus-notturno.webp",
     "pack": "illustrazioni-31-60",
     "illustratedFaction": "Sottocittà",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "55": {
     "card": "Maledizione Statica",
@@ -469,7 +551,9 @@ export const illustrations = {
     "thumb": "assets/miniature/55-maledizione-statica.webp",
     "pack": "illustrazioni-31-60",
     "illustratedFaction": "Sottocittà",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "56": {
     "card": "Sanguisuga dei Dati",
@@ -477,7 +561,9 @@ export const illustrations = {
     "thumb": "assets/miniature/56-sanguisuga-dei-dati.webp",
     "pack": "illustrazioni-31-60",
     "illustratedFaction": "Sottocittà",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "57": {
     "card": "Ombra del Parcheggio",
@@ -485,7 +571,9 @@ export const illustrations = {
     "thumb": "assets/miniature/57-ombra-del-parcheggio.webp",
     "pack": "illustrazioni-31-60",
     "illustratedFaction": "Sottocittà",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "58": {
     "card": "Contratto della Sottocittà",
@@ -493,7 +581,9 @@ export const illustrations = {
     "thumb": "assets/miniature/58-contratto-della-sottocitta.webp",
     "pack": "illustrazioni-31-60",
     "illustratedFaction": "Sottocittà",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "59": {
     "card": "Re della Fogna",
@@ -501,7 +591,9 @@ export const illustrations = {
     "thumb": "assets/miniature/59-re-della-fogna.webp",
     "pack": "illustrazioni-31-60",
     "illustratedFaction": "Sottocittà",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   },
   "60": {
     "card": "Frammento di Veil",
@@ -509,7 +601,9 @@ export const illustrations = {
     "thumb": "assets/miniature/60-frammento-di-veil.webp",
     "pack": "illustrazioni-31-60",
     "illustratedFaction": "Sottocittà",
-    "differences": []
+    "differences": [],
+    "original": null,
+    "correction": null
   }
 };
 

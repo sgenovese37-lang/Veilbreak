@@ -40,7 +40,19 @@ test("ogni carta ha la sua illustrazione collegata per ID e i file esistono", ()
     assert.equal(art.card, card.name, `nome diverso per ${card.id}`);
     assert.ok(existsSync(root + art.src), art.src);
     assert.ok(existsSync(root + art.thumb), art.thumb);
+    if (art.original) assert.ok(existsSync(root + art.original), art.original);
   }
+});
+
+test("le 13 illustrazioni corrette coincidono con il catalogo", () => {
+  const fixed = Object.entries(illustrations).filter(([, art]) => art.correction).map(([id]) => Number(id));
+  assert.deepEqual(fixed.sort((a, b) => a - b), [1, 3, 6, 7, 8, 9, 10, 15, 16, 20, 24, 25, 27]);
+  for (const id of fixed) {
+    assert.deepEqual(illustrations[id].differences, [], `carta ${id}`);
+    assert.match(illustrations[id].src, /illustrazioni-corrette/);
+  }
+  const left = Object.values(illustrations).flatMap(art => art.differences);
+  assert.ok(left.every(text => text.startsWith("Differenza solo grafica")), "restano solo differenze grafiche");
 });
 
 test("gli artefatti entrano in campo e Specchio Incrinato infligge danni", () => {

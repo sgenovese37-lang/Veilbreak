@@ -111,10 +111,13 @@ function drawCard(c, options = {}) {
     e.append(strip);
   }
   if (options.copies !== undefined) e.append(element("small", `Copie possedute ${options.copies}/${copyLimit(c)}`, "copies"));
-  if (options.meta && art?.differences.length) e.append(element("small", "⚠ L’illustrazione differisce dal catalogo", "warning"));
+  if (options.meta && art && ruleDifferences(art).length) e.append(element("small", "⚠ L’illustrazione differisce dal catalogo", "warning"));
   if (options.badge) e.append(element("small", options.badge, "badge"));
   return e;
 }
+
+// Le differenze solo grafiche (maiuscole, punteggiatura) non cambiano le regole: niente avviso.
+const ruleDifferences = art => art.differences.filter(text => !text.startsWith("Differenza solo grafica"));
 
 function withDetails(cardElement, c) {
   const wrap = element("div", undefined, "card-wrap");
@@ -147,6 +150,18 @@ function showCard(c) {
     rules.append(list);
   } else if (art) {
     rules.append(element("p", "L’illustrazione coincide con il catalogo.", "muted"));
+  }
+  if (art?.correction) {
+    rules.append(element("h3", "Illustrazione corretta"));
+    rules.append(element("p", art.correction, "muted"));
+    const img = body.querySelector(".viewer-art");
+    let showingOriginal = false;
+    const toggle = button("Vedi originale", () => {
+      showingOriginal = !showingOriginal;
+      img.src = showingOriginal ? art.original : art.src;
+      toggle.textContent = showingOriginal ? "Vedi versione corretta" : "Vedi originale";
+    });
+    rules.append(toggle);
   }
   const close = button("Chiudi", () => viewer.close(), "primary");
   rules.append(close);
