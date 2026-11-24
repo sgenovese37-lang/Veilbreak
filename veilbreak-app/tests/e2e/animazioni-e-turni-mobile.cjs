@@ -65,7 +65,7 @@ const shots = (process.env.SHOTS ?? require('os').tmpdir()) + '/';
       await page.waitForTimeout(300);
     }
     for (let k = 0; k < 6; k++) {
-      const a = page.locator('.board.mine .token.can-attack');
+      await page.waitForSelector('#table .arena:not(.busy)', { timeout: 15000 }).catch(() => {}); const a = page.locator('.board.mine .token.can-attack');
       if (!(await a.count())) break;
       await a.first().click();
       const t = page.locator('.hero-portrait.target, .token.target');

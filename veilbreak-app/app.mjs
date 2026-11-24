@@ -42,6 +42,7 @@ let previous = new Map();
 let replaying = false;     // il computer sta mostrando le sue mosse una alla volta
 let replayRun = 0;         // cambia quando si esce dalla partita: ferma l'animazione in corso
 let lastTurnKey = null;    // per annunciare il cambio di turno
+let logSeenKey = null;     // turno in cui il registro è stato aperto l'ultima volta
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 const decksKey = "veilbreak-custom-decks";
 try { savedDecks = new Map(Object.entries(JSON.parse(localStorage.getItem(decksKey) ?? "{}"))); }
@@ -68,6 +69,7 @@ function updateWallet() {
   toggle.textContent = soundEnabled() ? "Suoni: sì" : "Suoni: no";
   toggle.setAttribute("aria-pressed", soundEnabled());
 }
+get("wallet").onclick = () => showSection("shop-nav");
 get("sound-toggle").onclick = () => { setSound(!soundEnabled()); updateWallet(); sound("play"); };
 
 // I mazzi salvati valgono solo se usano carte possedute nella collezione.
@@ -218,7 +220,6 @@ viewer.addEventListener("click", event => { if (event.target === viewer) viewer.
 
 function drawCatalogue() {
   get("cards").replaceChildren(...cards.filter(c => !filter.value || c.faction === filter.value).map(c => drawCard(c, { meta: true, art: "full", copies: owned(c.id), action: () => showCard(c) })));
-  drawShop();
 }
 
 function renderDeckEditor(message = "", focus) {
@@ -279,13 +280,15 @@ function renderDeckEditor(message = "", focus) {
   else if (focus) (get(focus)?.disabled ? get(focus)?.parentElement?.querySelector("button:not(:disabled)") : get(focus))?.focus();
 }
 
-const sections = ["match", "story-nav", "quests-nav", "library", "decks", "missions"];
+const sections = ["match", "story-nav", "quests-nav", "shop-nav", "library", "decks", "missions"];
 function showSection(name) {
   updateWallet();
   document.body.classList.toggle("in-match", name === "match" && Boolean(game));
   get("story").hidden = name !== "story-nav";
   get("quests").hidden = name !== "quests-nav";
   catalogue.hidden = name !== "library";
+  get("negozio").hidden = name !== "shop-nav";
+  if (name === "shop-nav") drawShop();
   get("tutorial").hidden = name !== "missions";
   get("deck-editor").hidden = name !== "decks";
   setup.hidden = name !== "match" || Boolean(game);
@@ -418,7 +421,11 @@ async function showAction(action) {
 
 function selectedTargets() {
   if (selected?.kind === "play") return playTargets(game, game.players[game.active].hand[selected.index]);
-  if (selected?.kind === "attack") return attackTargets(game, selected.uid);
+  if (selected?.kind === "attack") {
+    // bersagli raggiungibili da almeno una delle creature scelte
+    const all = selected.uids.flatMap(uid => attackTargets(game, uid));
+    return all.filter((t, i) => all.findIndex(o => o.side === t.side && o.uid === t.uid) === i);
+  }
   if (selected?.kind === "power") return powerTargets(game);
   return [];
 }
@@ -434,6 +441,7 @@ async function target(side, uid) {
   const action = selected;
   selected = null;
   busy = true;
+  render(); // tavolo bloccato finché l'azione non è finita
   try {
     if (action.kind === "play") {
       const c = byId.get(game.players[game.active].hand[action.index]);
@@ -441,8 +449,15 @@ async function target(side, uid) {
     } else if (action.kind === "power") {
       if (useHeroPower(game, choice)) sound("power");
     } else {
-      await lunge(game.active, action.uid, choice);
-      attack(game, action.uid, choice);
+      // le creature scelte attaccano una dopo l'altra finché il bersaglio è in piedi
+      for (const uid of action.uids) {
+        const stillThere = choice.uid === null || game.players[choice.side].board.some(u => u.uid === choice.uid);
+        if (!stillThere || game.phase !== "play") break;
+        if (!attackTargets(game, uid).some(t => t.side === choice.side && t.uid === choice.uid)) continue;
+        await lunge(game.active, uid, choice);
+        attack(game, uid, choice);
+        if (action.uids.length > 1) { render(); await wait(180); }
+      }
     }
   } finally {
     busy = false;
@@ -662,14 +677,15 @@ function token(side, unit, own, allow) {
   const c = cardOf(unit);
   const current = stats(game, side, unit);
   const isTarget = allow && available(side, unit.uid);
-  const canAttack = allow && own && !selected && attackTargets(game, unit.uid).length > 0;
+  const canAttack = allow && own && (!selected || selected.kind === "attack") && attackTargets(game, unit.uid).length > 0;
+  const chosen = selected?.kind === "attack" && selected.uids.includes(unit.uid);
   const details = unit.card ? () => showCard(c) : undefined;
   const action = isTarget ? () => target(side, unit.uid)
-    : canAttack ? () => { selected = { kind: "attack", uid: unit.uid }; sound("select"); render(); }
+    : canAttack ? () => toggleAttacker(unit.uid)
     : details;
   const kw = unit.silenced ? {} : keywordOf(c);
   const t = button(undefined, action, ["token", c.rarity ?? "", kw.taunt ? "taunt" : "", canAttack ? "can-attack" : "",
-    isTarget ? "target" : "", unit.silenced ? "silenced" : "", selected?.uid === unit.uid ? "attacking" : ""].filter(Boolean).join(" "));
+    isTarget ? "target" : "", unit.silenced ? "silenced" : "", chosen ? "attacking" : ""].filter(Boolean).join(" "));
   t.setAttribute("aria-label", `${c.name}, Attacco ${current.attack}, Difesa ${current.health}${kw.taunt ? ", Provocazione" : ""}${canAttack ? ", può attaccare" : ""}`);
   t.dataset.side = side;
   t.dataset.uid = unit.uid;
@@ -683,6 +699,22 @@ function token(side, unit, own, allow) {
   t.append(element("span", current.attack, "att"), element("span", current.health, `dif${current.health < current.maxHealth ? " wounded" : ""}`));
   if (track(unit.uid, current.health, t)) t.classList.add("summoned");
   return t;
+}
+
+// Tocca una o più creature per attaccare insieme; un secondo tocco la toglie dalla selezione.
+function toggleAttacker(uid) {
+  const uids = selected?.kind === "attack" ? [...selected.uids] : [];
+  const at = uids.indexOf(uid);
+  if (at >= 0) uids.splice(at, 1); else uids.push(uid);
+  selected = uids.length ? { kind: "attack", uids } : null;
+  sound("select");
+  render();
+}
+function selectAllAttackers() {
+  const uids = game.players[game.active].board.filter(u => attackTargets(game, u.uid).length).map(u => u.uid);
+  selected = uids.length ? { kind: "attack", uids } : null;
+  sound("select");
+  render();
 }
 
 function boardRow(side, own, allow) {
@@ -797,14 +829,16 @@ function renderTable() {
   }
   let message = mull ? `Scegli fino a ${rules.mulliganLimit} carte da cambiare` : cpu ? "Turno avversario" : `Turno di ${game.players[active].name}`;
   if (mode === "cpu" && !cpu && !mull) message = "Il tuo turno";
-  if (selected) message = "Scegli un bersaglio";
+  if (selected) message = selected.kind === "attack"
+    ? `${selected.uids.length} ${selected.uids.length === 1 ? "creatura pronta" : "creature pronte"}: scegli il bersaglio`
+    : "Scegli un bersaglio";
   if (finished) {
     settleOutcome();
     message = game.winner === "draw" ? "Pareggio" : mode === "cpu" ? (game.winner === 0 ? "Vittoria!" : "Sconfitta") : `Vince ${game.players[game.winner].name}!`;
   }
   const view = mode === "cpu" ? 0 : active;
   const allow = !cpu && !finished;
-  const arena = element("div", undefined, `arena ${cpu ? "enemy-turn" : "my-turn"}`);
+  const arena = element("div", undefined, `arena ${cpu ? "enemy-turn" : "my-turn"}${busy ? " busy" : ""}`);
   const top = element("div", undefined, "topbar");
   top.append(button("☰ Menu", () => {
     if (finished || confirm("Abbandonare la partita?")) reset();
@@ -812,7 +846,9 @@ function renderTable() {
   const status = element("strong", message, `banner${selected ? " targeting" : ""}${cpu ? " waiting" : ""}`);
   status.setAttribute("role", "status");
   top.append(status);
-  const logButton = button("Registro", () => showLog(), "small");
+  const fresh = !mull && logSeenKey !== lastTurnKey ? previousTurn().length : 0;
+  const logButton = button(fresh ? `Registro · ${fresh}` : "Registro", () => { logSeenKey = lastTurnKey; showLog(); }, `small${fresh ? " has-new" : ""}`);
+  logButton.setAttribute("aria-label", fresh ? `Registro, ${fresh} mosse nuove` : "Registro della partita");
   top.append(logButton);
   arena.append(top);
   if (storyChapter !== null && !finished && game.round <= 1) {
@@ -834,15 +870,6 @@ function renderTable() {
   }
   const veil = element("div", undefined, "veil-line");
   if (mull) enemyZone.hidden = true;
-  const recap = previousTurn();
-  if (!mull && recap.length && !finished) {
-    const last = element("div", undefined, "recap last-turn");
-    last.append(element("strong", "Turno precedente"));
-    const list = element("ul");
-    for (const entry of recap) list.append(element("li", entry));
-    last.append(list);
-    veil.append(last);
-  }
   // Azione principale a destra del tavolo
   const side = element("div", undefined, "turn-bar");
   if (finished) {
@@ -856,7 +883,13 @@ function renderTable() {
     }
     end.append(button(storyChapter !== null ? "Torna alla Storia" : "Nuova partita", reset, "primary"));
     arena.append(end);
-  } else if (!cpu && selected) side.append(button("Annulla", () => { selected = null; render(); }, "end-turn cancel"));
+  } else if (!cpu && selected) {
+    if (selected.kind === "attack") {
+      const ready = game.players[active].board.filter(u => attackTargets(game, u.uid).length).length;
+      if (ready > selected.uids.length) side.append(button("Tutte", selectAllAttackers, "end-turn all"));
+    }
+    side.append(button("Annulla", () => { selected = null; render(); }, "end-turn cancel"));
+  }
   else if (!cpu && mull) side.append(button("Conferma mano", () => { mulligan(game, [...replacements]); afterTurn(); }, "end-turn primary"));
   else if (!cpu) {
     const anyMove = game.players[active].hand.some((_, i) => canPlay(game, i)) || canUseHeroPower(game)
@@ -997,22 +1030,29 @@ function drawShop() {
   const profile = loadProfile();
   const { have, max } = collectionProgress();
   const head = element("div", undefined, "section-head");
-  head.append(element("h2", "Buste"), element("span", `Collezione ${have}/${max}`, "muted"));
+  head.append(element("h2", "Negozio"), element("span", `Collezione ${have}/${max}`, "muted"));
+  const wallet = element("div", undefined, "wallet-card");
+  const coins = element("div", undefined, "coin-total");
+  coins.append(element("span", "◆", "coin-icon"), element("strong", profile.shards), element("span", "Schegge"));
+  const packsBox = element("div", undefined, "coin-total");
+  packsBox.append(element("span", "▣", "coin-icon pack"), element("strong", profile.packs), element("span", profile.packs === 1 ? "busta da aprire" : "buste da aprire"));
+  wallet.append(coins, packsBox,
+    element("p", "Le Schegge sono le monete del gioco: le guadagni vincendo le partite (15, 25 o 40 secondo la difficoltà, 5 se perdi), con le missioni, la Storia e il tutorial.", "muted"));
   const actions = element("div", undefined, "actions");
   const buy = button(`Compra una busta · ${packPrice} Schegge`, () => {
-    if (buyPack()) { sound("reward"); lastPack = null; updateWallet(); drawCatalogue(); }
+    if (buyPack()) { sound("reward"); lastPack = null; updateWallet(); drawShop(); }
   });
   buy.disabled = profile.shards < packPrice;
   const open = button(`Apri una busta (${profile.packs})`, () => {
     lastPack = openPack();
     if (lastPack) sound("pack");
     updateWallet();
-    drawCatalogue();
-    get("shop").scrollIntoView({ block: "start" });
+    drawShop();
+    get("shop").querySelector(".pack-result")?.scrollIntoView({ block: "start", behavior: "smooth" });
   }, "primary");
   open.disabled = profile.packs < 1;
   actions.append(buy, open);
-  const children = [head, element("p", "Ogni busta contiene 5 carte. Le copie oltre il massimo giocabile (2, o 1 per le Leggendarie) diventano Schegge.", "muted"), actions];
+  const children = [head, wallet, element("h3", "Buste di carte"), element("p", "Ogni busta contiene 5 carte. Le copie oltre il massimo giocabile (2, o 1 per le Leggendarie) diventano Schegge.", "muted"), actions];
   if (lastPack) {
     const row = element("div", undefined, "cards pack-result");
     for (const result of lastPack) {

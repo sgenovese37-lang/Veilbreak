@@ -16,7 +16,7 @@
     <div class="brand">
       <h1>VEILBREAK</h1>
       <div class="wallet-row">
-        <span id="wallet" aria-live="polite"></span>
+        <button id="wallet" class="wallet" type="button" aria-live="polite" aria-label="Schegge e buste: apri il negozio"></button>
         <button id="sound-toggle" class="small" type="button"></button>
       </div>
     </div>
@@ -24,6 +24,7 @@
       <button id="match" aria-controls="table">Partita</button>
       <button id="story-nav" aria-controls="story">Storia</button>
       <button id="quests-nav" aria-controls="quests">Missioni</button>
+      <button id="shop-nav" aria-controls="negozio">Negozio</button>
       <button id="library" aria-controls="catalogue">Collezione</button>
       <button id="decks" aria-controls="deck-editor">Mazzi</button>
       <button id="missions" aria-controls="tutorial">Tutorial</button>
@@ -43,10 +44,10 @@
     <section id="table" hidden aria-label="Tavolo di gioco"></section>
     <section id="story" class="sheet wide" hidden aria-label="Modalità Storia"></section>
     <section id="quests" class="sheet wide" hidden aria-label="Missioni e premi"></section>
+    <section id="negozio" class="sheet wide" hidden aria-label="Negozio"><div id="shop" class="shop"></div></section>
     <section id="deck-editor" class="sheet" hidden aria-label="Costruisci un mazzo"></section>
     <section id="tutorial" class="sheet" hidden aria-label="Tutorial a missioni"></section>
     <section id="catalogue" hidden aria-labelledby="catalogue-title">
-      <div id="shop" class="shop"></div>
       <div class="section-head">
         <h2 id="catalogue-title">Carte</h2>
         <label>Fazione <select id="filter"><option value="">Tutte</option></select></label>

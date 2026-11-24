@@ -50,7 +50,7 @@ const shots = (process.env.SHOTS ?? require('os').tmpdir()) + '/';
       }
     }
     for (let k = 0; k < 8; k++) {
-      const attacker = page.locator('.board.mine .token.can-attack');
+      await page.waitForSelector('#table .arena:not(.busy)', { timeout: 15000 }).catch(() => {}); const attacker = page.locator('.board.mine .token.can-attack');
       s = await status();
       if (!(await attacker.count()) || s === 'Vittoria!' || s === 'Sconfitta') break;
       await attacker.first().click();
@@ -69,7 +69,8 @@ const shots = (process.env.SHOTS ?? require('os').tmpdir()) + '/';
   if (result === 'Vittoria!') console.log('epilogo:', (await page.locator('.story-outro').innerText()).split('\n')[0]);
   await page.screenshot({ path: shots + '22-fine-capitolo.png', fullPage: true });
   await page.click('text=Torna alla Storia');
-  console.log('capitolo 2 sbloccato:', !(await page.locator('.chapter-list button').nth(1).isDisabled()));
+  const unlocked = !(await page.locator('.chapter-list button').nth(1).isDisabled());
+  console.log('capitolo 2:', result === 'Vittoria!' ? (unlocked ? 'sbloccato dopo la vittoria' : 'ERRORE: ancora bloccato') : (unlocked ? 'ERRORE: sbloccato dopo una sconfitta' : 'resta bloccato dopo la sconfitta, corretto'));
 
   // Missioni
   await page.click('#quests-nav');
@@ -84,7 +85,8 @@ const shots = (process.env.SHOTS ?? require('os').tmpdir()) + '/';
   await checkWidth('missioni');
 
   // Buste
-  await page.click('#library');
+  await page.click('#shop-nav');
+  console.log('negozio:', (await page.locator('.wallet-card').innerText()).split('\n').slice(0, 4).join(' '));
   const before = await page.locator('#wallet').innerText();
   await page.click('text=/Apri una busta/');
   await page.waitForTimeout(900);

@@ -104,3 +104,11 @@ Per compilarla in locale servono Node, Java 17 e l’Android SDK:
     cd android && ./gradlew assembleDebug
 
 L’icona e la schermata di avvio Android si rigenerano con `python3 -I icone-android.py .` dentro `app-android/`.
+
+## Stile grafico, negozio e attacco multiplo
+
+L'interfaccia riprende lo stile delle carte: cornici di rame smussate, fondo scuro come i riquadri di testo, carattere EB Garamond (licenza SIL OFL, in `assets/fonts/`), filigrana e divisore con il rombo ritagliati dalle cornici delle carte (`python3 -I tools/build_ornaments.py .`).
+
+Il **Negozio** (nel menu, o toccando il saldo in alto) mostra Schegge e buste e permette di comprarle e aprirle. Le Schegge sono le monete del gioco.
+
+**Attacco multiplo:** tocca una o più creature pronte (o «Tutte»), poi il bersaglio: attaccano una dopo l'altra finché il bersaglio resta in piedi. Durante l'animazione il tavolo è bloccato. Le mosse dell'avversario non compaiono più in un riquadro sul tavolo: il pulsante «Registro» mostra quante sono nuove.

@@ -59,7 +59,7 @@ const shots = (process.env.SHOTS ?? require('os').tmpdir()) + '/';
     }
     // attacchi
     for (let k = 0; k < 8; k++) {
-      const attacker = page.locator('.board.mine .token.can-attack');
+      await page.waitForSelector('#table .arena:not(.busy)', { timeout: 15000 }).catch(() => {}); const attacker = page.locator('.board.mine .token.can-attack');
       if (!(await attacker.count()) || /^(Vince|Vittoria|Sconfitta)/.test(await status())) break;
       await attacker.first().click();
       const heroTarget = page.locator('.hero-portrait.target');
