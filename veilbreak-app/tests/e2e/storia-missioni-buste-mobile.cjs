@@ -24,7 +24,7 @@ const shots = (process.env.SHOTS ?? require('os').tmpdir()) + '/';
   await page.click('#story-nav');
   await page.screenshot({ path: shots + '21-storia.png', fullPage: true });
   console.log('capitolo 2 bloccato:', await page.locator('.chapter-list button').nth(1).isDisabled());
-  await page.selectOption('.chapter select', 'Patto Neon');
+  await page.click('.chapter [data-faction="Patto Neon"]');
   await page.click('text=Gioca il capitolo');
   console.log('introduzione visibile:', await page.locator('.recap').first().innerText().then(t => t.startsWith('Capitolo 1')));
   await page.click('text=Conferma mano');

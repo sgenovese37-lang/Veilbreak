@@ -19,8 +19,8 @@ const shots = (process.env.SHOTS ?? require('os').tmpdir()) + '/';
   // Partita contro il computer
   await page.selectOption('select[name=mode]', 'cpu');
   await page.selectOption('select[name=level]', 'Normale');
-  await page.selectOption('select[name=first]', 'Corte di Hollow');
-  await page.selectOption('select[name=second]', 'Patto Neon');
+  await page.click('#pick-first [data-faction="Corte di Hollow"]');
+  await page.click('#pick-second [data-faction="Patto Neon"]');
   await page.click('text=Inizia partita');
   await page.screenshot({ path: shots + '02-mulligan.png', fullPage: true });
   // sostituisci due carte

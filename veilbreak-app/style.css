@@ -453,3 +453,95 @@ body.in-match #table { display: block; }
 .hand.mulligan .hand-card[aria-pressed="true"] { transform: none; box-shadow: 0 0 0 3px #ff6b5e, 0 0 1rem #ff6b5e; }
 .hand.mulligan .hand-card[aria-pressed="true"] .mini-art { filter: brightness(.55); }
 .swap-mark { inset: 42% 0 auto; font-size: .8rem; }
+
+/* ================= Animazioni, turni, anteprime ================= */
+.token, .hand-card, .relic, .hero-portrait { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; touch-action: manipulation; }
+
+/* Di chi è il turno: la metà attiva è illuminata, l'altra si spegne */
+.arena .zone { transition: filter .4s, box-shadow .4s; }
+.arena.my-turn .zone.mine { box-shadow: 0 0 1.4rem -.2rem var(--table-highlight), inset 0 0 1.2rem -.6rem var(--table-highlight); }
+.arena.my-turn .zone.enemy { filter: brightness(.72) saturate(.8); }
+.arena.enemy-turn .zone.enemy { box-shadow: 0 0 1.4rem -.2rem #ff6b5e, inset 0 0 1.2rem -.6rem #ff6b5e; }
+.arena.enemy-turn .zone.mine { filter: brightness(.72) saturate(.8); }
+.arena.enemy-turn .hand { filter: brightness(.6); pointer-events: none; }
+.banner { font-weight: bold; padding: .25rem .6rem; border-radius: 1rem; }
+.arena.my-turn .banner { color: #2b1b06; background: linear-gradient(#ffe39a, #d39a2b); text-shadow: none; }
+.arena.enemy-turn .banner { color: #fff; background: linear-gradient(#b8463f, #6e1d19); text-shadow: none; animation: pulse 1.6s ease-in-out infinite; }
+.arena.mulligan .banner { color: var(--brass); background: none; animation: none; }
+
+.turn-splash {
+  position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; pointer-events: none;
+  background: radial-gradient(ellipse at center, #000a 0, transparent 70%);
+  animation: splash-bg 1.5s ease forwards;
+}
+.turn-splash strong {
+  padding: .7rem 2.2rem; font-size: clamp(1.8rem, 9vw, 3rem); letter-spacing: .08em; text-transform: uppercase;
+  border-radius: 999px; border: 3px solid; box-shadow: 0 0 3rem #000;
+  animation: splash-text 1.5s cubic-bezier(.2,.9,.3,1.2) forwards;
+}
+.turn-splash.mine strong { color: #2b1b06; border-color: #fff1c6; background: linear-gradient(#ffe39a, #d39a2b); }
+.turn-splash.enemy strong { color: #fff; border-color: #ffb3ad; background: linear-gradient(#c2453d, #5e1814); }
+@keyframes splash-bg { 0% { opacity: 0; } 15%, 75% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes splash-text { 0% { transform: scale(.4); opacity: 0; } 18% { transform: scale(1.08); opacity: 1; } 30%, 75% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.15); opacity: 0; } }
+
+/* Carta grande al centro quando si gioca un incantesimo o quando gioca l'avversario */
+.cast-preview {
+  position: fixed; inset: 0; z-index: 55; display: grid; place-content: center; justify-items: center; gap: .5rem; pointer-events: none;
+  background: #0007; animation: fade-in .2s ease-out;
+}
+.cast-preview small { color: #fff; font-size: 1rem; letter-spacing: .06em; text-transform: uppercase; text-shadow: 0 0 .5rem #000; }
+.cast-preview img { width: min(62vw, 17rem); border-radius: .8rem; box-shadow: 0 0 2.5rem #b98cffaa, 0 1rem 2rem #000; animation: card-in .35s cubic-bezier(.2,.9,.3,1.2); }
+.cast-preview.leaving { animation: fade-out .25s ease-in forwards; }
+@keyframes card-in { from { transform: translateY(40%) scale(.5) rotate(-6deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes fade-out { to { opacity: 0; transform: scale(1.06); } }
+
+/* Tenere premuto: anteprima ingrandita */
+.peek-layer { position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; background: #000b; pointer-events: none; animation: fade-in .12s ease-out; }
+.peek-layer[hidden] { display: none; }
+.peek-card { display: grid; gap: .6rem; justify-items: center; width: min(84vw, 22rem); }
+.peek-card img { width: 100%; border-radius: .9rem; box-shadow: 0 0 2rem #000; animation: card-in .2s ease-out; }
+.peek-rules { width: 100%; display: grid; gap: .2rem; padding: .6rem .8rem; border: 1px solid var(--brass); border-radius: .6rem; background: #141217f2; font-size: .95rem; }
+.peek-rules span { color: #b9d3ff; font-size: .85rem; }
+
+/* Creature distrutte che svaniscono */
+.token.ghost { z-index: 40; pointer-events: none; animation: die .7s ease-in forwards; }
+@keyframes die { 0% { filter: brightness(2) saturate(0); transform: scale(1.05); } 40% { opacity: 1; } 100% { opacity: 0; transform: scale(.6) rotate(8deg); filter: brightness(.3) blur(2px); } }
+.hero-power.flash { animation: power-flash .55s ease-out; }
+@keyframes power-flash { 50% { transform: scale(1.3); box-shadow: 0 0 1.5rem #ffd98a; } }
+
+/* Essenza: più grande e animata */
+.crystals { position: relative; gap: .22rem; }
+.crystals .count { display: flex; align-items: baseline; gap: .05rem; margin-right: .35rem; font-size: .95rem; }
+.crystals .count b { font-size: 1.45rem; color: #d7e8ff; text-shadow: 0 0 .5rem #4f8fff; }
+.crystals i { width: 1.15rem; height: 1.15rem; }
+.crystals i.draining { animation: drain .6s ease-out; }
+.crystals i.filling { animation: fill .7s ease-out; }
+@keyframes drain { 0% { background: radial-gradient(circle at 40% 30%, #fff, #6aa8ff); transform: scale(1.35); } 100% { transform: scale(1); } }
+@keyframes fill { 0% { transform: scale(0); } 60% { transform: scale(1.4); box-shadow: 0 0 .9rem #9cc6ff; } 100% { transform: scale(1); } }
+.float.mana { left: auto; right: 0; top: -.4rem; font-size: 1.25rem; color: #9cc6ff; padding: 0; background: none; }
+.float.mana.up { color: #b8ffc6; }
+.crystals.small { justify-content: flex-start; }
+.crystals.small i { width: .7rem; height: .7rem; }
+.crystals.small .count b { font-size: 1rem; }
+.hero-strip.enemy { grid-template-columns: auto auto auto 1fr; grid-template-areas: "extras portrait power info" "crystals crystals crystals crystals"; }
+.hero-strip.enemy .extras { grid-area: extras; } .hero-strip.enemy .hero-portrait { grid-area: portrait; }
+.hero-strip.enemy .hero-power { grid-area: power; } .hero-strip.enemy .hero-info { grid-area: info; }
+.hero-strip.enemy .crystals { grid-area: crystals; }
+
+/* Scelta dell'eroe */
+.picker-box { display: grid; gap: .45rem; }
+.picker-box h3 { font-size: 1rem; color: var(--brass); }
+.hero-picker { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+.hero-choice { display: grid; grid-template-columns: 3.2rem 1fr; gap: .5rem; align-items: center; text-align: left; padding: .5rem; border-radius: .6rem; }
+.hero-choice .emblem { width: 3.2rem; height: 3.2rem; border-radius: 50%; display: block; }
+.hero-choice .initial { display: grid; place-items: center; font-size: 1.4rem; }
+.hero-choice-text { display: grid; gap: .1rem; min-width: 0; line-height: 1.2; }
+.hero-choice-text strong { font-size: .88rem; }
+.hero-choice-text small { font-size: .75rem; }
+.hero-choice-power { font-size: .7rem; color: var(--muted); }
+.hero-choice[aria-pressed="true"] { border-color: var(--brass); background: #3a2c22; box-shadow: 0 0 0 2px var(--brass), 0 0 1rem #ebc18a55; }
+@media (max-width: 360px) { .hero-picker { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) {
+  .turn-splash strong, .cast-preview img, .token.ghost, .crystals i.draining, .crystals i.filling { animation-duration: .01s; }
+}

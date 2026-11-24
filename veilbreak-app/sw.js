@@ -1,6 +1,6 @@
 // Service worker: rende il gioco installabile e giocabile offline.
 // Cambia VERSION quando pubblichi una nuova versione dei file.
-const VERSION = "veilbreak-v4";
+const VERSION = "veilbreak-v5";
 const SHELL = [
   "./", "./index.html", "./style.css", "./manifest.webmanifest",
   "./app.mjs", "./game.mjs", "./ai.mjs", "./cards.mjs", "./heroes.mjs", "./illustrations.mjs",

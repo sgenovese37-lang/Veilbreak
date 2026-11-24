@@ -65,7 +65,7 @@ function apply(g, action) {
   return attack(g, action.uid, action.target);
 }
 
-export function smartTurn(g) {
+export function smartTurn(g, onStep = () => {}) {
   const side = g.active;
   if (g.phase === "mulligan") {
     const p = g.players[side];
@@ -84,12 +84,15 @@ export function smartTurn(g) {
       const score = evaluate(trial, side);
       if (score > bestScore) { best = action; bestScore = score; }
     }
-    if (!best || !apply(g, best)) break;
+    if (!best) break;
+    const card = best.kind === "play" ? g.players[side].hand[best.index] : undefined;
+    if (!apply(g, best)) break;
+    onStep({ ...best, side, card, target: best.target ?? null });
   }
   if (g.phase === "play" && g.active === side) endTurn(g);
 }
 
 // Punto unico per far giocare il computer: Difficile usa la ricerca, gli altri livelli le regole semplici.
-export function runComputer(g, level) {
-  return level === "Difficile" ? smartTurn(g) : computerTurn(g, level);
+export function runComputer(g, level, onStep) {
+  return level === "Difficile" ? smartTurn(g, onStep) : computerTurn(g, level, onStep);
 }
