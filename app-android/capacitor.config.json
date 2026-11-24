@@ -1,0 +1,8 @@
+{
+  "appId": "it.veilbreak.gioco",
+  "appName": "VEILBREAK",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#101114"
+  }
+}

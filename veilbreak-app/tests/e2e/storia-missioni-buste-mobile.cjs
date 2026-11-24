@@ -24,16 +24,16 @@ const shots = (process.env.SHOTS ?? require('os').tmpdir()) + '/';
   await page.click('#story-nav');
   await page.screenshot({ path: shots + '21-storia.png', fullPage: true });
   console.log('capitolo 2 bloccato:', await page.locator('.chapter-list button').nth(1).isDisabled());
-  await page.selectOption('.chapter select', 'Patto Neon');
+  await page.click('.chapter [data-faction="Patto Neon"]');
   await page.click('text=Gioca il capitolo');
   console.log('introduzione visibile:', await page.locator('.recap').first().innerText().then(t => t.startsWith('Capitolo 1')));
   await page.click('text=Conferma mano');
   for (let turn = 0; turn < 40; turn++) {
-    await page.waitForFunction(() => !(document.querySelector('#table [role=status]')?.textContent ?? '').includes('computer'), null, { timeout: 15000 });
+    await page.waitForFunction(() => !(document.querySelector('#table [role=status]')?.textContent ?? '').includes('avversario'), null, { timeout: 15000 });
     let s = await status();
     if (s === 'Vittoria!' || s === 'Sconfitta' || s === 'Pareggio') break;
     for (let k = 0; k < 10; k++) {
-      const playable = page.locator('#table .side').last().locator('.cards.hand button.card:not([disabled])');
+      const playable = page.locator('.hand .hand-card.playable');
       if (!(await playable.count())) break;
       await playable.first().click();
       if ((await status()).includes('bersaglio')) {
@@ -41,7 +41,7 @@ const shots = (process.env.SHOTS ?? require('os').tmpdir()) + '/';
         if (await t.count()) await t.first().click(); else await page.click('text=Annulla');
       }
     }
-    const power = page.locator('#table .side').last().locator('.hero-power button:not([disabled])');
+    const power = page.locator('.hero-strip.mine .hero-power:not([disabled])');
     if (await power.count()) {
       await power.click();
       if ((await status()).includes('bersaglio')) {
@@ -50,13 +50,13 @@ const shots = (process.env.SHOTS ?? require('os').tmpdir()) + '/';
       }
     }
     for (let k = 0; k < 8; k++) {
-      const attacker = page.locator('#table .side').last().locator('.cards').first().locator('button.card:not([disabled])');
+      const attacker = page.locator('.board.mine .token.can-attack');
       s = await status();
       if (!(await attacker.count()) || s === 'Vittoria!' || s === 'Sconfitta') break;
       await attacker.first().click();
-      const hero = page.locator('#table .hero button.target');
+      const hero = page.locator('.hero-portrait.target');
       if (await hero.count()) await hero.click();
-      else if (await page.locator('#table .card.target').count()) await page.locator('#table .card.target').first().click();
+      else if (await page.locator('.token.target').count()) await page.locator('.token.target').first().click();
       else { await page.click('text=Annulla'); break; }
     }
     s = await status();

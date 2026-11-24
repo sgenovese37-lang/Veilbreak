@@ -1,5 +1,6 @@
 import { cards } from "./cards.mjs";
 import { heroFor, heroPowerCost } from "./heroes.mjs";
+import { starterDecks } from "./decks.mjs";
 
 export const rules = Object.freeze({ maxLife: 30, openingHand: 6, mulliganLimit: 2, maxEssence: 10, handLimit: 10 });
 
@@ -36,7 +37,9 @@ function draw(p, count, g) {
 }
 
 export const deckSize = 15;
-export const defaultDeck = name => cards.filter(card => card.faction === name).slice(0, deckSize).map(card => card.id);
+export const defaultDeck = name => validDeck(name, starterDecks[name])
+  ? [...starterDecks[name]]
+  : cards.filter(card => card.faction === name).slice(0, deckSize).map(card => card.id);
 export const copyLimit = card => card.rarity === "Legendary" ? 1 : 2;
 
 export function validDeck(name, deck) {
@@ -408,7 +411,8 @@ export function endTurn(g) {
   return true;
 }
 
-export function computerTurn(g, level) {
+// onStep(azione), facoltativo: chiamato dopo ogni mossa per animarla nell'interfaccia.
+export function computerTurn(g, level, onStep = () => {}) {
   const p = g.players[g.active];
   if (g.phase === "mulligan") return mulligan(g, p.hand.map((id, i) => ({ id, i })).filter(({ id }) => byId.get(id).cost >= 5).slice(0, rules.mulliganLimit).map(e => e.i));
   if (g.phase !== "play") return;
@@ -426,7 +430,10 @@ export function computerTurn(g, level) {
       return [{ index, target, value: easy ? g.random() : c.cost + (high && c.type === "Creatura" ? 1 : 0) }];
     });
     options.sort((a, b) => b.value - a.value);
-    if (!options.length || !play(g, options[0].index, options[0].target)) break;
+    if (!options.length) break;
+    const card = p.hand[options[0].index];
+    if (!play(g, options[0].index, options[0].target)) break;
+    onStep({ kind: "play", side, card, target: options[0].target ?? null });
   }
   if (canUseHeroPower(g)) {
     const options = powerTargets(g);
@@ -434,7 +441,7 @@ export function computerTurn(g, level) {
     const best = options.find(t => power.damage
       ? stats(g, t.side, unitAt(g, t)).health <= power.damage
       : attackTargets(g, t.uid).length);
-    useHeroPower(g, best ?? options[0]);
+    if (useHeroPower(g, best ?? options[0])) onStep({ kind: "power", side, target: best ?? options[0] ?? null });
   }
   for (const unit of [...p.board]) {
     const options = attackTargets(g, unit.uid);
@@ -442,7 +449,7 @@ export function computerTurn(g, level) {
     const hero = options.find(t => t.uid === null);
     const lethal = hero && stats(g, side, unit).attack >= g.players[hero.side].life;
     const target = lethal ? hero : kill || (easy ? options[Math.floor(g.random() * options.length)] : hero || options[0]);
-    if (target) attack(g, unit.uid, target);
+    if (target && attack(g, unit.uid, target)) onStep({ kind: "attack", side, uid: unit.uid, target });
   }
   if (g.phase === "play") endTurn(g);
 }

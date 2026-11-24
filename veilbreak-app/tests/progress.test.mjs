@@ -2,11 +2,11 @@ import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { cards } from "../cards.mjs";
 import {
-  loadProfile, resetProfileForTests, owned, openPack, buyPack, packPrice, rewardMatch, collectionProgress,
+  loadProfile, resetProfileForTests, owned, openPack, buyPack, packPrice, rewardMatch, collectionProgress, startingCopies,
 } from "../profile.mjs";
 import { currentMissions, recordEvent, claimMission, dayKey, weekKey } from "../missions.mjs";
 import { chapters, completeChapter, storyProgress, isUnlocked, finalReward } from "../story.mjs";
-import { factions, createGame, mulligan, computerTurn, useHeroPower, stats } from "../game.mjs";
+import { factions, createGame, mulligan, computerTurn, useHeroPower, stats, defaultDeck } from "../game.mjs";
 import { smartTurn, runComputer } from "../ai.mjs";
 import { heroes } from "../heroes.mjs";
 
@@ -16,8 +16,12 @@ beforeEach(() => resetProfileForTests());
 test("la collezione parte con una copia di ogni carta e una busta", () => {
   const p = loadProfile();
   assert.equal(p.packs, 1);
-  for (const c of cards) assert.equal(owned(c.id), 1);
-  assert.deepEqual(collectionProgress(), { have: 60, max: 60 * 2 - cards.filter(c => c.rarity === "Legendary").length });
+  for (const c of cards) assert.equal(owned(c.id), startingCopies(c.id));
+  for (const faction of factions) {
+    const deck = defaultDeck(faction);
+    for (const id of new Set(deck)) assert.ok(owned(id) >= deck.filter(x => x === id).length, `${faction}: copie mancanti per ${id}`);
+  }
+  assert.equal(collectionProgress().max, 60 * 2 - cards.filter(c => c.rarity === "Legendary").length);
 });
 
 test("le buste danno copie fino al massimo e poi Schegge", () => {
@@ -119,5 +123,24 @@ test("runComputer termina le partite a ogni livello", () => {
     const g = createGame(["Corte di Hollow", "Senza Santi"], seeded(31));
     for (let i = 0; i < 400 && g.phase !== "finished"; i++) runComputer(g, level);
     assert.equal(g.phase, "finished");
+  }
+});
+
+test("i due scontri sbilanciati restano vicini al 50% con i mazzi predefiniti", () => {
+  const share = (a, b, games = 120) => {
+    let aw = 0, decided = 0;
+    for (let k = 0; k < games; k++) {
+      const names = k % 2 ? [b, a] : [a, b];
+      const g = createGame(names, seeded(9000 + k));
+      for (let t = 0; t < 400 && g.phase !== "finished"; t++) smartTurn(g);
+      if (g.winner === "draw") continue;
+      decided++;
+      if (names[g.winner] === a) aw++;
+    }
+    return aw / decided;
+  };
+  for (const [a, b] of [["Corte di Hollow", "Patto Neon"], ["Corte di Hollow", "Senza Santi"]]) {
+    const value = share(a, b);
+    assert.ok(value > 0.35 && value < 0.65, `${a} contro ${b}: ${Math.round(value * 100)}%`);
   }
 });
