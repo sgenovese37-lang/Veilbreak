@@ -1,5 +1,8 @@
 apply plugin: 'com.android.application'
 
+// Numero della compilazione su GitHub (1 in locale): cresce sempre, così ogni APK aggiorna il precedente.
+def buildNumber = (System.getenv("GITHUB_RUN_NUMBER") ?: "1") as Integer
+
 android {
     namespace "it.veilbreak.gioco"
     compileSdk rootProject.ext.compileSdkVersion
@@ -8,8 +11,8 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // Il numero di versione cresce a ogni compilazione su GitHub: così ogni APK si installa sopra il precedente.
-        versionCode (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInteger()
-        versionName "0.1." + (System.getenv("GITHUB_RUN_NUMBER") ?: "0")
+        versionCode buildNumber
+        versionName "0.1." + buildNumber
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
