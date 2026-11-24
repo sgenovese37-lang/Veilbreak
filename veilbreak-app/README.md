@@ -94,7 +94,7 @@ Animazioni e turni: all’inizio di ogni turno compare a tutto schermo «Il tuo 
 
 ## App Android (APK)
 
-La cartella `app-android/` impacchetta il gioco come app Android con Capacitor. A ogni invio di modifiche GitHub Actions (`.github/workflows/apk.yml`) esegue i test, compila l'APK e lo pubblica nella release **apk-ultima** del repository: dal telefono apri la pagina delle release, scarica `VEILBREAK.apk` e installalo, consentendo l'installazione da quella fonte quando Android lo chiede. È una versione di prova (firmata con la chiave di debug), non adatta al Play Store.
+La cartella `app-android/` impacchetta il gioco come app Android con Capacitor. A ogni invio di modifiche GitHub Actions (`.github/workflows/apk.yml`) esegue i test, compila l'APK e lo pubblica nella release **apk-ultima** del repository: dal telefono apri la pagina delle release, scarica `VEILBREAK.apk` e installalo, consentendo l'installazione da quella fonte quando Android lo chiede. È una versione di prova, non adatta al Play Store. Ogni APK è firmato con la stessa chiave di prova (`app-android/android/app/veilbreak-prova.keystore`, password `android`) e ha un numero di versione crescente, così ogni aggiornamento si installa sopra il precedente senza perdere i progressi. Per pubblicare sul Play Store servirà una chiave vera, da tenere nei segreti di GitHub e non nel repository.
 
 Per compilarla in locale servono Node, Java 17 e l’Android SDK:
 

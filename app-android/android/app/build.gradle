@@ -7,8 +7,9 @@ android {
         applicationId "it.veilbreak.gioco"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        // Il numero di versione cresce a ogni compilazione su GitHub: così ogni APK si installa sopra il precedente.
+        versionCode (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInteger()
+        versionName "0.1." + (System.getenv("GITHUB_RUN_NUMBER") ?: "0")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,7 +17,20 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // Chiave di firma di prova, uguale per tutte le compilazioni: Android accetta un aggiornamento
+    // solo se è firmato con la stessa chiave della versione installata. Non è adatta al Play Store.
+    signingConfigs {
+        prova {
+            storeFile file("veilbreak-prova.keystore")
+            storePassword "android"
+            keyAlias "veilbreak"
+            keyPassword "android"
+        }
+    }
     buildTypes {
+        debug {
+            signingConfig signingConfigs.prova
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
