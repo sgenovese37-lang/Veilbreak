@@ -12,6 +12,7 @@ const targeted = new Set([1, 9, 12, 17, 23, 55]);
 export const cardOf = unit => byId.get(unit.card) ?? fragment;
 export const has = (player, id) => player.board.some(unit => unit.card === id && !unit.silenced);
 const rival = side => 1 - side;
+const damageText = n => n === 1 ? "1 danno" : `${n} danni`;
 const heal = (p, n) => { p.life = Math.min(rules.maxLife, p.life + n); };
 
 function shuffle(items, random) {
@@ -323,7 +324,7 @@ export function attack(g, uid, target) {
   } else {
     damageHero(g, target.side, power);
     if (!unit.silenced && unit.card === 18) discard(g.players[target.side], g);
-    note(g, `${cardOf(unit).name} infligge ${power} danni all’eroe.`);
+    note(g, `${cardOf(unit).name} infligge ${damageText(power)} all’eroe.`);
     settle(g);
   }
   return true;
@@ -348,7 +349,7 @@ function startTurn(g, side) {
   else {
     p.fatigue++;
     damageHero(g, side, p.fatigue);
-    note(g, `${p.name} subisce ${p.fatigue} danni da esaurimento del mazzo.`);
+    note(g, `${p.name} subisce ${damageText(p.fatigue)} da esaurimento del mazzo.`);
   }
   if (p.life === 0) { settle(g); return; }
   for (const id of p.artifacts) {

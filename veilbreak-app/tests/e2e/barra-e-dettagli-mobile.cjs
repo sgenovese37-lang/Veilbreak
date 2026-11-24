@@ -1,0 +1,34 @@
+const { chromium, devices } = require('playwright');
+(async () => {
+  const browser = await chromium.launch();
+  const page = await (await browser.newContext({ ...devices['iPhone 13'] })).newPage();
+  const errors = [];
+  page.on('pageerror', e => errors.push(e.message));
+  const W = page.viewportSize().width;
+  const wide = () => page.evaluate(() => Math.max(document.documentElement.scrollWidth, innerWidth));
+  await page.goto('http://127.0.0.1:8000/veilbreak-app/');
+  await page.selectOption('select[name=first]', 'Sottocittà');
+  await page.selectOption('select[name=second]', 'Senza Santi');
+  await page.click('text=Inizia partita');
+  await page.click('text=Conferma mano');
+  await page.waitForTimeout(400);
+  await page.click('text=Fine turno');
+  await page.waitForTimeout(1200);
+  await page.click('text=Fine turno');
+  await page.waitForTimeout(1200);
+  const bar = await page.locator('.turn-bar').boundingBox();
+  const vh = page.viewportSize().height;
+  console.log('barra in vista senza scorrere:', bar.y >= 0 && bar.y + bar.height <= vh);
+  console.log('riepilogo:', (await page.locator('.recap').innerText().catch(() => 'assente')).replace(/\n/g, ' | '));
+  console.log('mano scorre in orizzontale:', await page.locator('.cards.hand').evaluate(e => e.scrollWidth > e.clientWidth));
+  console.log('larghezza pagina', await wide(), 'schermo', W);
+  await page.screenshot({ path: (process.env.SHOTS ?? require('os').tmpdir()) + '/11-barra-e-mano.png' });
+  await page.locator('.cards.hand .details').first().click();
+  await page.waitForTimeout(600);
+  console.log('dettagli in partita aperti:', await page.locator('#card-viewer[open]').count() === 1);
+  await page.screenshot({ path: (process.env.SHOTS ?? require('os').tmpdir()) + '/12-dettagli-in-partita.png' });
+  await page.click('#card-viewer >> text=Chiudi');
+  for (const id of ['library', 'decks', 'missions']) { await page.click('#' + id); console.log(id, 'larghezza', await wide()); }
+  console.log('errori:', errors.length ? errors : 'nessuno');
+  await browser.close();
+})();

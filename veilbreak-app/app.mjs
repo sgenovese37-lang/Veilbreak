@@ -80,6 +80,14 @@ function drawCard(c, options = {}) {
   return e;
 }
 
+function withDetails(cardElement, c) {
+  const wrap = element("div", undefined, "card-wrap");
+  const info = button("Dettagli", () => showCard(c), "details");
+  info.setAttribute("aria-label", `Dettagli di ${c.name}`);
+  wrap.append(cardElement, info);
+  return wrap;
+}
+
 const viewer = get("card-viewer");
 function showCard(c) {
   const art = illustrationFor(c.id);
@@ -287,11 +295,12 @@ function sidePanel(side, own, allow) {
       render();
     } : undefined;
     const current = stats(game, side, unit);
-    board.append(drawCard(cardOf(unit), {
+    const drawn = drawCard(cardOf(unit), {
       action, target: isTarget, cost: false, attack: current.attack, health: current.health,
       text: !unit.silenced, remaining: unit.silenced ? "Silenziata" : undefined,
       pressed: action && own ? selected?.uid === unit.uid : undefined,
-    }));
+    });
+    board.append(unit.card ? withDetails(drawn, cardOf(unit)) : drawn);
   }
   section.append(board);
   if (p.artifacts.length) section.append(element("p", `Artefatti · ${p.artifacts.map(id => byId.get(id).name).join(", ")}`, "muted"));
@@ -299,8 +308,8 @@ function sidePanel(side, own, allow) {
   if (own && allow) {
     if (p.peek !== null && p.peek === p.deck[0]) section.append(element("p", `In cima al mazzo: ${byId.get(p.peek).name}.`, "muted"));
     section.append(element("h3", "Mano"));
-    const hand = element("div", undefined, "cards");
-    p.hand.forEach((id, i) => hand.append(drawCard(byId.get(id), {
+    const hand = element("div", undefined, "cards hand");
+    p.hand.forEach((id, i) => hand.append(withDetails(drawCard(byId.get(id), {
       action: () => {
         if (game.phase !== "mulligan") return chooseCard(i);
         if (replacements.has(i)) replacements.delete(i);
@@ -310,7 +319,7 @@ function sidePanel(side, own, allow) {
       disabled: game.phase === "play" && !canPlay(game, i),
       pressed: game.phase === "mulligan" ? replacements.has(i) : selected?.index === i,
       cost: game.phase === "play" ? price(game, side, byId.get(id)) : undefined,
-    })));
+    }), byId.get(id))));
     section.append(hand);
   }
   return section;
@@ -321,7 +330,7 @@ function render() {
   const cpu = mode === "cpu" && active === 1;
   const finished = game.phase === "finished";
   const mull = game.phase === "mulligan";
-  const controls = element("div", undefined, "actions");
+  const controls = element("div", undefined, "actions turn-bar");
   table.replaceChildren();
   if (handover) {
     controls.append(element("p", `Passa il dispositivo al giocatore di ${game.players[active].name}.`));
@@ -341,7 +350,15 @@ function render() {
   else if (!cpu && mull) controls.append(button("Conferma mano", () => { mulligan(game, [...replacements]); afterTurn(); }, "primary"));
   else if (!cpu) controls.append(button("Fine turno", () => { endTurn(game); afterTurn(); }, "primary"));
   const view = mode === "cpu" ? 0 : active;
-  table.append(controls);
+  const recap = previousTurn();
+  if (!mull && recap.length) {
+    const box = element("div", undefined, "recap");
+    box.append(element("strong", "Turno precedente"));
+    const list = element("ul");
+    for (const entry of recap) list.append(element("li", entry));
+    box.append(list);
+    table.append(box);
+  }
   if (!mull) table.append(sidePanel(1 - view, false, !cpu && !finished));
   table.append(sidePanel(view, true, !cpu && !finished));
   if (!mull && game.log.length) {
@@ -352,5 +369,12 @@ function render() {
     log.append(list);
     table.append(log);
   }
+  table.append(controls);
+}
+
+function previousTurn() {
+  const starts = game.log.flatMap((entry, i) => entry.startsWith("Turno di ") ? [i] : []);
+  if (starts.length < 2) return [];
+  return game.log.slice(starts.at(-2) + 1, starts.at(-1)).slice(-6);
 }
 showSection("match");

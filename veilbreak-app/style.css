@@ -131,3 +131,19 @@ nav { flex-wrap: wrap; }
   .viewer-body { grid-template-columns: 1fr; padding: .65rem; }
   .viewer-art { max-height: 62dvh; object-fit: contain; }
 }
+
+.card-wrap { display: grid; gap: .25rem; align-content: start; width: min(12rem, 100%); }
+.card-wrap .card { width: 100%; }
+.card-wrap .details { font-size: .8rem; padding: .3rem .5rem; }
+.turn-bar { position: sticky; bottom: max(.5rem, env(safe-area-inset-bottom)); z-index: 5; box-shadow: 0 -.4rem 1.2rem #000a; }
+.recap { background: var(--surface); border: 1px solid var(--edge); border-radius: .5rem; padding: .6rem 1rem; font-size: .9rem; }
+.recap ul { margin: .25rem 0 0; padding-left: 1.2rem; color: var(--muted); }
+@media (max-width: 540px) {
+  .cards .card-wrap { width: 100%; }
+  .cards.hand { display: flex; flex-wrap: nowrap; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: .4rem; margin-inline: -.62rem; padding-inline: .62rem; }
+  .cards.hand .card-wrap { flex: 0 0 min(10rem, 44vw); scroll-snap-align: start; }
+  .turn-bar { padding: .5rem .62rem; }
+  .turn-bar button { min-height: 2.75rem; }
+}
+#table > *, .side, .cards { min-width: 0; }
+#table { grid-template-columns: minmax(0, 1fr); }

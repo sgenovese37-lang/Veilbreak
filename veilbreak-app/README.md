@@ -51,3 +51,12 @@ Per una nuova fazione aggiungi anche le sue righe in un nuovo `assets/illustrazi
     node --test tests/*.test.mjs
 
 I test controllano le creature corrette, il collegamento delle 60 immagini, artefatti, Sindaco, poteri degli eroi e 48 partite complete computer contro computer.
+
+Prove su schermo mobile (iPhone 13 simulato, richiede Playwright e il server avviato su `127.0.0.1:8000`):
+
+    node tests/e2e/partita-e-tutorial-mobile.cjs
+    node tests/e2e/barra-e-dettagli-mobile.cjs
+
+## Interfaccia su telefono
+
+Durante la partita la barra con lo stato e il pulsante «Fine turno» resta fissa in basso. La mano scorre in orizzontale. Ogni carta in mano e in campo ha il pulsante «Dettagli», che apre illustrazione, regole del catalogo e differenze. In cima al tavolo il riquadro «Turno precedente» riassume le mosse appena fatte dall’avversario.
