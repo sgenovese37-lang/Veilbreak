@@ -6,10 +6,12 @@ export const heroes = {
     table: "Sala del Consiglio",
     theme: "hollow",
     power: {
-      name: "Decreto di Protezione",
-      text: "Una creatura alleata ottiene +1 Difesa fino all’inizio del tuo prossimo turno.",
+      // Versione precedente (playtest 1): +1 Difesa fino all'inizio del prossimo turno, con
+      // { target: "ally", defense: 1 }. Cambiata perché la Corte vinceva solo il 30% delle partite.
+      name: "Decreto di Investitura",
+      text: "Una creatura alleata ottiene +1/+1 in modo permanente.",
       target: "ally",
-      defense: 1,
+      buff: 1,
     },
   },
   "Patto Neon": {

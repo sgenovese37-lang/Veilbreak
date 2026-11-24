@@ -57,4 +57,5 @@ ordered = {k: entries[k] for k in sorted(entries)}
     "export const illustrationFor = id => illustrations[id] ?? null;\n",
     encoding="utf-8",
 )
+(thumbs / "elenco.json").write_text(json.dumps([e["thumb"] for e in ordered.values()], indent=0), encoding="utf-8")
 print(f"{len(ordered)} illustrazioni collegate, {sum(bool(e['differences']) for e in ordered.values())} con differenze")

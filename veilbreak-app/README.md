@@ -2,7 +2,7 @@
 
 Avvia un server statico dalla radice del repository, per esempio con `python3 -m http.server 8000`, e apri http://localhost:8000/veilbreak-app/.
 
-Il prototipo include le 60 carte del catalogo del repository, la sfida contro il computer a tre difficoltà e una partita in due sullo stesso dispositivo. Ogni fazione parte da un mazzo predefinito da 15 carte. L’editor salva un mazzo personale per fazione, con un massimo di due copie per carta e una per ciascuna Leggendaria. La modalità contro il computer usa il mazzo predefinito per l’avversario. Il tutorial riprende i dieci capitoli del repository come prove a scelta multipla, con un gettone per il primo completamento di ciascuna missione e il distintivo Primo Binder al termine. I progressi sono salvati nel browser. I gettoni del tutorial e il distintivo sono premi del prototipo.
+Il gioco include le 60 carte del catalogo con le illustrazioni, la sfida contro il computer a tre difficoltà, una partita in due sullo stesso dispositivo, la modalità Storia in 8 capitoli, missioni giornaliere e settimanali, Schegge, buste e collezione. Si può installare sul telefono e funziona anche offline. Ogni fazione parte da un mazzo predefinito da 15 carte. L’editor salva un mazzo personale per fazione, con un massimo di due copie per carta e una per ciascuna Leggendaria. La modalità contro il computer usa il mazzo predefinito per l’avversario. Il tutorial riprende i dieci capitoli del repository come prove a scelta multipla, con un gettone per il primo completamento di ciascuna missione e il distintivo Primo Binder al termine. I progressi sono salvati nel browser. Ogni missione del tutorial dà anche 20 Schegge e il completamento 100 Schegge e il titolo Primo Binder.
 
 Le regole del catalogo e del tutorial hanno priorità. Per i casi che i documenti lasciano aperti, il prototipo usa queste convenzioni di playtest.
 
@@ -11,7 +11,7 @@ Le regole del catalogo e del tutorial hanno priorità. Per i casi che i document
 - Telecamera di Sicurezza rivela la carta una volta, quando entra in gioco. Telefono Vincolante sconta il primo incantesimo del turno per ogni copia in campo. ATM di Sangue si attiva alla fine del turno di entrambi i giocatori.
 - L’Attacco ha un minimo di zero. Quando il mazzo è vuoto, ogni pesca obbligatoria di inizio turno infligge un danno al proprio eroe in più rispetto alla volta precedente.
 
-Il gioco completo richiede ancora il multiplayer online, la storia, le missioni giornaliere e settimanali e un sistema di ricompense reale.
+Manca ancora il gioco 1 contro 1 online, che richiede un server.
 
 ## Regole di partita
 
@@ -21,7 +21,7 @@ Ogni metà del tavolo usa il tema del suo eroe, anche quando si affrontano fazio
 
 | Fazione | Eroe | Potere |
 | --- | --- | --- |
-| Corte di Hollow | Prefetta Ada Vesper | +1 Difesa a una creatura alleata fino all’inizio del proprio prossimo turno |
+| Corte di Hollow | Prefetta Ada Vesper | +1/+1 permanente a una creatura alleata (prima: +1 Difesa fino al proprio prossimo turno; cambiato per il bilanciamento) |
 | Patto Neon | Iona Volt, la Frequenza | 1 danno a una creatura nemica |
 | Senza Santi | Elena Voss, il Contratto | Cura di 2 punti vita al proprio eroe |
 | Sottocittà | Mara Sottorotaia | +1 Attacco a una creatura alleata fino alla fine del turno |
@@ -32,7 +32,7 @@ I nomi degli eroi e i poteri sono proposte per il playtest.
 
 Aggiungi o modifica le schede in `cards.mjs`. Ogni scheda usa un ID numerico stabile, nome, fazione, rarità, costo, tipo, testo e, per le creature, Attacco e Difesa. Il catalogo, l’editor e la selezione della partita derivano le fazioni dalle schede. Una nuova fazione deve avere almeno 15 carte per giocare con un mazzo predefinito. Gli effetti si risolvono in `game.mjs`; le nuove meccaniche richiedono una regola nel motore. Le sei carte segnate Legendary nel catalogo sono tutte incluse.
 
-Per assegnare un eroe e un tavolo a una nuova fazione, aggiungi una voce in `heroes.mjs` e uno stile in `style.css` per il relativo tema. Il motore riusa i tipi di potere già supportati (danno, cura, Attacco e Difesa).
+Per assegnare un eroe e un tavolo a una nuova fazione, aggiungi una voce in `heroes.mjs` e uno stile in `style.css` per il relativo tema. Il motore riusa i tipi di potere già supportati: `damage` (danno a una creatura), `heal` (cura), `attack` e `defense` (temporanei), `buff` (+X/+X permanente), `summon` (evoca la carta con quell’ID) e `heroDamage` (danno all’eroe nemico). Le nuove fazioni entrano automaticamente in collezione (una copia per carta), nelle missioni «Vinci con…» e nell’analisi del bilanciamento.
 
 ## Illustrazioni
 
@@ -50,13 +50,34 @@ Per una nuova fazione aggiungi anche le sue righe in un nuovo `assets/illustrazi
 
     node --test tests/*.test.mjs
 
-I test controllano le creature corrette, il collegamento delle 60 immagini, artefatti, Sindaco, poteri degli eroi e 48 partite complete computer contro computer.
+I 20 test controllano carte, immagini, regole, poteri degli eroi, partite complete a ogni livello, collezione e buste, missioni, Storia e la forza del computer Difficile.
 
 Prove su schermo mobile (iPhone 13 simulato, richiede Playwright e il server avviato su `127.0.0.1:8000`):
 
     node tests/e2e/partita-e-tutorial-mobile.cjs
     node tests/e2e/barra-e-dettagli-mobile.cjs
+    node tests/e2e/storia-missioni-buste-mobile.cjs
 
 ## Interfaccia su telefono
 
 Durante la partita la barra con lo stato e il pulsante «Fine turno» resta fissa in basso. La mano scorre in orizzontale. Ogni carta in mano e in campo ha il pulsante «Dettagli», che apre illustrazione, regole del catalogo e differenze. In cima al tavolo il riquadro «Turno precedente» riassume le mosse appena fatte dall’avversario.
+
+## Modalità Storia
+
+«La Notte del Velo Spezzato» ha 8 capitoli contro le quattro fazioni, da Facile a Difficile, alcuni con più punti vita per l’avversario. Ogni capitolo si sblocca vincendo il precedente e dà un premio alla prima vittoria. Il premio finale vale 500 Schegge, 2 buste e il titolo Custode del Velo. Testi, avversari e premi sono in `story.mjs`.
+
+## Missioni, Schegge e buste
+
+Ogni giorno ci sono 3 missioni giornaliere e ogni lunedì 3 settimanali, scelte da `missions.mjs`. Contano le partite contro il computer e la Storia; le partite in due sullo stesso dispositivo non danno premi. Una vittoria vale 15, 25 o 40 Schegge secondo la difficoltà, una sconfitta 5.
+
+Si parte con una copia di ogni carta e una busta. Una busta costa 100 Schegge e contiene 5 carte (probabilità: Comune 50%, Non comune 28%, Rara 15%, Epica 5%, Leggendaria 2%). Le copie oltre il massimo giocabile diventano Schegge. L’editor dei mazzi permette solo le copie possedute. Valori e probabilità sono in `profile.mjs`.
+
+## Computer e bilanciamento
+
+A Difficile il computer prova ogni mossa possibile su una copia della partita e sceglie quella che migliora di più la posizione (`ai.mjs`); batte il livello Normale in circa due partite su tre. L’analisi delle fazioni si rilancia con `node tools/bilanciamento.mjs` e i risultati sono commentati in `BILANCIAMENTO.md`.
+
+## Installazione e offline
+
+`manifest.webmanifest` e `sw.js` rendono il gioco installabile dal browser del telefono («Aggiungi a schermata Home»). Le miniature e i file del gioco vengono salvati per l’uso offline; le illustrazioni grandi restano disponibili dopo la prima apertura. Quando pubblichi una nuova versione, cambia `VERSION` in `sw.js`. Le icone si rigenerano con `python3 -I tools/build_icons.py .`.
+
+Animazioni (evocazione, danni, cure, apertura delle buste) e suoni sintetizzati si possono disattivare: i suoni dal pulsante in alto, le animazioni con l’impostazione di sistema «Riduci movimento».

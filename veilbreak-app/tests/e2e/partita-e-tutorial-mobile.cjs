@@ -37,7 +37,7 @@ const shots = (process.env.SHOTS ?? require('os').tmpdir()) + '/';
       const s = document.querySelector('#table [role=status]')?.textContent ?? '';
       return !s.includes('computer');
     }, null, { timeout: 10000 });
-    if ((await status()).startsWith('Vince') || (await status()) === 'Pareggio') break;
+    if (/^(Vince|Vittoria|Sconfitta|Pareggio)/.test(await status())) break;
     // gioca le carte disponibili
     for (let k = 0; k < 10; k++) {
       const playable = page.locator('#table .side').last().locator('.cards').last().locator('button.card:not([disabled])');
@@ -60,7 +60,7 @@ const shots = (process.env.SHOTS ?? require('os').tmpdir()) + '/';
     // attacchi
     for (let k = 0; k < 8; k++) {
       const attacker = page.locator('#table .side').last().locator('.cards').first().locator('button.card:not([disabled])');
-      if (!(await attacker.count()) || (await status()).startsWith('Vince')) break;
+      if (!(await attacker.count()) || /^(Vince|Vittoria|Sconfitta)/.test(await status())) break;
       await attacker.first().click();
       const heroTarget = page.locator('#table .hero button.target');
       if (await heroTarget.count()) await heroTarget.click();
@@ -71,7 +71,7 @@ const shots = (process.env.SHOTS ?? require('os').tmpdir()) + '/';
     if (turns === 2) await page.screenshot({ path: shots + '03-partita-turno3.png', fullPage: true });
     if (turns === 5) await page.screenshot({ path: shots + '04-partita-turno6.png' });
     const s = await status();
-    if (s.startsWith('Vince') || s === 'Pareggio') break;
+    if (/^(Vince|Vittoria|Sconfitta|Pareggio)/.test(s)) break;
     await overflow('partita turno ' + turns);
     await page.click('text=Fine turno');
     await page.waitForTimeout(700);

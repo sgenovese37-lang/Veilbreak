@@ -13,7 +13,8 @@ export const cardOf = unit => byId.get(unit.card) ?? fragment;
 export const has = (player, id) => player.board.some(unit => unit.card === id && !unit.silenced);
 const rival = side => 1 - side;
 const damageText = n => n === 1 ? "1 danno" : `${n} danni`;
-const heal = (p, n) => { p.life = Math.min(rules.maxLife, p.life + n); };
+const heal = (p, n) => { p.life = Math.min(p.maxLife, p.life + n); };
+const emptyStats = () => ({ cards: 0, creatures: 0, spells: 0, artifacts: 0, secrets: 0, heroDamage: 0, kills: 0, powers: 0, turns: 0 });
 
 function shuffle(items, random) {
   for (let i = items.length - 1; i > 0; i--) {
@@ -49,15 +50,18 @@ export function validDeck(name, deck) {
   });
 }
 
-export function createGame(names, random = Math.random, customDecks = []) {
+// options.lives: punti vita iniziali per lato (Storia). options.decks: mazzi già decisi, senza i limiti dell'editor.
+export function createGame(names, random = Math.random, customDecks = [], options = {}) {
   const players = names.map((name, side) => {
     const custom = customDecks[side];
-    const deck = shuffle(validDeck(name, custom) ? [...custom] : defaultDeck(name), random);
-    const player = { name, life: rules.maxLife, capacity: 0, essence: 0, deck, hand: [], discard: [], powerUsed: false, board: [], artifacts: [], secrets: [], discount: 0, fatigue: 0, peek: null };
+    const forced = options.decks?.[side];
+    const deck = shuffle(forced?.length ? [...forced] : validDeck(name, custom) ? [...custom] : defaultDeck(name), random);
+    const maxLife = options.lives?.[side] ?? rules.maxLife;
+    const player = { name, life: maxLife, maxLife, capacity: 0, essence: 0, deck, hand: [], discard: [], powerUsed: false, board: [], artifacts: [], secrets: [], discount: 0, fatigue: 0, peek: null };
     draw(player, rules.openingHand);
     return player;
   });
-  return { players, active: 0, phase: "mulligan", round: 0, next: 1, winner: null, log: [], random };
+  return { players, active: 0, phase: "mulligan", round: 0, next: 1, winner: null, log: [], random, stats: [emptyStats(), emptyStats()] };
 }
 
 export function note(g, text) {
@@ -90,8 +94,9 @@ export function stats(g, side, unit) {
   const c = cardOf(unit);
   const boost = aura(p, 31, unit.uid);
   const loss = enemy.artifacts.filter(id => id === 53).length;
-  const maxHealth = c.health + boost + unit.guard[0] + unit.guard[1] + p.artifacts.filter(id => id === 44).length;
-  return { attack: Math.max(0, c.attack + boost + unit.powerAttack - loss - unit.weakened), health: maxHealth - unit.damage, maxHealth };
+  const bonus = unit.bonus ?? 0;
+  const maxHealth = c.health + boost + bonus + unit.guard[0] + unit.guard[1] + p.artifacts.filter(id => id === 44).length;
+  return { attack: Math.max(0, c.attack + boost + bonus + unit.powerAttack - loss - unit.weakened), health: maxHealth - unit.damage, maxHealth };
 }
 
 function summon(g, side, card) {
@@ -111,9 +116,10 @@ function takeSecret(p, id) {
   return true;
 }
 
-function damageHero(g, side, value) {
+function damageHero(g, side, value, credited = true) {
   const p = g.players[side];
   if (value <= 0) return;
+  if (credited) g.stats[rival(side)].heroDamage += Math.min(value, p.life);
   p.life = Math.max(0, p.life - value);
   if (takeSecret(p, 39)) {
     draw(p, 2, g);
@@ -131,8 +137,9 @@ function settle(g) {
       const p = g.players[side];
       p.board = p.board.filter(other => other.uid !== unit.uid);
       deadIds.add(unit.uid);
+      if (unit.card) g.stats[rival(side)].kills++;
       if (!unit.silenced && unit.card === 31) draw(p, 3, g);
-      if (!unit.silenced && unit.card === 45) heal(p, rules.maxLife);
+      if (!unit.silenced && unit.card === 45) heal(p, p.maxLife);
     }
   } while (dead.length);
   const [a, b] = g.players;
@@ -184,7 +191,7 @@ export function canUseHeroPower(g) {
   const p = g.players[g.active];
   const power = heroFor(p.name)?.power;
   return Boolean(g.phase === "play" && power && !p.powerUsed && p.essence >= heroPowerCost
-    && (!power.target || powerTargets(g).length) && (!power.heal || p.life < rules.maxLife));
+    && (!power.target || powerTargets(g).length) && (!power.heal || p.life < p.maxLife));
 }
 
 export function useHeroPower(g, target) {
@@ -197,10 +204,14 @@ export function useHeroPower(g, target) {
   const unit = unitAt(g, target);
   p.essence -= heroPowerCost;
   p.powerUsed = true;
+  g.stats[side].powers++;
   if (power.defense) unit.guard[side] = power.defense;
   if (power.attack) unit.powerAttack += power.attack;
+  if (power.buff) unit.bonus = (unit.bonus ?? 0) + power.buff;
   if (power.damage) unit.damage += power.damage;
   if (power.heal) heal(p, power.heal);
+  if (power.summon) summon(g, side, power.summon);
+  if (power.heroDamage) damageHero(g, rival(side), power.heroDamage);
   note(g, `${hero.name} usa ${power.name}.`);
   settle(g);
   return true;
@@ -250,7 +261,7 @@ function resolve(g, side, id, target) {
     case 33: heal(p, 5); break;
     case 35: heal(p, 3); break;
     case 38: hitAll(enemy, 2); break;
-    case 40: damageHero(g, opponent, 2); damageHero(g, side, 1); break;
+    case 40: damageHero(g, opponent, 2); damageHero(g, side, 1, false); break;
     case 41: heal(p, 2); break;
     case 43: heal(p, 4); draw(p, 1, g); break;
     case 46: draw(p, enemy.board.length, g); break;
@@ -276,6 +287,9 @@ export function play(g, index, target) {
   if (targets.length && !targets.some(choice => matchTarget(choice, target))) return false;
   p.essence -= price(g, side, c);
   p.hand.splice(index, 1);
+  const tally = g.stats[side];
+  tally.cards++;
+  tally[{ Creatura: "creatures", Incantesimo: "spells", Artefatto: "artifacts", Segreto: "secrets" }[c.type]]++;
   if (c.type === "Incantesimo") p.discount = 0;
   note(g, c.type === "Segreto" ? `${p.name} prepara un Segreto.` : `${p.name} gioca ${c.name}.`);
   const unit = c.type === "Creatura" ? summon(g, side, c.id) : null;
@@ -336,6 +350,7 @@ function startTurn(g, side) {
   const p = g.players[side];
   p.capacity = Math.min(rules.maxEssence, p.capacity + 1);
   p.powerUsed = false;
+  g.stats[side].turns++;
   for (const player of g.players) {
     for (const unit of player.board) unit.guard[side] = 0;
   }
@@ -348,7 +363,7 @@ function startTurn(g, side) {
   if (p.deck.length) draw(p, 1, g);
   else {
     p.fatigue++;
-    damageHero(g, side, p.fatigue);
+    damageHero(g, side, p.fatigue, false);
     note(g, `${p.name} subisce ${damageText(p.fatigue)} da esaurimento del mazzo.`);
   }
   if (p.life === 0) { settle(g); return; }

@@ -1,13 +1,20 @@
 import { cards } from "./cards.mjs";
 import {
   factions, byId, createGame, mulligan, canPlay, playTargets, play,
-  attackTargets, attack, endTurn, computerTurn, stats, cardOf, price,
+  attackTargets, attack, endTurn, stats, cardOf, price,
   defaultDeck, copyLimit, deckSize, validDeck, rules, powerTargets, canUseHeroPower, useHeroPower,
 } from "./game.mjs";
 
 import { renderTutorial } from "./tutorial.mjs";
 import { heroFor, heroPowerCost } from "./heroes.mjs";
 import { illustrationFor } from "./illustrations.mjs";
+import { runComputer } from "./ai.mjs";
+import {
+  loadProfile, owned, buyPack, openPack, packPrice, collectionProgress, rewardMatch, titles,
+} from "./profile.mjs";
+import { currentMissions, recordEvent, claimMission } from "./missions.mjs";
+import { chapters, storyTitle, storyProgress, isUnlocked, completeChapter, finalReward } from "./story.mjs";
+import { sound, soundEnabled, setSound } from "./audio.mjs";
 
 const get = id => document.getElementById(id);
 const form = get("settings");
@@ -26,6 +33,12 @@ let timer;
 let editing = factions[0];
 let draft;
 let savedDecks;
+let storyChapter = null;
+let storyPick = null;
+let storyFaction = factions[0];
+let lastPack = null;
+let outcome = null;
+let previous = new Map();
 const decksKey = "veilbreak-custom-decks";
 try { savedDecks = new Map(Object.entries(JSON.parse(localStorage.getItem(decksKey) ?? "{}"))); }
 catch { savedDecks = new Map(); }
@@ -43,6 +56,27 @@ function button(text, action, cls) {
   b.onclick = action;
   return b;
 }
+
+function updateWallet() {
+  const profile = loadProfile();
+  get("wallet").textContent = `◆ ${profile.shards} Schegge · ${profile.packs} ${profile.packs === 1 ? "busta" : "buste"}`;
+  const toggle = get("sound-toggle");
+  toggle.textContent = soundEnabled() ? "Suoni: sì" : "Suoni: no";
+  toggle.setAttribute("aria-pressed", soundEnabled());
+}
+get("sound-toggle").onclick = () => { setSound(!soundEnabled()); updateWallet(); sound("play"); };
+
+// I mazzi salvati valgono solo se usano carte possedute nella collezione.
+function deckOwned(deck) {
+  if (!Array.isArray(deck)) return false;
+  const counts = new Map();
+  for (const id of deck) counts.set(id, (counts.get(id) ?? 0) + 1);
+  return [...counts].every(([id, n]) => n <= owned(id));
+}
+const playableDeck = name => {
+  const deck = savedDecks.get(name);
+  return validDeck(name, deck) && deckOwned(deck) ? deck : null;
+};
 
 for (const select of [form.elements.first, form.elements.second, filter]) {
   for (const name of factions) select.append(new Option(name, name));
@@ -76,7 +110,9 @@ function drawCard(c, options = {}) {
     strip.append(element("span", `ATT ${options.attack ?? c.attack}`, "att"), element("span", `DIF ${options.health ?? c.health}`, "dif"));
     e.append(strip);
   }
+  if (options.copies !== undefined) e.append(element("small", `Copie possedute ${options.copies}/${copyLimit(c)}`, "copies"));
   if (options.meta && art?.differences.length) e.append(element("small", "⚠ L’illustrazione differisce dal catalogo", "warning"));
+  if (options.badge) e.append(element("small", options.badge, "badge"));
   return e;
 }
 
@@ -122,7 +158,8 @@ function showCard(c) {
 viewer.addEventListener("click", event => { if (event.target === viewer) viewer.close(); });
 
 function drawCatalogue() {
-  get("cards").replaceChildren(...cards.filter(c => !filter.value || c.faction === filter.value).map(c => drawCard(c, { meta: true, art: "full", action: () => showCard(c) })));
+  get("cards").replaceChildren(...cards.filter(c => !filter.value || c.faction === filter.value).map(c => drawCard(c, { meta: true, art: "full", copies: owned(c.id), action: () => showCard(c) })));
+  drawShop();
 }
 
 function renderDeckEditor(message = "", focus) {
@@ -151,7 +188,7 @@ function renderDeckEditor(message = "", focus) {
       renderDeckEditor("Mazzo disponibile per questa sessione.", "save");
     }
   }, "primary");
-  save.disabled = !validDeck(editing, draft);
+  save.disabled = !validDeck(editing, draft) || !deckOwned(draft);
   controls.append(save);
   controls.append(button("Ripristina predefinito", () => { draft = defaultDeck(editing); renderDeckEditor(); }));
   const status = element("p", message);
@@ -173,8 +210,8 @@ function renderDeckEditor(message = "", focus) {
     remove.setAttribute("aria-label", `Rimuovi ${c.name}`);
     plus.setAttribute("aria-label", `Aggiungi ${c.name}`);
     remove.disabled = count === 0;
-    plus.disabled = count >= copyLimit(c) || used >= deckSize;
-    row.append(element("span", `${c.name} · ${c.cost} Essenza`), remove, element("span", count), plus);
+    plus.disabled = count >= copyLimit(c) || count >= owned(c.id) || used >= deckSize;
+    row.append(element("span", `${c.name} · ${c.cost} Essenza · possiedi ${owned(c.id)}`), remove, element("span", count), plus);
     list.append(row);
   }
   panel.replaceChildren(header, controls, status, list);
@@ -183,13 +220,19 @@ function renderDeckEditor(message = "", focus) {
   else if (focus) (get(focus)?.disabled ? get(focus)?.parentElement?.querySelector("button:not(:disabled)") : get(focus))?.focus();
 }
 
+const sections = ["match", "story-nav", "quests-nav", "library", "decks", "missions"];
 function showSection(name) {
+  updateWallet();
+  get("story").hidden = name !== "story-nav";
+  get("quests").hidden = name !== "quests-nav";
   catalogue.hidden = name !== "library";
   get("tutorial").hidden = name !== "missions";
   get("deck-editor").hidden = name !== "decks";
   setup.hidden = name !== "match" || Boolean(game);
   table.hidden = name !== "match" || !game;
-  for (const id of ["match", "library", "decks", "missions"]) get(id).setAttribute("aria-pressed", id === name);
+  for (const id of sections) get(id).setAttribute("aria-pressed", id === name);
+  if (name === "story-nav") renderStory();
+  if (name === "quests-nav") renderQuests();
   if (name === "library") drawCatalogue();
   if (name === "missions") renderTutorial(get("tutorial"));
   if (name === "decks") {
@@ -198,25 +241,63 @@ function showSection(name) {
   }
 }
 
-for (const id of ["match", "library", "decks", "missions"]) get(id).onclick = () => showSection(id);
+for (const id of sections) get(id).onclick = () => showSection(id);
+get("tutorial").addEventListener("click", () => setTimeout(updateWallet));
 filter.onchange = drawCatalogue;
 form.onsubmit = event => {
   event.preventDefault();
   mode = form.elements.mode.value;
   level = form.elements.level.value;
   const names = [form.elements.first.value, form.elements.second.value];
-  game = createGame(names, Math.random, names.map((name, side) => side === 1 && mode === "cpu" ? null : savedDecks.get(name)));
+  startMatch(names, names.map((name, side) => side === 1 && mode === "cpu" ? null : playableDeck(name)));
+};
+
+function startMatch(names, decks, options = {}) {
+  game = createGame(names, Math.random, decks, options);
   handover = false;
   selected = null;
+  outcome = null;
+  previous = new Map();
   replacements.clear();
   showSection("match");
   render();
-};
+}
 
 function reset() {
   clearTimeout(timer);
+  const fromStory = storyChapter !== null;
   game = null;
-  showSection("match");
+  storyChapter = null;
+  showSection(fromStory ? "story-nav" : "match");
+}
+
+// Ricompense di fine partita: solo contro il computer (anche in Storia), una volta per partita.
+function settleOutcome() {
+  if (outcome || game.phase !== "finished") return;
+  outcome = { lines: [] };
+  if (mode !== "cpu") {
+    sound("win");
+    return;
+  }
+  const won = game.winner === 0;
+  sound(won ? "win" : "lose");
+  const shards = rewardMatch(won, level);
+  outcome.lines.push(`+${shards} Schegge`);
+  const event = { won, level, faction: game.players[0].name, stats: game.stats[0] };
+  if (storyChapter !== null && won) {
+    const chapter = chapters[storyChapter];
+    const granted = completeChapter(storyChapter);
+    event.chapterCleared = true;
+    outcome.story = chapter.outro;
+    if (granted?.chapter) outcome.lines.push(`Premio del capitolo: ${rewardText(granted.chapter)}`);
+    if (granted?.final) outcome.lines.push(`Premio finale della Storia: ${rewardText(granted.final)} e il titolo ${titles[finalReward.title].name}`);
+  }
+  recordEvent(event);
+  updateWallet();
+}
+
+function rewardText(reward) {
+  return [reward.shards ? `${reward.shards} Schegge` : "", reward.packs ? `${reward.packs} ${reward.packs === 1 ? "busta" : "buste"}` : ""].filter(Boolean).join(" e ");
 }
 
 function afterTurn() {
@@ -225,7 +306,7 @@ function afterTurn() {
   handover = mode === "local" && game.phase !== "finished";
   render();
   if (mode === "cpu" && game.active === 1 && game.phase !== "finished") {
-    timer = setTimeout(() => { computerTurn(game, level); render(); }, 450);
+    timer = setTimeout(() => { runComputer(game, level); render(); }, 450);
   }
 }
 
@@ -243,9 +324,9 @@ function available(side, uid) {
 function target(side, uid) {
   if (!available(side, uid)) return;
   const choice = { side, uid };
-  if (selected.kind === "play") play(game, selected.index, choice);
-  else if (selected.kind === "power") useHeroPower(game, choice);
-  else attack(game, selected.uid, choice);
+  if (selected.kind === "play") { if (play(game, selected.index, choice)) sound("play"); }
+  else if (selected.kind === "power") { if (useHeroPower(game, choice)) sound("power"); }
+  else if (attack(game, selected.uid, choice)) sound("attack");
   selected = null;
   render();
 }
@@ -254,7 +335,7 @@ function chooseCard(index) {
   const id = game.players[game.active].hand[index];
   if (playTargets(game, id).length) selected = { kind: "play", index };
   else {
-    play(game, index);
+    if (play(game, index)) sound("play");
     selected = null;
   }
   render();
@@ -270,15 +351,19 @@ function sidePanel(side, own, allow) {
   identity.append(element("small", hero ? `${p.name} · ${hero.table}` : p.name));
   identity.append(element("h2", hero?.name ?? p.name));
   head.append(identity);
-  const life = `${p.life}/${rules.maxLife} PV`;
-  head.append(allow && available(side, null) ? button(life, () => target(side, null), "target") : element("p", life));
+  const life = `${p.life}/${p.maxLife} PV`;
+  const lifeNode = allow && available(side, null) ? button(life, () => target(side, null), "target") : element("p", life);
+  const oldLife = previous.get(`hero-${side}`);
+  if (oldLife !== undefined && oldLife !== p.life) lifeNode.classList.add(p.life < oldLife ? "hit" : "healed");
+  previous.set(`hero-${side}`, p.life);
+  head.append(lifeNode);
   head.append(element("p", `Essenza ${p.essence}/${p.capacity} · Mazzo ${p.deck.length} · Mano ${p.hand.length}/${rules.handLimit}`));
   section.append(head);
   if (hero) {
     const power = element("div", undefined, "hero-power");
     const activate = button(`${hero.power.name} · ${heroPowerCost} Essenza`, () => {
       if (powerTargets(game).length) selected = { kind: "power" };
-      else useHeroPower(game);
+      else if (useHeroPower(game)) sound("power");
       render();
     });
     activate.disabled = !allow || !own || Boolean(selected) || !canUseHeroPower(game);
@@ -300,6 +385,10 @@ function sidePanel(side, own, allow) {
       text: !unit.silenced, remaining: unit.silenced ? "Silenziata" : undefined,
       pressed: action && own ? selected?.uid === unit.uid : undefined,
     });
+    const oldHealth = previous.get(unit.uid);
+    if (oldHealth === undefined) drawn.classList.add("summoned");
+    else if (current.health < oldHealth) drawn.classList.add("hit");
+    previous.set(unit.uid, current.health);
     board.append(unit.card ? withDetails(drawn, cardOf(unit)) : drawn);
   }
   section.append(board);
@@ -341,15 +430,31 @@ function render() {
   let message = mull ? `Puoi sostituire fino a ${rules.mulliganLimit} carte.` : `Turno di ${game.players[active].name}`;
   if (cpu) message = "Il computer sta giocando.";
   if (selected) message = "Scegli un bersaglio evidenziato.";
-  if (finished) message = game.winner === "draw" ? "Pareggio" : `Vince ${game.players[game.winner].name}!`;
+  if (finished) {
+    settleOutcome();
+    message = game.winner === "draw" ? "Pareggio" : mode === "cpu" ? (game.winner === 0 ? "Vittoria!" : "Sconfitta") : `Vince ${game.players[game.winner].name}!`;
+  }
   const status = element("strong", message);
   status.setAttribute("role", "status");
   controls.append(status);
-  if (finished) controls.append(button("Nuova partita", reset, "primary"));
+  if (finished) {
+    if (outcome?.lines.length) controls.append(element("span", outcome.lines.join(" · "), "reward-line"));
+    controls.append(button(storyChapter !== null ? "Torna alla Storia" : "Nuova partita", reset, "primary"));
+  }
   else if (!cpu && selected) controls.append(button("Annulla", () => { selected = null; render(); }));
   else if (!cpu && mull) controls.append(button("Conferma mano", () => { mulligan(game, [...replacements]); afterTurn(); }, "primary"));
   else if (!cpu) controls.append(button("Fine turno", () => { endTurn(game); afterTurn(); }, "primary"));
   const view = mode === "cpu" ? 0 : active;
+  if (finished && outcome?.story) {
+    const box = element("div", undefined, "recap story-outro");
+    box.append(element("strong", chapters[storyChapter]?.title ?? "Storia"), element("p", outcome.story));
+    table.append(box);
+  }
+  if (storyChapter !== null && !finished && game.round <= 1) {
+    const box = element("div", undefined, "recap");
+    box.append(element("strong", `Capitolo ${storyChapter + 1} · ${chapters[storyChapter].title}`), element("p", chapters[storyChapter].intro));
+    table.append(box);
+  }
   const recap = previousTurn();
   if (!mull && recap.length) {
     const box = element("div", undefined, "recap");
@@ -376,5 +481,137 @@ function previousTurn() {
   const starts = game.log.flatMap((entry, i) => entry.startsWith("Turno di ") ? [i] : []);
   if (starts.length < 2) return [];
   return game.log.slice(starts.at(-2) + 1, starts.at(-1)).slice(-6);
+}
+
+// ---------- Storia ----------
+function renderStory() {
+  const panel = get("story");
+  const cleared = storyProgress();
+  storyPick ??= Math.min(cleared, chapters.length - 1);
+  const head = element("div", undefined, "section-head");
+  head.append(element("h2", `Storia · ${storyTitle}`), element("span", `Capitoli superati ${cleared}/${chapters.length}`, "muted"));
+  const list = element("ol", undefined, "chapter-list");
+  chapters.forEach((chapter, i) => {
+    const unlocked = isUnlocked(i);
+    const state = i < cleared ? "✓ Superato" : unlocked ? "Disponibile" : "Bloccato";
+    const item = element("li");
+    const choose = button(`${i + 1}. ${chapter.title} · ${state}`, () => { storyPick = i; renderStory(); });
+    choose.disabled = !unlocked;
+    choose.setAttribute("aria-pressed", storyPick === i);
+    item.append(choose);
+    list.append(item);
+  });
+  const chapter = chapters[storyPick];
+  const detail = element("article", undefined, "chapter");
+  detail.append(element("h3", `Capitolo ${storyPick + 1} · ${chapter.title}`), element("p", chapter.intro));
+  const enemyHero = heroFor(chapter.opponent);
+  detail.append(element("p", `Avversario: ${enemyHero?.name ?? chapter.opponent} (${chapter.opponent}) · ${chapter.level} · ${chapter.lives[1]} PV contro i tuoi ${chapter.lives[0]}`, "muted"));
+  const firstTime = storyPick >= cleared;
+  detail.append(element("p", firstTime ? `Premio alla prima vittoria: ${rewardText(chapter.reward)}` : "Capitolo già superato: puoi rigiocarlo per le Schegge della vittoria.", "reward-line"));
+  const pickFaction = element("label", "La tua fazione ");
+  const select = element("select");
+  for (const name of factions) select.append(new Option(name, name));
+  select.value = storyFaction;
+  select.onchange = () => { storyFaction = select.value; };
+  pickFaction.append(select);
+  const start = button("Gioca il capitolo", () => {
+    storyChapter = storyPick;
+    mode = "cpu";
+    level = chapter.level;
+    startMatch([storyFaction, chapter.opponent], [playableDeck(storyFaction), null], { lives: chapter.lives });
+  }, "primary");
+  detail.append(pickFaction, start);
+  const final = element("p", cleared === chapters.length
+    ? `Storia completata · Titolo ${titles[finalReward.title].name}`
+    : `Premio finale: ${rewardText(finalReward)} e il titolo ${titles[finalReward.title].name}`, "muted");
+  panel.replaceChildren(head, list, detail, final);
+}
+
+// ---------- Missioni e profilo ----------
+function renderQuests(message = "") {
+  const panel = get("quests");
+  const profile = loadProfile();
+  const all = currentMissions();
+  const head = element("div", undefined, "section-head");
+  head.append(element("h2", "Missioni"));
+  const status = element("p", message, "reward-line");
+  status.setAttribute("role", "status");
+  const block = (title, note, list) => {
+    const box = element("section", undefined, "quest-block");
+    box.append(element("h3", title), element("p", note, "muted"));
+    const ul = element("ul", undefined, "quest-list");
+    for (const m of list) {
+      const li = element("li", undefined, m.claimed ? "claimed" : m.done ? "done" : "");
+      const text = element("div");
+      text.append(element("strong", m.text), element("small", `Premio: ${rewardText(m)}`));
+      const bar = element("progress");
+      bar.max = m.goal; bar.value = m.value;
+      bar.setAttribute("aria-label", `${m.text}: ${m.value} su ${m.goal}`);
+      const claim = button(m.claimed ? "Riscattata" : m.done ? "Riscatta" : `${m.value}/${m.goal}`, () => {
+        const got = claimMission(m.id);
+        if (got) { sound("reward"); updateWallet(); renderQuests(`Hai ottenuto ${rewardText(got)}.`); }
+      }, m.done && !m.claimed ? "primary" : "");
+      claim.disabled = !m.done || m.claimed;
+      li.append(text, bar, claim);
+      ul.append(li);
+    }
+    box.append(ul);
+    return box;
+  };
+  const profileBox = element("section", undefined, "quest-block");
+  profileBox.append(element("h3", "Profilo"));
+  profileBox.append(element("p", `Partite contro il computer ${profile.stats.played} · Vittorie ${profile.stats.won}`));
+  const { have, max } = collectionProgress();
+  profileBox.append(element("p", `Collezione ${have}/${max} copie giocabili`));
+  profileBox.append(element("p", profile.titles.length ? `Titoli: ${profile.titles.map(id => titles[id]?.name).join(", ")}` : "Nessun titolo ancora: completa il tutorial e la Storia.", "muted"));
+  if (profile.history.length) {
+    const details = element("details");
+    details.append(element("summary", "Ultimi premi"));
+    const ol = element("ul", undefined, "log");
+    for (const line of profile.history.slice(0, 10)) ol.append(element("li", line));
+    details.append(ol);
+    profileBox.append(details);
+  }
+  panel.replaceChildren(head, status,
+    block("Giornaliere", "Si rinnovano a mezzanotte. Contano le partite contro il computer e la Storia.", all.daily),
+    block("Settimanali", "Si rinnovano ogni lunedì.", all.weekly),
+    profileBox);
+}
+
+// ---------- Buste ----------
+function drawShop() {
+  const shop = get("shop");
+  const profile = loadProfile();
+  const { have, max } = collectionProgress();
+  const head = element("div", undefined, "section-head");
+  head.append(element("h2", "Buste"), element("span", `Collezione ${have}/${max}`, "muted"));
+  const actions = element("div", undefined, "actions");
+  const buy = button(`Compra una busta · ${packPrice} Schegge`, () => {
+    if (buyPack()) { sound("reward"); lastPack = null; updateWallet(); drawCatalogue(); }
+  });
+  buy.disabled = profile.shards < packPrice;
+  const open = button(`Apri una busta (${profile.packs})`, () => {
+    lastPack = openPack();
+    if (lastPack) sound("pack");
+    updateWallet();
+    drawCatalogue();
+    get("shop").scrollIntoView({ block: "start" });
+  }, "primary");
+  open.disabled = profile.packs < 1;
+  actions.append(buy, open);
+  const children = [head, element("p", "Ogni busta contiene 5 carte. Le copie oltre il massimo giocabile (2, o 1 per le Leggendarie) diventano Schegge.", "muted"), actions];
+  if (lastPack) {
+    const row = element("div", undefined, "cards pack-result");
+    for (const result of lastPack) {
+      const c = byId.get(result.id);
+      row.append(drawCard(c, { meta: true, art: "full", badge: result.newCopy ? "Nuova copia!" : `Doppione · +${result.shards} Schegge`, action: () => showCard(c) }));
+    }
+    children.push(row);
+  }
+  shop.replaceChildren(...children);
+}
+
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  navigator.serviceWorker.register("./sw.js").catch(() => {});
 }
 showSection("match");

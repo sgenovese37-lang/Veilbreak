@@ -1,3 +1,7 @@
+import { addShards, grantTitle, rewardOnce } from "./profile.mjs";
+
+export const tutorialReward = { perMission: 20, final: 100 };
+
 const missions = [
   {
     title: "Benvenuto a VEILBREAK",
@@ -50,14 +54,14 @@ const missions = [
   },
   {
     title: "Modalità di gioco",
-    lesson: "Nel prototipo puoi sfidare il computer a tre difficoltà o giocare in due sullo stesso dispositivo.",
+    lesson: "Puoi sfidare il computer a tre difficoltà, giocare in due sullo stesso dispositivo o seguire la modalità Storia, un capitolo alla volta. Il gioco 1 contro 1 online arriverà in seguito.",
     prompt: "Quale modalità scegli per esercitarti da solo?",
     choices: ["Due giocatori sullo stesso dispositivo.", "Contro il computer.", "Catalogo delle carte."],
     answer: 1,
   },
   {
     title: "Missioni e premi",
-    lesson: "Ogni prova del tutorial superata assegna un premio. Il completamento di tutte le missioni sblocca anche un premio finale.",
+    lesson: "Ogni prova del tutorial superata assegna un gettone e 20 Schegge. Completarle tutte sblocca il premio finale: il distintivo Primo Binder e 100 Schegge. Le missioni giornaliere e settimanali e i capitoli della Storia danno altre Schegge e buste di carte.",
     prompt: "Quando si sblocca il premio finale?",
     choices: ["Dopo aver aperto il tutorial.", "Dopo aver superato la prima missione.", "Dopo aver superato tutte le missioni."],
     answer: 2,
@@ -80,6 +84,16 @@ try {
   // Il tutorial funziona anche se il browser blocca la memoria locale.
 }
 
+// Premi del tutorial: una sola volta per missione, anche per i progressi salvati prima dei premi.
+function grantTutorialRewards() {
+  for (let i = 0; i < completed; i++) {
+    rewardOnce(`tutorial-${i}`, p => addShards(tutorialReward.perMission, `tutorial · ${missions[i].title}`, p));
+  }
+  if (completed === missions.length) {
+    rewardOnce("tutorial-finale", p => { addShards(tutorialReward.final, "tutorial completato", p); grantTitle("primo-binder", p); });
+  }
+}
+
 function add(container, tag, text) {
   const node = document.createElement(tag);
   node.textContent = text;
@@ -88,12 +102,13 @@ function add(container, tag, text) {
 }
 
 export function renderTutorial(container, index = completed, message = "") {
+  grantTutorialRewards();
   container.replaceChildren();
   add(container, "h2", "Tutorial a missioni");
   add(container, "p", `Missioni completate ${completed}/${missions.length} · Gettoni tutorial ${completed}`);
   const status = add(container, "p", message);
   status.setAttribute("role", "status");
-  if (completed === missions.length) add(container, "p", "Premio finale sbloccato · Distintivo Primo Binder");
+  if (completed === missions.length) add(container, "p", `Premio finale sbloccato · Distintivo Primo Binder e ${tutorialReward.final} Schegge`);
   if (index < missions.length) {
     const mission = missions[index];
     add(container, "h3", mission.title);
@@ -110,7 +125,7 @@ export function renderTutorial(container, index = completed, message = "") {
         if (index === completed) {
           completed++;
           try { localStorage.setItem(storageKey, String(completed)); } catch {}
-          renderTutorial(container, completed, "Missione superata · Hai ottenuto 1 gettone tutorial.");
+          renderTutorial(container, completed, `Missione superata · Hai ottenuto 1 gettone tutorial e ${tutorialReward.perMission} Schegge.`);
         } else {
           renderTutorial(container, index + 1, "Risposta corretta.");
         }
