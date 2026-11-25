@@ -498,5 +498,7 @@ export default {
  "Molte carte da 7 Essenza o più: arriveranno tardi in partita.": "Muchas cartas de 7 o más: llegarán tarde.",
  "Poche creature: fai fatica a controllare il tavolo.": "Pocas criaturas: cuesta controlar la mesa.",
  "Nessuna carta con Provocazione per proteggere il tuo eroe.": "Ninguna carta con Guardia para proteger a tu héroe.",
- "Mazzo equilibrato: buona curva e abbastanza creature.": "Mazo equilibrado: buena curva y suficientes criaturas."
+ "Mazzo equilibrato: buona curva e abbastanza creature.": "Mazo equilibrado: buena curva y suficientes criaturas.",
+ "Risparmio energetico: sì": "Ahorro de energía: sí",
+ "Risparmio energetico: no": "Ahorro de energía: no"
 };

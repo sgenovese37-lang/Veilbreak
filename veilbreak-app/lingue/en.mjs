@@ -498,5 +498,7 @@ export default {
  "Molte carte da 7 Essenza o più: arriveranno tardi in partita.": "Many cards costing 7 or more: they will come late.",
  "Poche creature: fai fatica a controllare il tavolo.": "Few creatures: hard to control the board.",
  "Nessuna carta con Provocazione per proteggere il tuo eroe.": "No Guard cards to protect your hero.",
- "Mazzo equilibrato: buona curva e abbastanza creature.": "Balanced deck: good curve and enough creatures."
+ "Mazzo equilibrato: buona curva e abbastanza creature.": "Balanced deck: good curve and enough creatures.",
+ "Risparmio energetico: sì": "Battery saver: on",
+ "Risparmio energetico: no": "Battery saver: off"
 };

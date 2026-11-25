@@ -498,5 +498,7 @@ export default {
  "Molte carte da 7 Essenza o più: arriveranno tardi in partita.": "Viele Karten ab 7 Essenz: Sie kommen spät ins Spiel.",
  "Poche creature: fai fatica a controllare il tavolo.": "Wenige Kreaturen: Das Spielfeld ist schwer zu kontrollieren.",
  "Nessuna carta con Provocazione per proteggere il tuo eroe.": "Keine Karten mit Wache, um deinen Helden zu schützen.",
- "Mazzo equilibrato: buona curva e abbastanza creature.": "Ausgewogenes Deck: gute Kurve und genug Kreaturen."
+ "Mazzo equilibrato: buona curva e abbastanza creature.": "Ausgewogenes Deck: gute Kurve und genug Kreaturen.",
+ "Risparmio energetico: sì": "Energiesparen: an",
+ "Risparmio energetico: no": "Energiesparen: aus"
 };

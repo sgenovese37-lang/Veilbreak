@@ -27,10 +27,14 @@ export function startEmbers(canvas) {
   const count = reduce ? 0 : Math.min(46, Math.round(w * h / 9000));
   for (let i = 0; i < count; i++) parts.push(spawn(true));
   const frame = time => {
+    const asleep = document.hidden || document.body.classList.contains("in-match") || document.body.classList.contains("energy-save") || !parts.length;
+    // in partita, in risparmio energetico o con l'app nascosta: si controlla solo due volte al secondo
+    if (asleep) { setTimeout(() => requestAnimationFrame(frame), 500); last = 0; return; }
     requestAnimationFrame(frame);
-    const dt = Math.min(0.05, (time - last) / 1000 || 0);
+    // 30 immagini al secondo bastano per le braci
+    if (last && time - last < 32) return;
+    const dt = Math.min(0.07, (time - last) / 1000 || 0);
     last = time;
-    if (document.hidden || document.body.classList.contains("in-match") || !parts.length) return;
     // dopo la partita la tela torna visibile: rimisurarla se la sua misura è cambiata
     if (canvas.clientWidth !== w || canvas.clientHeight !== h) resize();
     if (!w || !h) return;

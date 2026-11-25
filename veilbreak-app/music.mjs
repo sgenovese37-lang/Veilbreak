@@ -158,6 +158,7 @@ export function playMusic(name) {
     m.setValueAtTime(0.0001, ctx.currentTime);
     m.exponentialRampToValueAtTime(v, ctx.currentTime + 3);
     state.timer = setInterval(() => {
+      if (document.hidden) return;   // app in secondo piano: niente note da programmare
       if (state.nextAt < ctx.currentTime - 2) state.nextAt = ctx.currentTime + 0.1;   // dopo una pausa del telefono
       scheduleUntil(state, ctx.currentTime + 1.5);
     }, 250);

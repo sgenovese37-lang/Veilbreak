@@ -100,6 +100,9 @@ function updateWallet() {
   const toggle = get("sound-toggle");
   toggle.textContent = t(soundEnabled() ? "Suoni: sì" : "Suoni: no");
   toggle.setAttribute("aria-pressed", soundEnabled());
+  const saver = get("saver-toggle");
+  saver.textContent = t(energySaver() ? "Risparmio energetico: sì" : "Risparmio energetico: no");
+  saver.setAttribute("aria-pressed", energySaver());
   const introButton = get("intro-toggle");
   introButton.textContent = t(introEnabled() ? "Introduzione: sì" : "Introduzione: no");
   introButton.setAttribute("aria-pressed", introEnabled());
@@ -107,6 +110,21 @@ function updateWallet() {
   music.textContent = t(musicEnabled() ? "Musica: sì" : "Musica: no");
   music.setAttribute("aria-pressed", musicEnabled());
 }
+// Risparmio energetico: meno animazioni (niente braci, sfondo fermo, effetti del tavolo ridotti, niente sfocature).
+// Si attiva dalle impostazioni oppure da solo quando la batteria è sotto il 20% e il telefono non è in carica.
+const saverKey = "veilbreak-risparmio";
+let autoSaver = false;
+const energySaver = () => { try { const v = localStorage.getItem(saverKey); return v === "on" || (v !== "off" && autoSaver); } catch { return autoSaver; } };
+function applySaver() { document.body.classList.toggle("energy-save", energySaver()); }
+get("saver-toggle").onclick = () => { try { localStorage.setItem(saverKey, energySaver() ? "off" : "on"); } catch { /* solo per ora */ } applySaver(); updateWallet(); };
+navigator.getBattery?.().then(battery => {
+  const check = () => { autoSaver = battery.level < 0.2 && !battery.charging; applySaver(); };
+  check();
+  battery.addEventListener?.("levelchange", check);
+  battery.addEventListener?.("chargingchange", check);
+}).catch(() => {});
+applySaver();
+
 // Introduzione animata all'avvio (si può disattivare dalle impostazioni; le prove automatiche la saltano).
 const introKey = "veilbreak-intro";
 const introEnabled = () => { try { return localStorage.getItem(introKey) !== "off"; } catch { return true; } };
@@ -1240,7 +1258,8 @@ function renderTable() {
     arena.dataset.env = matchEnv;
     const amb = element("div", undefined, "ambience");
     amb.setAttribute("aria-hidden", "true");
-    for (let i = 0; i < 3; i++) amb.append(element("i"));
+    for (let i = 0; i < 6; i++) amb.append(element("i"));
+    amb.append(element("b", undefined, "env-flash"));
     arena.append(amb);
     if (mull) arena.append(element("div", `${t("Ambientazione")} · ${t(environments[matchEnv].name)}`, "env-name"));
   }

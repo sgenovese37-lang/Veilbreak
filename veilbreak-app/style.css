@@ -1381,3 +1381,70 @@ body.intro-on .backdrop, body.intro-on #embers { visibility: hidden; }
 .curve-col small { font-size: .7rem; color: var(--muted); }
 .advisor-tips { margin: 0; padding-left: 1.1rem; font-size: .85rem; color: #d8ccbf; }
 .advisor-make { min-height: 2.8rem; }
+
+/* ---------- Ambientazioni dei tavoli: più profondità e vita ---------- */
+.arena[data-env] { --env-light: #c9a8ff; }
+.arena[data-env="hollow"] { --env-light: #b48cff; }
+.arena[data-env="neon"] { --env-light: #ff4fd8; }
+.arena[data-env="saints"] { --env-light: #ffcf6a; }
+.arena[data-env="undercity"] { --env-light: #7ee08a; }
+.arena[data-env]::before { animation: env-breathe 48s ease-in-out infinite alternate; transform-origin: 50% 40%; }
+@keyframes env-breathe { from { transform: scale(1.02); } to { transform: scale(1.1) translate(-1.5%, -1%); } }
+/* luce di fazione che sale dai bordi */
+.arena[data-env] .zone { box-shadow: var(--frame), inset 0 0 2.2rem -.6rem color-mix(in srgb, var(--env-light) 55%, transparent), var(--frame-inner); }
+/* la crepa del Velo tra le due metà del tavolo */
+.arena[data-env] > .veil-line::before {
+  content: ""; position: absolute; left: 4%; right: 4%; top: 50%; height: 2px; transform: translateY(-50%);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--env-light) 80%, white) 20%, #fff 50%, color-mix(in srgb, var(--env-light) 80%, white) 80%, transparent);
+  box-shadow: 0 0 .8rem var(--env-light), 0 0 2rem color-mix(in srgb, var(--env-light) 50%, transparent);
+  clip-path: polygon(0 40%, 18% 0, 33% 100%, 47% 10%, 61% 90%, 76% 0, 90% 80%, 100% 40%, 100% 60%, 90% 100%, 76% 20%, 61% 100%, 47% 30%, 33% 100%, 18% 20%, 0 60%);
+  animation: veil-pulse 3.6s ease-in-out infinite; pointer-events: none;
+}
+@keyframes veil-pulse { 50% { opacity: .55; filter: brightness(1.4); } }
+/* particelle in più (4-6) */
+.arena[data-env="hollow"] .ambience i:nth-child(n+4) { width: 3px; height: 3px; border-radius: 50%; background: #e9dcff; box-shadow: 0 0 6px #b48cff; filter: none; animation: mote 14s linear infinite; }
+.arena[data-env="hollow"] .ambience i:nth-child(4) { left: 15%; top: 70%; } .arena[data-env="hollow"] .ambience i:nth-child(5) { left: 60%; top: 85%; animation-delay: -5s; } .arena[data-env="hollow"] .ambience i:nth-child(6) { left: 85%; top: 60%; animation-delay: -9s; }
+@keyframes mote { 0% { transform: translate(0, 0); opacity: 0; } 15% { opacity: .9; } 100% { transform: translate(-30px, -260px); opacity: 0; } }
+.arena[data-env="neon"] .ambience i:nth-child(4) { left: 38%; animation-delay: -.3s; } .arena[data-env="neon"] .ambience i:nth-child(5) { left: 66%; animation-delay: -.7s; } .arena[data-env="neon"] .ambience i:nth-child(6) { left: 9%; animation-delay: -1.1s; }
+.arena[data-env="saints"] .ambience i:nth-child(4) { left: 35%; animation-delay: -1.5s; animation-duration: 10s; } .arena[data-env="saints"] .ambience i:nth-child(5) { left: 65%; animation-delay: -4.5s; animation-duration: 12s; } .arena[data-env="saints"] .ambience i:nth-child(6) { left: 90%; animation-delay: -7.5s; animation-duration: 14s; }
+.arena[data-env="undercity"] .ambience i:nth-child(4) { left: 30%; animation-delay: -.6s; animation-duration: 3.1s; } .arena[data-env="undercity"] .ambience i:nth-child(5) { left: 62%; animation-delay: -1.7s; animation-duration: 2.7s; } .arena[data-env="undercity"] .ambience i:nth-child(6) { left: 92%; animation-delay: -2.4s; animation-duration: 3.6s; }
+/* lampi: fulmini al neon, bagliore di candela, riflesso verde nelle gallerie, lampo viola nell'archivio */
+.ambience .env-flash { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
+.arena[data-env="neon"] .env-flash { background: radial-gradient(ellipse at 70% 0%, #d9f4ff66, transparent 60%); animation: lightning 11s linear infinite; }
+.arena[data-env="hollow"] .env-flash { background: radial-gradient(ellipse at 20% 10%, #c9a8ff33, transparent 55%); animation: lightning 17s linear infinite 4s; }
+.arena[data-env="saints"] .env-flash { background: radial-gradient(ellipse at 50% 100%, #ffcf6a26, transparent 60%); animation: candle 1.6s ease-in-out infinite alternate; opacity: 1; }
+.arena[data-env="undercity"] .env-flash { background: linear-gradient(0deg, #4fae8c22, transparent 35%); animation: drift 9s ease-in-out infinite alternate; opacity: 1; }
+@keyframes lightning { 0%, 91%, 100% { opacity: 0; } 92% { opacity: 1; } 93% { opacity: .2; } 94.5% { opacity: .9; } 96% { opacity: 0; } }
+.arena > .veil-line { position: relative; }
+
+/* ---------- Testi dei menu più grandi ---------- */
+nav.dock button { font-size: .8rem; gap: .2rem; }
+nav.dock .ico { width: 1.65rem; height: 1.65rem; }
+.res { font-size: 1.05rem; }
+.res small { font-size: .8rem; }
+main .sheet, #settings, .shop, .chapter, .quest-block { font-size: 1.06rem; }
+.seg-label, .picker-box h3, .deck-factions-title, .advisor-label { font-size: .86rem; }
+.seg-item { font-size: .95rem; }
+.levels .seg-item { font-size: 1rem; }
+.hero-choice-text strong { font-size: 1.12rem; }
+.hero-choice-text small { font-size: .7rem; }
+.hero-choice-power { font-size: .8rem; }
+.chapter-tile { font-size: .92rem; }
+.settings-body button, .settings-body select { font-size: 1rem; min-height: 2.8rem; }
+.tagline { font-size: 1.15rem; }
+.deck-name b { font-size: .95rem; }
+.deck-name small { font-size: .84rem; }
+.offer strong { font-size: .95rem; }
+.offer small { font-size: .8rem; }
+.quest-list li strong { font-size: 1rem; }
+
+/* ---------- Risparmio energetico ---------- */
+body.energy-save .backdrop .slide { animation: none; opacity: 0; }
+body.energy-save .backdrop .slide:first-child { opacity: 1; }
+body.energy-save .backdrop .fog, body.energy-save h1.logo, body.energy-save #settings > button.primary, body.energy-save .pack-art img,
+body.energy-save .arena[data-env]::before, body.energy-save .ambience, body.energy-save .ambience *, body.energy-save .ambience::before, body.energy-save .ambience::after,
+body.energy-save .veil-line::before, body.energy-save .perm.secret, body.energy-save .token.veiled .face { animation: none !important; }
+body.energy-save .ambience i, body.energy-save .ambience .env-flash { display: none; }
+body.energy-save .topstrip, body.energy-save nav.dock, body.energy-save .sheet, body.energy-save .shop, body.energy-save #settings,
+body.energy-save .chapter, body.energy-save .quest-list li, body.energy-save .wallet-card { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+body.energy-save #embers { display: none; }

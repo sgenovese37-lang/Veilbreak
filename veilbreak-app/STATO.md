@@ -43,6 +43,13 @@ Riepilogo per riprendere il lavoro in una nuova sessione.
 - Illustrazioni del secondo set arrivate (PDF di anteprima, 480×720) in `assets/illustrazioni-61-90/`; da sostituire con gli originali se l'utente manda lo ZIP. La grafica provvisoria resta per eventuali carte future senza immagine.
 - Mazzi predefiniti rifatti con le carte nuove (vedi `BILANCIAMENTO.md`).
 
+## Aggiunte del 25 novembre (sera)
+- Tavolo: artefatti e segreti visibili come carte; eroe, potere ed Essenza più grandi; simbolo nel cerchio del potere.
+- Fine partita con riepilogo, Rivincita e Cambia eroe; Storia con Prossimo capitolo.
+- Storia interattiva: dialoghi con ritratti in `scene.mjs`; battuta d'entrata per ogni carta in `voci.mjs` (per ora solo in italiano).
+- Introduzione animata (`intro.mjs`), Negozio con offerte e 7 dorsi (`assets/dorsi/`), consigliere dei mazzi (`advisor.mjs`).
+- Nuovi suoni di attacco, ambientazioni più ricche, menu più grandi, risparmio energetico (anche automatico sotto il 20% di batteria).
+
 ## Prossimi passi
 - Correzioni dalle partite dell'utente.
 - Vantaggio di chi gioca per primo ancora intorno al 60% contro il computer.
