@@ -44,3 +44,8 @@ test("i segnaposto {nome} restano uguali nelle traduzioni", () => {
   const holes = s => [...s.matchAll(/\{(\w+)\}/g)].map(m => m[1]).sort().join();
   for (const [it, text] of Object.entries(en)) assert.equal(holes(text), holes(it), it);
 });
+
+test("senza una scelta nelle impostazioni il gioco è in italiano", async () => {
+  const { currentLang } = await import("../i18n.mjs");
+  assert.equal(currentLang(), "it");
+});

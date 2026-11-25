@@ -1,6 +1,6 @@
 // Lingue del gioco: italiano (testo di partenza), inglese, tedesco, spagnolo.
 // Le frasi italiane fanno da chiave: t("Il tuo turno") cerca la traduzione nel file della lingua
-// (cartella lingue/) e, se manca, mostra l'italiano. {nome} nelle frasi viene sostituito dai valori.
+// (cartella lingue/) e, se manca, mostra l'italiano. La lingua predefinita è l'italiano. {nome} nelle frasi viene sostituito dai valori.
 // Le illustrazioni delle carte restano in italiano; si traducono interfaccia, regole e schede.
 import en from "./lingue/en.mjs";
 import de from "./lingue/de.mjs";
@@ -15,8 +15,8 @@ function detect() {
     const saved = localStorage.getItem(key);
     if (saved && languages[saved]) return saved;
   } catch { /* memoria locale non disponibile */ }
-  const browser = typeof navigator !== "undefined" ? String(navigator.language ?? "").slice(0, 2).toLowerCase() : "";
-  return languages[browser] ? browser : "it";
+  // Il gioco parte sempre in italiano: le altre lingue solo se scelte nelle impostazioni.
+  return "it";
 }
 
 let lang = detect();

@@ -1,6 +1,6 @@
 // Registra i temi musicali del gioco in file WAV per ascoltarli fuori dal gioco.
 // Serve il gioco su http://127.0.0.1:8000 (python3 -m http.server 8000 dalla radice del progetto).
-// Uso: node tools/registra_musica.cjs <cartella di uscita> [secondi=40] [temi separati da virgola]
+// Uso: node tools/registra_musica.cjs <cartella di uscita> [secondi=40] [temi separati da virgola, oppure «effetti»]
 const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
@@ -11,8 +11,16 @@ const [outDir = '.', secondsArg = '40', list = 'menu,hollow,neon,saints,undercit
   await page.goto('http://127.0.0.1:8000/veilbreak-app/manifest.webmanifest');
   for (const name of list.split(',')) {
     const b64 = await page.evaluate(async ([name, seconds]) => {
-      const { renderTheme } = await import('/veilbreak-app/music.mjs');
-      const buf = await renderTheme(name, seconds);
+      let buf;
+      if (name === 'effetti') {
+        // tutti gli effetti e poi le voci di una creatura per fazione
+        const { renderEffects } = await import('/veilbreak-app/audio.mjs');
+        const { cards } = await import('/veilbreak-app/cards.mjs');
+        buf = await renderEffects([4, 18, 37, 47].map(id => cards.find(c => c.id === id)));
+      } else {
+        const { renderTheme } = await import('/veilbreak-app/music.mjs');
+        buf = await renderTheme(name, seconds);
+      }
       const ch = [buf.getChannelData(0), buf.getChannelData(1)];
       let peak = 0;
       for (const c of ch) for (let i = 0; i < c.length; i++) peak = Math.max(peak, Math.abs(c[i]));

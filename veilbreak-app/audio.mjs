@@ -19,6 +19,9 @@ function audio() {
   return context;
 }
 
+import { effects, cardVoice, showcase } from "./sfx.mjs";
+import { impulse } from "./synth.mjs";
+
 // Per la musica (music.mjs): stesso contesto audio e stessa uscita dei suoni.
 export const audioContext = () => audio();
 export const audioOutput = () => master;
@@ -37,26 +40,6 @@ for (const ev of ["pointerdown", "touchstart", "keydown"]) {
   window.addEventListener(ev, () => { try { audio(); } catch { /* audio non disponibile */ } }, { passive: true });
 }
 
-// [frequenza iniziale, frequenza finale, durata, forma d'onda, volume]
-const sounds = {
-  select: [[660, 760, 0.05, "triangle", 0.25]],
-  play: [[300, 520, 0.12, "triangle", 0.4], [520, 700, 0.12, "sine", 0.3]],
-  summon: [[140, 90, 0.18, "sawtooth", 0.35], [420, 620, 0.16, "triangle", 0.35]],
-  cast: [[880, 1320, 0.1, "sine", 0.3], [1320, 660, 0.25, "triangle", 0.3]],
-  attack: [[220, 110, 0.09, "sawtooth", 0.45]],
-  hit: [[160, 60, 0.16, "square", 0.45], ["noise", 0.12, 0.35]],
-  death: [[300, 60, 0.35, "sawtooth", 0.4], ["noise", 0.3, 0.3]],
-  heal: [[523, 784, 0.18, "sine", 0.35], [784, 1046, 0.2, "sine", 0.25]],
-  power: [[392, 784, 0.12, "sine", 0.4], [784, 1175, 0.16, "triangle", 0.3]],
-  mana: [[1046, 880, 0.07, "sine", 0.25]],
-  turn: [[392, 392, 0.12, "triangle", 0.45], [523, 523, 0.12, "triangle", 0.45], [784, 784, 0.28, "triangle", 0.45]],
-  enemy: [[220, 220, 0.18, "sine", 0.35], [185, 185, 0.3, "sine", 0.35]],
-  reward: [[523, 523, 0.08, "triangle", 0.4], [659, 659, 0.08, "triangle", 0.4], [784, 784, 0.16, "triangle", 0.4]],
-  win: [[392, 392, 0.14, "triangle", 0.45], [523, 523, 0.14, "triangle", 0.45], [659, 659, 0.14, "triangle", 0.45], [784, 784, 0.4, "triangle", 0.45]],
-  lose: [[330, 320, 0.22, "sine", 0.4], [262, 250, 0.22, "sine", 0.4], [196, 180, 0.45, "sine", 0.4]],
-  pack: [[300, 300, 0.06, "sine", 0.3], [450, 450, 0.06, "sine", 0.3], [600, 600, 0.06, "sine", 0.3], [900, 1200, 0.2, "triangle", 0.4]],
-};
-
 export const soundEnabled = () => enabled;
 
 export function setSound(on) {
@@ -64,40 +47,30 @@ export function setSound(on) {
   try { localStorage.setItem(key, on ? "on" : "off"); } catch { /* preferenza solo per questa sessione */ }
 }
 
-function noise(ctx, at, length, volume) {
-  const buffer = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * length), ctx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
-  const src = ctx.createBufferSource();
-  const gain = ctx.createGain();
-  gain.gain.value = volume;
-  src.buffer = buffer;
-  src.connect(gain).connect(master);
-  src.start(at);
+// Bus degli effetti: riverbero corto e limitatore, così gli effetti non distorcono mai.
+let sfxBus = null;
+function effectsBus(ctx) {
+  if (sfxBus?.ctx === ctx) return sfxBus.input;
+  const input = ctx.createGain(); input.gain.value = 1;
+  const dry = ctx.createGain(); dry.gain.value = 0.85;
+  const verb = ctx.createConvolver(); verb.buffer = impulse(ctx, 2.6, 3);
+  const wet = ctx.createGain(); wet.gain.value = 0.38;
+  const limit = ctx.createDynamicsCompressor();
+  limit.threshold.value = -10; limit.ratio.value = 8; limit.attack.value = 0.003; limit.release.value = 0.25;
+  const out = ctx.createGain(); out.gain.value = 1.05;
+  input.connect(dry).connect(limit);
+  input.connect(verb).connect(wet).connect(limit);
+  limit.connect(out).connect(master);
+  sfxBus = { ctx, input };
+  return input;
 }
 
 export function sound(name) {
-  if (!enabled || !sounds[name]) return;
+  if (!enabled || !effects[name]) return;
   try {
     const ctx = audio();
     if (!ctx) return;
-    let at = ctx.currentTime + 0.01;
-    for (const step of sounds[name]) {
-      if (step[0] === "noise") { noise(ctx, at, step[1], step[2]); continue; }
-      const [from, to, length, type, volume] = step;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(from, at);
-      osc.frequency.exponentialRampToValueAtTime(Math.max(20, to), at + length);
-      gain.gain.value = 0.0001; gain.gain.setValueAtTime(0.0001, at);
-      gain.gain.exponentialRampToValueAtTime(volume, at + 0.012);
-      gain.gain.exponentialRampToValueAtTime(0.0001, at + length);
-      osc.connect(gain).connect(master);
-      osc.start(at);
-      osc.stop(at + length + 0.03);
-      at += length * 0.8;
-    }
+    effects[name](ctx, effectsBus(ctx), ctx.currentTime + 0.01);
   } catch { /* audio non disponibile */ }
 }
 
@@ -107,42 +80,7 @@ export function buzz(ms = 30) {
 }
 
 // ---------- Suoni delle carte ----------
-// Ogni carta ha la sua voce: il timbro dipende dalla fazione, l'altezza e il ritmo dall'ID della carta.
-const timbres = {
-  "Corte di Hollow": { wave: "sine", overtone: 2.76, noise: 0, vibrato: 0 },      // campane e ottoni lontani
-  "Patto Neon": { wave: "square", overtone: 1.5, noise: 0.08, vibrato: 0, glitch: true }, // elettronica che sfrigola
-  "Senza Santi": { wave: "triangle", overtone: 1.5, noise: 0, vibrato: 6 },      // voci da coro
-  "Sottocittà": { wave: "sawtooth", overtone: 0.5, noise: 0.25, vibrato: 0 },    // ringhi e gocce
-};
-const semitone = n => Math.pow(2, n / 12);
-function seedOf(id) { let h = 2166136261; for (const ch of String(id)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return h >>> 0; }
-
-function voice(ctx, at, freq, length, t, volume, glide = 1) {
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.type = t.wave;
-  osc.frequency.setValueAtTime(freq, at);
-  osc.frequency.exponentialRampToValueAtTime(Math.max(30, freq * glide), at + length);
-  if (t.vibrato) {
-    const lfo = ctx.createOscillator(); const depth = ctx.createGain();
-    lfo.frequency.value = t.vibrato; depth.gain.value = freq * 0.02;
-    lfo.connect(depth).connect(osc.frequency); lfo.start(at); lfo.stop(at + length + 0.05);
-  }
-  gain.gain.value = 0.0001; gain.gain.setValueAtTime(0.0001, at);
-  gain.gain.exponentialRampToValueAtTime(volume, at + 0.015);
-  gain.gain.exponentialRampToValueAtTime(0.0001, at + length);
-  osc.connect(gain).connect(master);
-  osc.start(at); osc.stop(at + length + 0.05);
-  if (t.overtone) {
-    const o2 = ctx.createOscillator(); const g2 = ctx.createGain();
-    o2.type = "sine"; o2.frequency.setValueAtTime(freq * t.overtone, at);
-    o2.frequency.exponentialRampToValueAtTime(Math.max(30, freq * t.overtone * glide), at + length);
-    g2.gain.value = 0.0001; g2.gain.setValueAtTime(0.0001, at); g2.gain.exponentialRampToValueAtTime(volume * 0.35, at + 0.01);
-    g2.gain.exponentialRampToValueAtTime(0.0001, at + length * 0.7);
-    o2.connect(g2).connect(master); o2.start(at); o2.stop(at + length);
-  }
-}
-
+// Ogni carta ha la sua voce (sfx.mjs): il timbro dipende dalla fazione, l'altezza dall'ID della carta.
 let lastCardSound = 0;
 // event: "enter" (entra in gioco), "attack" (attacca), "hurt" (subisce danni), "death" (muore)
 export function cardSound(card, event) {
@@ -153,27 +91,24 @@ export function cardSound(card, event) {
     const now = ctx.currentTime;
     if (event === "hurt" && now - lastCardSound < 0.08) return; // niente valanghe di suoni
     lastCardSound = now;
-    const t = timbres[card.faction] ?? { wave: "triangle", overtone: 2, noise: 0, vibrato: 0 };
-    const seed = seedOf(card.id);
-    const base = 110 * semitone(seed % 14) * (card.type === "Creatura" ? 1 : 2);
-    const step = [3, 4, 5, 7][seed % 4];
-    const big = card.rarity === "Legendary" || card.rarity === "Epic";
-    let at = now + 0.01;
-    if (event === "enter") {
-      const notes = big ? [0, step, 12, 12 + step] : [0, step, 12];
-      for (const n of notes) { voice(ctx, at, base * semitone(n), 0.16, t, 0.28); at += t.glitch ? 0.05 : 0.09; }
-      if (big) voice(ctx, at, base * 2, 0.6, t, 0.22);
-    } else if (event === "attack") {
-      voice(ctx, at, base * 2.2, 0.16, t, 0.3, 0.45);
-      if (t.glitch) voice(ctx, at + 0.05, base * 3, 0.06, t, 0.18);
-    } else if (event === "hurt") {
-      voice(ctx, at, base * 0.9, 0.14, t, 0.3, 0.6);
-    } else if (event === "death") {
-      voice(ctx, at, base * 1.5, 0.55, t, 0.3, 0.25);
-      voice(ctx, at + 0.12, base * semitone(-step), 0.6, t, 0.2, 0.3);
-    }
-    if (t.noise && (event === "attack" || event === "death" || event === "hurt")) noise(ctx, at, event === "death" ? 0.35 : 0.12, t.noise);
+    cardVoice(ctx, effectsBus(ctx), card, event, now + 0.01);
   } catch { /* audio non disponibile */ }
+}
+
+// Registra tutti gli effetti uno dopo l'altro (per ascoltarli fuori dal gioco: tools/registra_musica.cjs).
+export async function renderEffects(cards = [], sampleRate = 44100) {
+  const items = [...showcase];
+  for (const card of cards) for (const event of ["enter", "attack", "hurt", "death"]) items.push({ length: event === "death" || event === "enter" ? 1.9 : 1.1, play: (c, d, at) => cardVoice(c, d, card, event, at) });
+  const seconds = items.reduce((sum, item) => sum + item.length, 1);
+  const ctx = new OfflineAudioContext(2, Math.ceil(seconds * sampleRate), sampleRate);
+  const previous = master;
+  master = ctx.destination;
+  sfxBus = null;
+  let at = 0.2;
+  for (const item of items) { item.play(ctx, effectsBus(ctx), at); at += item.length; }
+  master = previous;
+  sfxBus = null;
+  return ctx.startRendering();
 }
 
 // ---------- Sottofondo delle ambientazioni ----------
