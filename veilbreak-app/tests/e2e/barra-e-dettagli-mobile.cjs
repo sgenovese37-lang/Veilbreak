@@ -23,11 +23,13 @@ const { chromium, devices } = require('playwright');
   console.log('mano scorre in orizzontale:', await page.locator('.hand').evaluate(e => e.scrollWidth > e.clientWidth));
   console.log('larghezza pagina', await wide(), 'schermo', W);
   await page.screenshot({ path: (process.env.SHOTS ?? require('os').tmpdir()) + '/11-barra-e-mano.png' });
-  await page.locator('.hand .info').first().click();
-  await page.waitForTimeout(600);
-  console.log('dettagli in partita aperti:', await page.locator('#card-viewer[open]').count() === 1);
+  // dettagli in partita: si tiene premuta la carta (non c'è più il pulsante «i»)
+  const held = await page.locator('.hand .hand-card').first().boundingBox();
+  await page.mouse.move(held.x + held.width / 2, held.y + held.height / 2); await page.mouse.down();
+  await page.waitForTimeout(700); await page.mouse.up(); await page.waitForTimeout(300);
+  console.log('dettagli in partita aperti:', await page.locator('.peek-layer:not([hidden]) .peek-rules').count() === 1);
   await page.screenshot({ path: (process.env.SHOTS ?? require('os').tmpdir()) + '/12-dettagli-in-partita.png' });
-  await page.click('#card-viewer >> text=Chiudi');
+  await page.mouse.click(195, 60); await page.waitForTimeout(300);
   page.once('dialog', d => d.accept());
   await page.click('.menu-exit');
   console.log('tornato al menu:', await page.locator('#setup').isVisible());

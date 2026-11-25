@@ -1637,3 +1637,6 @@ body.energy-save #embers { display: none; }
 .peek-note span { font-size: .95rem; line-height: 1.32; color: #efe3d0; }
 .peek-note.type { background: #8fb4ff12; box-shadow: inset 3px 0 0 #8fb4ff; }
 .peek-note.type b { color: #b9d0ff; }
+/* in mano le carte si sovrappongono a destra: il costo va in alto a sinistra, sempre visibile */
+.hand-card .stat-ring.ring-cost { left: 15% !important; top: 9% !important; }
+.hand-card .placeholder .gem, .hand-card > .gem.big { left: -.5rem; right: auto; }

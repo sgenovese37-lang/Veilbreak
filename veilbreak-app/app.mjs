@@ -1438,9 +1438,8 @@ function handCard(side, id, i) {
   if (mull && replacements.has(i)) card.append(element("span", "Da cambiare", "swap-mark"));
   attachPeek(card, c);
   if (playable) attachDrag(card, i, c);
-  const info = button("i", () => showCard(c), "info");
-  info.setAttribute("aria-label", t("Dettagli di {card}", { card: c.name }));
-  wrap.append(card, info);
+  // niente pulsante «i»: i dettagli si vedono tenendo premuta la carta
+  wrap.append(card);
   wrap.style.setProperty("--tilt", `${(i - (game.players[side].hand.length - 1) / 2) * 1.5}deg`);
   return wrap;
 }
