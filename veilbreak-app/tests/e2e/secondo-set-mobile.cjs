@@ -1,4 +1,4 @@
-// Prova su iPhone 13 simulato del secondo set: carte provvisorie in Collezione e in mano,
+// Prova su iPhone 13 simulato del secondo set: illustrazioni in Collezione e in mano,
 // scheda con la spiegazione delle parole chiave (Velato, Lascito, Furia, Patto).
 const { chromium, devices } = require('playwright');
 const shots = (process.env.SHOTS ?? require('os').tmpdir()) + '/';
@@ -16,7 +16,8 @@ const url = 'http://127.0.0.1:8000/veilbreak-app/';
   await page.goto(url);
   await page.click('#library');
   await page.selectOption('#filter', 'Patto Neon');
-  console.log('carte provvisorie in Collezione (Patto Neon):', await page.locator('.card .art.placeholder').count());
+  console.log('carte del Patto Neon in Collezione:', await page.locator('.card').count(), '| provvisorie:', await page.locator('.card .art.placeholder').count(),
+    '| immagini non caricate:', await page.evaluate(() => [...document.querySelectorAll('.card img.art')].filter(i => i.complete && !i.naturalWidth).length));
   await page.locator('.card', { hasText: 'La Regina Statica' }).first().click();
   const notes = await page.locator('#card-viewer .keyword-notes dt').allInnerTexts();
   console.log('parole chiave spiegate nella scheda della Regina Statica:', notes.join(', '));
@@ -25,7 +26,7 @@ const url = 'http://127.0.0.1:8000/veilbreak-app/';
   await page.click('#match');
   await page.click('#pick-first [data-hero="Patto Neon"]');
   await page.click('text=Inizia partita');
-  console.log('carte provvisorie nella mano iniziale:', await page.locator('.hand .hand-card.placeholder').count(),
+  console.log('carte del secondo set nella mano iniziale:', await page.evaluate(() => [...document.querySelectorAll('.hand .hand-card img')].filter(i => /illustrazioni-61-90|miniature\/(6[1-9]|[78][0-9]|90)-/.test(i.src)).length),
     '| costi con goccia di sangue (Patto):', await page.locator('.hand .gem.pact').count());
   await page.screenshot({ path: shots + '91-mano-secondo-set.png' });
   console.log('larghezza', await page.evaluate(() => document.documentElement.scrollWidth));

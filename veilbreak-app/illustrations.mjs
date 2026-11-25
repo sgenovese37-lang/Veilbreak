@@ -604,6 +604,314 @@ export const illustrations = {
     "differences": [],
     "original": null,
     "correction": null
+  },
+  "61": {
+    "card": "Notaio dell’Oltretomba",
+    "src": "assets/illustrazioni-61-90/illustrazioni/61-notaio-delloltretomba.webp",
+    "thumb": "assets/miniature/61-notaio-delloltretomba.webp",
+    "pack": "illustrazioni-61-90",
+    "illustratedFaction": "Corte di Hollow",
+    "differences": [],
+    "original": null,
+    "correction": null
+  },
+  "62": {
+    "card": "Archivista Senza Volto",
+    "src": "assets/illustrazioni-61-90/illustrazioni/62-archivista-senza-volto.webp",
+    "thumb": "assets/miniature/62-archivista-senza-volto.webp",
+    "pack": "illustrazioni-61-90",
+    "illustratedFaction": "Corte di Hollow",
+    "differences": [],
+    "original": null,
+    "correction": null
+  },
+  "63": {
+    "card": "Timbro del Vincolo",
+    "src": "assets/illustrazioni-61-90/illustrazioni/63-timbro-del-vincolo.webp",
+    "thumb": "assets/miniature/63-timbro-del-vincolo.webp",
+    "pack": "illustrazioni-61-90",
+    "illustratedFaction": "Corte di Hollow",
+    "differences": [],
+    "original": null,
+    "correction": null
+  },
+  "64": {
+    "card": "Ufficiale Giudiziario",
+    "src": "assets/illustrazioni-61-90/illustrazioni/64-ufficiale-giudiziario.webp",
+    "thumb": "assets/miniature/64-ufficiale-giudiziario.webp",
+    "pack": "illustrazioni-61-90",
+    "illustratedFaction": "Corte di Hollow",
+    "differences": [],
+    "original": null,
+    "correction": null
+  },
+  "65": {
+    "card": "Registro dei Debiti",
+    "src": "assets/illustrazioni-61-90/illustrazioni/65-registro-dei-debiti.webp",
+    "thumb": "assets/miniature/65-registro-dei-debiti.webp",
+    "pack": "illustrazioni-61-90",
+    "illustratedFaction": "Corte di Hollow",
+    "differences": [],
+    "original": null,
+    "correction": null
+  },
+  "66": {
+    "card": "Sfratto Esecutivo",
+    "src": "assets/illustrazioni-61-90/illustrazioni/66-sfratto-esecutivo.webp",
+    "thumb": "assets/miniature/66-sfratto-esecutivo.webp",
+    "pack": "illustrazioni-61-90",
+    "illustratedFaction": "Corte di Hollow",
+    "differences": [],
+    "original": null,
+    "correction": null
+  },
+  "67": {
+    "card": "Commissione d’Inchiesta",
+    "src": "assets/illustrazioni-61-90/illustrazioni/67-commissione-dinchiesta.webp",
+    "thumb": "assets/miniature/67-commissione-dinchiesta.webp",
+    "pack": "illustrazioni-61-90",
+    "illustratedFaction": "Corte di Hollow",
+    "differences": [],
+    "original": null,
+    "correction": null
+  },
+  "68": {
+    "card": "Il Gran Conservatore",
+    "src": "assets/illustrazioni-61-90/illustrazioni/68-il-gran-conservatore.webp",
+    "thumb": "assets/miniature/68-il-gran-conservatore.webp",
+    "pack": "illustrazioni-61-90",
+    "illustratedFaction": "Corte di Hollow",
+    "differences": [],
+    "original": null,
+    "correction": null
+  },
+  "69": {
+    "card": "Corriere della Rete",
+    "src": "assets/illustrazioni-61-90/illustrazioni/69-corriere-della-rete.webp",
+    "thumb": "assets/miniature/69-corriere-della-rete.webp",
+    "pack": "illustrazioni-61-90",
+    "illustratedFaction": "Patto Neon",
+    "differences": [],
+    "original": null,
+    "correction": null
+  },
+  "70": {
+    "card": "Cortocircuito",
+    "src": "assets/illustrazioni-61-90/illustrazioni/70-cortocircuito.webp",
+    "thumb": "assets/miniature/70-cortocircuito.webp",
+    "pack": "illustrazioni-61-90",
+    "illustratedFaction": "Patto Neon",
+    "differences": [],
+    "original": null,
+    "correction": null
+  },
+  "71": {
+    "card": "Hacker Posseduto",
+    "src": "assets/illustrazioni-61-90/illustrazioni/71-hacker-posseduto.webp",
+    "thumb": "assets/miniature/71-hacker-posseduto.webp",
+    "pack": "illustrazioni-61-90",
+    "illustratedFaction": "Patto Neon",
+    "differences": [
+      "Differenza solo grafica: il costo in punti vita del Patto è disegnato in una gemma invece che in una goccia di sangue."
+    ],
+    "original": null,
+    "correction": null
+  },
+  "72": {
+    "card": "Spirito nel Cavo",
+    "src": "assets/illustrazioni-61-90/illustrazioni/72-spirito-nel-cavo.webp",
+    "thumb": "assets/miniature/72-spirito-nel-cavo.webp",
+    "pack": "illustrazioni-61-90",
+    "illustratedFaction": "Patto Neon",
+    "differences": [],
+    "original": null,
+    "correction": null
+  },
+  "73": {
+    "card": "Firewall Infernale",
+    "src": "assets/illustrazioni-61-90/illustrazioni/73-firewall-infernale.webp",
+    "thumb": "assets/miniature/73-firewall-infernale.webp",
+    "pack": "illustrazioni-61-90",
+    "illustratedFaction": "Patto Neon",
+    "differences": [],
+    "original": null,
+    "correction": null
+  },
+  "74": {
+    "card": "Riflesso Duplicato",
+    "src": "assets/illustrazioni-61-90/illustrazioni/74-riflesso-duplicato.webp",
+    "thumb": "assets/miniature/74-riflesso-duplicato.webp",
+    "pack": "illustrazioni-61-90",
+    "illustratedFaction": "Patto Neon",
+    "differences": [
+      "Differenza solo grafica: il costo in punti vita del Patto è disegnato in una gemma invece che in una goccia di sangue."
+    ],
+    "original": null,
+    "correction": null
+  },
+  "75": {
+    "card": "La Regina Statica",
+    "src": "assets/illustrazioni-61-90/illustrazioni/75-la-regina-statica.webp",
+    "thumb": "assets/miniature/75-la-regina-statica.webp",
+    "pack": "illustrazioni-61-90",
+    "illustratedFaction": "Patto Neon",
+    "differences": [],
+    "original": null,
+    "correction": null
+  },
+  "76": {
+    "card": "Penitente Flagellante",
+    "src": "assets/illustrazioni-61-90/illustrazioni/76-penitente-flagellante.webp",
+    "thumb": "assets/miniature/76-penitente-flagellante.webp",
+    "pack": "illustrazioni-61-90",
+    "illustratedFaction": "Senza Santi",
+    "differences": [],
+    "original": null,
+    "correction": null
+  },
+  "77": {
+    "card": "Chierichetto Spettrale",
+    "src": "assets/illustrazioni-61-90/illustrazioni/77-chierichetto-spettrale.webp",
+    "thumb": "assets/miniature/77-chierichetto-spettrale.webp",
+    "pack": "illustrazioni-61-90",
+    "illustratedFaction": "Senza Santi",
+    "differences": [],
+    "original": null,
+    "correction": null
+  },
+  "78": {
+    "card": "Ostia Nera",
+    "src": "assets/illustrazioni-61-90/illustrazioni/78-ostia-nera.webp",
+    "thumb": "assets/miniature/78-ostia-nera.webp",
+    "pack": "illustrazioni-61-90",
+    "illustratedFaction": "Senza Santi",
+    "differences": [
+      "Differenza solo grafica: il costo in punti vita del Patto è disegnato in una gemma invece che in una goccia di sangue."
+    ],
+    "original": null,
+    "correction": null
+  },
+  "79": {
+    "card": "Confessionale Infestato",
+    "src": "assets/illustrazioni-61-90/illustrazioni/79-confessionale-infestato.webp",
+    "thumb": "assets/miniature/79-confessionale-infestato.webp",
+    "pack": "illustrazioni-61-90",
+    "illustratedFaction": "Senza Santi",
+    "differences": [],
+    "original": null,
+    "correction": null
+  },
+  "80": {
+    "card": "Martire della Cattedrale",
+    "src": "assets/illustrazioni-61-90/illustrazioni/80-martire-della-cattedrale.webp",
+    "thumb": "assets/miniature/80-martire-della-cattedrale.webp",
+    "pack": "illustrazioni-61-90",
+    "illustratedFaction": "Senza Santi",
+    "differences": [],
+    "original": null,
+    "correction": null
+  },
+  "81": {
+    "card": "Resurrezione Profana",
+    "src": "assets/illustrazioni-61-90/illustrazioni/81-resurrezione-profana.webp",
+    "thumb": "assets/miniature/81-resurrezione-profana.webp",
+    "pack": "illustrazioni-61-90",
+    "illustratedFaction": "Senza Santi",
+    "differences": [
+      "Differenza solo grafica: il costo in punti vita del Patto è disegnato in una gemma invece che in una goccia di sangue."
+    ],
+    "original": null,
+    "correction": null
+  },
+  "82": {
+    "card": "Reliquiario Ambulante",
+    "src": "assets/illustrazioni-61-90/illustrazioni/82-reliquiario-ambulante.webp",
+    "thumb": "assets/miniature/82-reliquiario-ambulante.webp",
+    "pack": "illustrazioni-61-90",
+    "illustratedFaction": "Senza Santi",
+    "differences": [],
+    "original": null,
+    "correction": null
+  },
+  "83": {
+    "card": "Santa Lucrezia delle Candele",
+    "src": "assets/illustrazioni-61-90/illustrazioni/83-santa-lucrezia-delle-candele.webp",
+    "thumb": "assets/miniature/83-santa-lucrezia-delle-candele.webp",
+    "pack": "illustrazioni-61-90",
+    "illustratedFaction": "Senza Santi",
+    "differences": [],
+    "original": null,
+    "correction": null
+  },
+  "84": {
+    "card": "Crepa nel Tombino",
+    "src": "assets/illustrazioni-61-90/illustrazioni/84-crepa-nel-tombino.webp",
+    "thumb": "assets/miniature/84-crepa-nel-tombino.webp",
+    "pack": "illustrazioni-61-90",
+    "illustratedFaction": "Sottocittà",
+    "differences": [],
+    "original": null,
+    "correction": null
+  },
+  "85": {
+    "card": "Mangiatore di Ombre",
+    "src": "assets/illustrazioni-61-90/illustrazioni/85-mangiatore-di-ombre.webp",
+    "thumb": "assets/miniature/85-mangiatore-di-ombre.webp",
+    "pack": "illustrazioni-61-90",
+    "illustratedFaction": "Sottocittà",
+    "differences": [],
+    "original": null,
+    "correction": null
+  },
+  "86": {
+    "card": "Guardiano dei Binari Morti",
+    "src": "assets/illustrazioni-61-90/illustrazioni/86-guardiano-dei-binari-morti.webp",
+    "thumb": "assets/miniature/86-guardiano-dei-binari-morti.webp",
+    "pack": "illustrazioni-61-90",
+    "illustratedFaction": "Sottocittà",
+    "differences": [],
+    "original": null,
+    "correction": null
+  },
+  "87": {
+    "card": "Trappola a Ganascia",
+    "src": "assets/illustrazioni-61-90/illustrazioni/87-trappola-a-ganascia.webp",
+    "thumb": "assets/miniature/87-trappola-a-ganascia.webp",
+    "pack": "illustrazioni-61-90",
+    "illustratedFaction": "Sottocittà",
+    "differences": [],
+    "original": null,
+    "correction": null
+  },
+  "88": {
+    "card": "Madre della Muffa",
+    "src": "assets/illustrazioni-61-90/illustrazioni/88-madre-della-muffa.webp",
+    "thumb": "assets/miniature/88-madre-della-muffa.webp",
+    "pack": "illustrazioni-61-90",
+    "illustratedFaction": "Sottocittà",
+    "differences": [],
+    "original": null,
+    "correction": null
+  },
+  "89": {
+    "card": "Il Pastore dei Cunicoli",
+    "src": "assets/illustrazioni-61-90/illustrazioni/89-il-pastore-dei-cunicoli.webp",
+    "thumb": "assets/miniature/89-il-pastore-dei-cunicoli.webp",
+    "pack": "illustrazioni-61-90",
+    "illustratedFaction": "Sottocittà",
+    "differences": [],
+    "original": null,
+    "correction": null
+  },
+  "90": {
+    "card": "Il Leviatano delle Cisterne",
+    "src": "assets/illustrazioni-61-90/illustrazioni/90-il-leviatano-delle-cisterne.webp",
+    "thumb": "assets/miniature/90-il-leviatano-delle-cisterne.webp",
+    "pack": "illustrazioni-61-90",
+    "illustratedFaction": "Sottocittà",
+    "differences": [],
+    "original": null,
+    "correction": null
   }
 };
 

@@ -35,8 +35,8 @@ test("il catalogo ha 90 carte (due set) con tipi validi e statistiche per tutte 
   assert.deepEqual(factions.map(f => cards.filter(c => c.faction === f && c.set === 2).length), [8, 7, 8, 7]);
 });
 
-test("ogni carta del primo set ha la sua illustrazione collegata per ID e i file esistono", () => {
-  for (const card of cards.filter(c => !c.set)) {
+test("ogni carta (90, due set) ha la sua illustrazione collegata per ID e i file esistono", () => {
+  for (const card of cards) {
     const art = illustrations[card.id];
     assert.ok(art, `illustrazione mancante per ${card.id}`);
     assert.equal(art.card, card.name, `nome diverso per ${card.id}`);

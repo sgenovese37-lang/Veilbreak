@@ -45,3 +45,10 @@ Con `tools/correggi_illustrazioni.py`:
 Il carattere è molto simile ma non identico a quello delle carte originali: a ingrandimento pieno un occhio attento può notare la differenza. Per un risultato perfetto servirebbe rigenerare le 13 immagini con lo strumento originale; basterebbe poi metterle in `assets/illustrazioni-corrette/illustrazioni/` con lo stesso nome e rilanciare `tools/build_illustrations.py`.
 
 Costi, rarità, Attacco e Difesa coincidevano già con il catalogo su tutte le 60 carte.
+
+## Secondo set (61-90), arrivato il 25 novembre 2026
+
+Le 30 illustrazioni create con ChatGPT sono arrivate in un PDF di anteprima (immagini da 480×720 pixel) e sono in `assets/illustrazioni-61-90/`. Controllate una per una: titolo, costo, nastro, regole, frase, Attacco e Difesa coincidono con il catalogo.
+
+- **71 Hacker Posseduto, 74 Riflesso Duplicato, 78 Ostia Nera, 81 Resurrezione Profana**: differenza solo grafica, il costo in punti vita del Patto è in una gemma invece che in una goccia di sangue. In mano il gioco mostra comunque la goccia.
+- Se arrivano gli originali a risoluzione piena, basta sostituire i file con lo stesso nome e rilanciare `python3 -I tools/build_illustrations.py .`.

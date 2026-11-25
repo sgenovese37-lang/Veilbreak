@@ -1,6 +1,6 @@
 // Service worker: rende il gioco installabile e giocabile offline.
 // Cambia VERSION quando pubblichi una nuova versione dei file.
-const VERSION = "veilbreak-v14";
+const VERSION = "veilbreak-v15";
 const SHELL = [
   "./icons.mjs", "./synth.mjs", "./sfx.mjs", "./embers.mjs", "./i18n.mjs", "./lingue/en.mjs", "./lingue/de.mjs", "./lingue/es.mjs", "./assets/fonts/cinzel-latin-600-normal.woff2", "./assets/fonts/cinzel-latin-700-normal.woff2", "./assets/fonts/cinzel-latin-900-normal.woff2", "./assets/fonts/cinzel-decorative-latin-900-normal.woff2", "./assets/fonts/cinzel-decorative-latin-700-normal.woff2", "./assets/sfondi/home-hollow.webp", "./assets/sfondi/home-neon.webp", "./assets/sfondi/home-saints.webp", "./assets/sfondi/home-undercity.webp", "./assets/originali-chatgpt/dorso-carte.webp", "./assets/eroi/carte/ada-vesper.webp", "./assets/eroi/carte/iona-volt.webp", "./assets/eroi/carte/elena-voss.webp", "./assets/eroi/carte/mara-sottorotaia.webp", "./assets/eroi/carte/orfeo-grimm.webp", "./assets/eroi/carte/dex-halogen.webp", "./assets/eroi/carte/ottavia.webp", "./assets/eroi/carte/nonna-ines.webp",
   "./", "./index.html", "./style.css", "./manifest.webmanifest",
