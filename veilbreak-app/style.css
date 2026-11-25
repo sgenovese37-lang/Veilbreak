@@ -1578,3 +1578,45 @@ body.energy-save #embers { display: none; }
 .brawl-rule svg { width: 2.6rem; height: 2.6rem; color: #d4b8ff; }
 .brawl-rule strong { font: 900 1.5rem/1.1 var(--display); color: #fff; }
 .brawl-rule p { margin: 0; font-size: 1.05rem; }
+.chapter-list .act-title { list-style: none; margin: .8rem 0 .2rem; font: 700 1.05rem/1.2 var(--display); color: var(--gold, #f0c27b); letter-spacing: .04em; }
+
+/* ---------- Impatti degli attacchi per fazione ---------- */
+.impact { position: fixed; z-index: 60; width: 7rem; height: 7rem; transform: translate(-50%, -50%); pointer-events: none; }
+.impact b { position: absolute; inset: 30%; border-radius: 50%; animation: impact-ring .55s ease-out forwards; }
+.impact-plain b { border: 3px solid #ffd9a0; }
+.impact-hollow b { border: 4px solid #f2c25c; box-shadow: 0 0 1.2rem #f2c25caa, inset 0 0 .8rem #f2c25c88; }
+.impact-hollow span { position: absolute; inset: 0; display: grid; place-items: center; font-size: 2.6rem; color: #ffe39a; text-shadow: 0 0 .8rem #f2a33a; animation: impact-stamp .55s ease-out forwards; }
+.impact-saints b { inset: 0; border-radius: 50%; background: radial-gradient(circle, #fffbe6 0 12%, #ffe8a3aa 24%, transparent 60%),
+  conic-gradient(from 0deg, transparent 0 4%, #fff3c4cc 5% 7%, transparent 8% 20%, #fff3c4cc 21% 23%, transparent 24% 45%, #fff3c4cc 46% 48%, transparent 49% 70%, #fff3c4cc 71% 73%, transparent 74%);
+  animation: impact-holy .6s ease-out forwards; }
+.impact-neon svg { width: 100%; height: 100%; overflow: visible; animation: impact-zap .5s steps(4) forwards; }
+.impact-neon polyline { fill: none; stroke: #7ff6ff; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 4px #ff3df2) drop-shadow(0 0 8px #7ff6ff); }
+.impact-undercity i { position: absolute; left: 18%; width: 64%; height: .38rem; border-radius: 50%; background: linear-gradient(90deg, transparent, #c8ff7a, #ff5b4b, transparent);
+  box-shadow: 0 0 .6rem #8dff5a; transform: rotate(-38deg) scaleX(0); animation: impact-claw .45s ease-out forwards; }
+.impact-undercity i:nth-child(1) { top: 30%; } .impact-undercity i:nth-child(2) { top: 46%; animation-delay: .05s; } .impact-undercity i:nth-child(3) { top: 62%; animation-delay: .1s; }
+@keyframes impact-ring { from { transform: scale(.3); opacity: 1; } to { transform: scale(1.8); opacity: 0; } }
+@keyframes impact-stamp { 0% { transform: scale(2.2); opacity: 0; } 30% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.05); opacity: 0; } }
+@keyframes impact-holy { from { transform: scale(.4) rotate(0); opacity: 1; } to { transform: scale(1.5) rotate(25deg); opacity: 0; } }
+@keyframes impact-zap { 0% { opacity: 1; transform: scale(.8) rotate(0); } 50% { opacity: .6; transform: scale(1.1) rotate(8deg); } 100% { opacity: 0; transform: scale(1.2) rotate(-6deg); } }
+@keyframes impact-claw { 0% { transform: rotate(-38deg) scaleX(0); opacity: 1; } 60% { transform: rotate(-38deg) scaleX(1); opacity: 1; } 100% { transform: rotate(-38deg) scaleX(1.1); opacity: 0; } }
+
+/* ---------- Entrata delle Leggendarie ---------- */
+.legend-entrance { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; align-content: center; gap: .7rem; padding: 1rem;
+  background: radial-gradient(circle at 50% 45%, #0000 0, #000d 70%), #000a; animation: legend-dim .35s ease-out; --legend: #f2c25c; }
+.legend-neon { --legend: #ff3df2; } .legend-saints { --legend: #ffe8a3; } .legend-undercity { --legend: #8dff5a; }
+.legend-burst { position: absolute; left: 50%; top: 45%; width: 160vmax; height: 160vmax; transform: translate(-50%, -50%); pointer-events: none;
+  background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--legend) 55%, transparent) 0 3deg, transparent 3deg 15deg);
+  -webkit-mask: radial-gradient(circle, #000 0, #0000 45%); mask: radial-gradient(circle, #000 0, #0000 45%);
+  animation: legend-rays 2.4s linear forwards; }
+.legend-label { position: relative; font: 900 1rem/1 "Cinzel", serif; letter-spacing: .35em; text-transform: uppercase; color: var(--legend); text-shadow: 0 0 1rem var(--legend); animation: legend-label .5s ease-out; }
+.legend-card { position: relative; width: min(64vw, 18rem); border-radius: .9rem;
+  box-shadow: 0 0 0 2px var(--legend), 0 0 3rem var(--legend), 0 1.4rem 3rem #000; animation: legend-card .7s cubic-bezier(.2, 1.3, .35, 1); }
+.legend-voice { position: relative; max-width: 22rem; text-align: center; font: italic 600 1.35rem/1.35 "EB Garamond", serif; color: #fff7e8;
+  text-shadow: 0 0 .8rem var(--legend), 0 2px 6px #000; quotes: "«" "»"; animation: legend-label .6s .35s ease-out both; }
+.legend-entrance.foe .legend-label::after { content: ""; }
+.legend-entrance.leaving { opacity: 0; transition: opacity .3s; }
+@keyframes legend-dim { from { opacity: 0; } }
+@keyframes legend-rays { from { transform: translate(-50%, -50%) rotate(0) scale(.6); opacity: 0; } 15% { opacity: 1; } to { transform: translate(-50%, -50%) rotate(40deg) scale(1); opacity: .8; } }
+@keyframes legend-card { from { transform: scale(.3) rotate(-8deg); opacity: 0; filter: brightness(3); } 60% { filter: brightness(1.4); } to { transform: none; opacity: 1; filter: none; } }
+@keyframes legend-label { from { opacity: 0; transform: translateY(.6rem); } }
+@media (prefers-reduced-motion: reduce) { .legend-burst, .impact { display: none; } }

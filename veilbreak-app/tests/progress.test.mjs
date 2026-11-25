@@ -150,14 +150,14 @@ test("i due scontri sbilanciati restano vicini al 50% con i mazzi predefiniti", 
   }
 });
 
-test("i quattro eroi della Storia si sbloccano vincendo i loro capitoli", () => {
+test("i sette eroi della Storia (Atto I e II) si sbloccano vincendo i loro capitoli", () => {
   assert.deepEqual(unlockedHeroes(), []);
   const found = [];
   for (let i = 0; i < chapters.length; i++) {
     const granted = completeChapter(i);
     if (granted.hero) found.push(granted.hero);
   }
-  assert.deepEqual(found.sort(), ["dex-halogen", "nonna-ines", "orfeo-grimm", "ottavia"]);
+  assert.deepEqual(found.sort(), ["dex-halogen", "kira-statica", "nonna-ines", "orfeo-grimm", "ottavia", "padre-lazzaro", "vittoria-sale"]);
   assert.deepEqual(unlockedHeroes().sort(), found);
   assert.equal(completeChapter(1).hero, null, "rigiocare un capitolo non ridà l'eroe");
 });

@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { cards } from "../cards.mjs";
-import { heroes, lockedHeroes } from "../heroes.mjs";
+import { heroes, lockedHeroes, extraHeroes } from "../heroes.mjs";
 import { chapters } from "../story.mjs";
 import { environments } from "../environments.mjs";
 import { missing, languages } from "../i18n.mjs";
@@ -33,7 +33,7 @@ test("ogni frase del codice è tradotta in inglese, tedesco e spagnolo", () => {
 test("regole delle carte, poteri, Storia e ambientazioni sono tradotti", () => {
   const texts = [
     ...cards.map(c => c.text).filter(Boolean), ...new Set(cards.map(c => c.type)),
-    ...[...Object.values(heroes), ...Object.values(lockedHeroes)].flatMap(h => [h.power.name, h.power.text]),
+    ...[...Object.values(heroes), ...Object.values(lockedHeroes), ...extraHeroes].flatMap(h => [h.power.name, h.power.text]),
     ...chapters.flatMap(c => [c.title, c.intro, c.outro]),
     ...Object.values(environments).map(e => e.name),
   ];

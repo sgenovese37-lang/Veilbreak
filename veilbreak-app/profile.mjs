@@ -16,6 +16,7 @@ export const matchRewards = { Facile: 15, Normale: 25, Difficile: 40, sconfitta:
 export const titles = {
   "primo-binder": { name: "Primo Binder", text: "Hai completato il tutorial." },
   "custode-del-velo": { name: "Custode del Velo", text: "Hai completato la modalità Storia." },
+  "signore-delle-cisterne": { name: "Signore delle Cisterne", text: "Hai completato l’Atto II della Storia." },
   "collezionista": { name: "Collezionista della Notte", text: "Possiedi tutte le copie giocabili di ogni carta." },
 };
 

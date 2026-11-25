@@ -16,6 +16,17 @@ export const cast = {
   re: { name: "Il Re della Fogna", card: 59 },
   sindaco: { name: "Il Sindaco", card: 1 },
   venditrice: { name: "La Venditrice", card: 28 },
+  // Atto II
+  kira: { name: "Kira Statica", portrait: "assets/eroi/ritratti/kira-statica.webp" },
+  lazzaro: { name: "Padre Lazzaro", portrait: "assets/eroi/ritratti/padre-lazzaro.webp" },
+  vittoria: { name: "Notaia Vittoria Sale", portrait: "assets/eroi/ritratti/vittoria-sale.webp" },
+  muffa: { name: "La Madre della Muffa", card: 88 },
+  archivista: { name: "L’Archivista Senza Volto", card: 62 },
+  regina: { name: "La Regina Statica", card: 75 },
+  lucrezia: { name: "Santa Lucrezia", card: 83 },
+  guardiano: { name: "Il Guardiano dei Binari", card: 86 },
+  conservatore: { name: "Il Gran Conservatore", card: 68 },
+  leviatano: { name: "Il Leviatano", card: 90 },
 };
 
 // Una scena per capitolo (stesso ordine di story.mjs). enemyHero: eroe che guida l'avversario.
@@ -141,6 +152,125 @@ export const scenes = [
       ["narratore", "La penna si spezza con un suono di vetro. Il Velo si richiude come una ferita che finalmente guarisce."],
       ["mara", "Guarda. I lampioni."],
       ["narratore", "All'alba Hollow Street riaccende i lampioni, uno dopo l'altro. E da qualche parte, sotto la città, qualcosa aspetta la prossima notte."],
+    ],
+  },
+  // ---------- Atto II · La Marea sotto la Città ----------
+  { // 9 · La marea nera
+    enemyHero: null,
+    before: [
+      ["narratore", "Una settimana di lampioni accesi. Poi, una notte, i tombini cominciano a piangere acqua nera."],
+      ["mara", "Binder. Sotto le rotaie c'è qualcosa che cresce. La muffa ha mangiato tre gallerie in due giorni."],
+      ["tu", "Il Velo è chiuso. Da dove arriva?"],
+      ["muffa", "Dal basso, piccola. Sempre dal basso. Io sono solo la prima a salire."],
+    ],
+    after: [
+      ["mara", "Guarda qui. Un registro di pietra, sepolto nella muffa."],
+      ["narratore", "Su ogni pagina lo stesso timbro: «Archivio Eterno · da conservare fino alla fine dei tempi»."],
+      ["tu", "Un archivio sotto la città. Chi conserva qualcosa per sempre… di solito ha paura di perderlo."],
+    ],
+  },
+  { // 10 · L'Archivio Eterno
+    enemyHero: null,
+    before: [
+      ["orfeo", "L'Archivio Eterno non esiste, ufficialmente. Il che significa che esiste, e che è pericoloso."],
+      ["narratore", "Scaffali che scendono per chilometri. In fondo, una figura senza volto timbra fascicoli nel silenzio."],
+      ["archivista", "Pratica respinta. Pratica respinta. Visitatrice non prevista: da catalogare."],
+      ["tu", "Cerco chi ha fatto salire l'acqua nera."],
+    ],
+    after: [
+      ["archivista", "Pratica… evasa. Una sola parola è autorizzata all'uscita."],
+      ["narratore", "Tra milioni di fascicoli, l'Archivista ne indica uno: «Cisterne»."],
+      ["orfeo", "Le vecchie cisterne della città. Chiuse da un secolo. Nessuno ci scende più."],
+    ],
+  },
+  { // 11 · Frequenze fantasma
+    enemyHero: "kira-statica",
+    before: [
+      ["dex", "Senti anche tu? Tutte le radio della città trasmettono un respiro. Lento. Bagnato."],
+      ["kira", "Non toccare la mia rete, Binder. La Regina sta ascoltando il mare sotto la città, e il mare risponde."],
+      ["regina", "Ogni parola sussurrata al telefono è mia. E ogni parola, adesso, parla di lui."],
+      ["tu", "Kira, quella cosa ti sta usando."],
+      ["kira", "Forse. Ma prima mi batti, poi ne parliamo."],
+    ],
+    after: [
+      ["kira", "Va bene. Hai vinto tu. Stacco la spina alla Regina."],
+      ["kira", "Prima però ho registrato il segnale. Ascolta: non è un respiro. È un battito."],
+      ["dex", "Qualcosa di enorme, sotto le cisterne. E ha il cuore che batte sempre più forte."],
+      ["kira", "Conta su di me, Binder. Nessuno usa la mia corrente senza pagare."],
+    ],
+  },
+  { // 12 · La santa delle candele
+    enemyHero: "padre-lazzaro",
+    before: [
+      ["ottavia", "Le candele della cripta si sono riaccese da sole. Per ogni fiamma, un morto si alza."],
+      ["lucrezia", "Per ogni candela accesa, un'anima torna. Non è questo che chiedevano i fedeli?"],
+      ["lazzaro", "Tornano, sì. Ma non verso di noi. Camminano tutti verso le cisterne."],
+      ["lazzaro", "Io sono già morto una volta, Binder. Lasciami vedere se sai difendere i vivi."],
+    ],
+    after: [
+      ["narratore", "Padre Lazzaro spegne l'ultima candela con due dita. Il fumo sale dritto, come una preghiera."],
+      ["lazzaro", "I morti non obbediscono alla santa. Obbediscono a chi li chiama dal fondo."],
+      ["ottavia", "Allora scendiamo a prenderlo. Insieme."],
+      ["lazzaro", "Insieme. Ho ancora una veglia da vegliare."],
+    ],
+  },
+  { // 13 · Il notaio dei morti
+    enemyHero: "vittoria-sale",
+    before: [
+      ["narratore", "In un ufficio senza finestre, una notaia timbra atti di cessione. Ogni firma è di un'anima appena risvegliata."],
+      ["vittoria", "Firma qui. E anche dopo la morte. Le anime sono beni trasferibili, Binder: lo dice il regolamento."],
+      ["tu", "Trasferibili a chi?"],
+      ["vittoria", "Riservato. A meno che tu non mi costringa a parlare."],
+    ],
+    after: [
+      ["vittoria", "Il sigillo… si è incrinato. Un atto senza sigillo non vale nulla."],
+      ["vittoria", "Il beneficiario è uno solo: «Il Gran Conservatore, per conto di Ciò che Dorme»."],
+      ["vittoria", "Ho servito la legge sbagliata. Lascia che ti aiuti a servire quella giusta."],
+    ],
+  },
+  { // 14 · Binari morti
+    enemyHero: null,
+    before: [
+      ["ines", "La linea chiusa nel 1953 porta dritta alle cisterne. Ma sui binari morti c'è un guardiano che non dorme mai."],
+      ["guardiano", "Biglietto. Andata soltanto: il ritorno non è previsto."],
+      ["tu", "Non ho biglietto. Ho una buona ragione."],
+      ["guardiano", "Le ragioni non si timbrano. Sui binari morti, l'ultimo treno sei tu."],
+    ],
+    after: [
+      ["guardiano", "Passa. Non ho mai visto nessuno arrivare fin qui con tanta voglia di tornare."],
+      ["narratore", "In fondo alla galleria, una porta di bronzo con un catalogo inciso."],
+      ["ines", "L'ingresso privato dell'Archivio Eterno. Il Gran Conservatore ti aspetta, piccola."],
+    ],
+  },
+  { // 15 · Il Gran Conservatore
+    enemyHero: null,
+    before: [
+      ["conservatore", "Benvenuta nell'Archivio Eterno. Qui nessun potere sfugge alla catalogazione."],
+      ["tu", "Hai catalogato la città per darla in pasto a qualcosa."],
+      ["conservatore", "Ho conservato la città. Per lui. Ciò che dorme sotto Hollow Street ha diritto a ogni cosa che la città dimentica."],
+      ["conservatore", "E tu, Binder, sei l'ultima voce del catalogo. Archiviazione definitiva."],
+    ],
+    after: [
+      ["narratore", "Il catalogo brucia pagina dopo pagina. Il Gran Conservatore si sbriciola in polvere di carta."],
+      ["conservatore", "Troppo tardi… il registro è chiuso. Lui… è sveglio."],
+      ["narratore", "Sotto i piedi il pavimento vibra. Molto più in basso, un battito enorme, sempre più vicino."],
+    ],
+  },
+  { // 16 · Il Leviatano delle Cisterne
+    enemyHero: null,
+    before: [
+      ["narratore", "Le cisterne. Un mare nero sotto la città, immobile come vetro. Poi il vetro si incrina."],
+      ["leviatano", "Mille anni di fame. E la città sopra di me, come un piatto apparecchiato."],
+      ["mara", "Non sei sola, Binder. Siamo tutti qui."],
+      ["kira", "Ho portato la corrente."],
+      ["lazzaro", "Io le preghiere."],
+      ["tu", "E io il Velo. Torna a dormire."],
+    ],
+    after: [
+      ["narratore", "Il Leviatano affonda nel buio da cui è venuto. Il mare nero si richiude su di lui come una palpebra."],
+      ["ottavia", "Le campane… stanno suonando. Tutte."],
+      ["vittoria", "Ho appena timbrato l'ultimo atto: la città appartiene a chi ci vive. Vale per sempre."],
+      ["narratore", "All'alba, per la prima volta da settimane, Hollow Street profuma di pioggia pulita. E i Binder, per una notte, dormono."],
     ],
   },
 ];

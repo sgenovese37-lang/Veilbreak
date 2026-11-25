@@ -60,6 +60,16 @@ Riepilogo per riprendere il lavoro in una nuova sessione.
 - Sezione «I tuoi mazzi» in cima a Mazzi: un mazzo per fazione, con Vedi, Modifica/Crea e Gioca.
 - Test: il computer attacca solo la Provocazione finché è in campo (Normale e Difficile).
 
+## Fase 3 (25 novembre)
+- Chi gioca per primo non pesca nel primo turno (vittorie del primo giocatore dal 64% al 53% nelle simulazioni).
+- Dialoghi della Storia e battute delle carte tradotti in inglese, tedesco e spagnolo.
+- Obiettivi permanenti (`achievements.mjs`) nella sezione Missioni; creazione di carte con le Schegge dalla scheda della carta.
+- Discesa nel Velo (`descent.mjs`) e Rissa della settimana (regole in `game.mjs`, `brawls`), dalla schermata iniziale.
+- Storia Atto II «La Marea sotto la Città»: capitoli 9-16 con dialoghi; 3 nuovi eroi (Kira Statica, Padre Lazzaro, Notaia Vittoria Sale) con ritratti provvisori; PDF con i prompt dei ritratti.
+- Entrata scenica delle Leggendarie e impatti degli attacchi diversi per fazione.
+- Copertina di avvio in `index.html`: niente lampo del modulo grezzo all'apertura.
+
 ## Prossimi passi
+- Ritratti definitivi dei 3 eroi dell'Atto II (prompt nel PDF).
 - Correzioni dalle partite dell'utente.
 - Vantaggio di chi gioca per primo ancora intorno al 60% contro il computer.

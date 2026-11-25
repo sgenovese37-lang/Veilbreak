@@ -7,7 +7,7 @@ import {
 } from "./game.mjs";
 
 import { renderTutorial } from "./tutorial.mjs";
-import { heroFor, heroPowerCost, heroesOf, lockedHeroes, heroWithId } from "./heroes.mjs";
+import { heroFor, heroPowerCost, heroesOf, lockedHeroesOf, heroWithId } from "./heroes.mjs";
 import { illustrationFor as catalogueArt } from "./illustrations.mjs";
 import { runComputer } from "./ai.mjs";
 import {
@@ -17,7 +17,7 @@ import {
 } from "./profile.mjs";
 import { currentMissions, recordEvent, claimMission } from "./missions.mjs";
 import { currentAchievements, recordAchievements, claimAchievement } from "./achievements.mjs";
-import { chapters, storyTitle, storyProgress, isUnlocked, completeChapter, finalReward, unlockedHeroes } from "./story.mjs";
+import { chapters, storyTitle, storyProgress, isUnlocked, completeChapter, finalReward, unlockedHeroes, actTwoReward, actOneLength } from "./story.mjs";
 import { sound, soundEnabled, setSound, buzz, cardSound, startAmbience, stopAmbience } from "./audio.mjs";
 import { environments, environmentFor } from "./environments.mjs";
 import { playMusic, musicEnabled, setMusic } from "./music.mjs";
@@ -178,8 +178,7 @@ function heroChoices(current, onPick, id) {
   const unlocked = unlockedHeroes();
   for (const faction of factions) {
     const list = heroesOf(faction, unlocked);
-    const locked = lockedHeroes[faction];
-    if (locked && !unlocked.includes(locked.id)) list.push({ ...heroWithId(locked.id), unavailable: true });
+    for (const locked of lockedHeroesOf(faction)) if (!unlocked.includes(locked.id)) list.push({ ...heroWithId(locked.id), unavailable: true });
     if (!list.length) list.push({ id: faction, faction, name: faction });
     for (const hero of list) {
       const choice = button(undefined, () => onPick(hero), `hero-choice${hero.unavailable ? " locked" : ""}`);
@@ -708,6 +707,7 @@ function settleOutcome() {
     outcome.story = chapter.outro;
     if (granted?.chapter) outcome.lines.push(t("Premio del capitolo: {reward}", { reward: rewardText(granted.chapter) }));
     if (granted?.hero) outcome.lines.push(t("Nuovo eroe sbloccato: {hero}. Sceglilo prima della partita!", { hero: heroWithId(granted.hero).name }));
+    if (granted?.actTwo) outcome.lines.push(t("Premio dell’Atto II: {reward} e il titolo {title}", { reward: rewardText(granted.actTwo), title: t(titles[actTwoReward.title].name) }));
     if (granted?.final) outcome.lines.push(t("Premio finale della Storia: {reward} e il titolo {title}", { reward: rewardText(granted.final), title: t(titles[finalReward.title].name) }));
   }
   Object.assign(event, matchExtras?.(won) ?? {});   // Discesa nel Velo e Rissa aggiungono i loro dati
@@ -763,6 +763,7 @@ async function showAction(action) {
     if (isPact(byId.get(action.card))) popSymbols(document.querySelector(`.hero-portrait[data-side="${action.side}"]`), ["pact"]);
     const played = byId.get(action.card);
     if (played?.type === "Segreto") await castPreview(played, "L’avversario prepara un Segreto", 1000, true);
+    else if (played?.rarity === "Legendary") await legendaryEntrance(played, action.side);
     else await castPreview(played, "L’avversario gioca", 1100);
   } else if (action.kind === "attack") {
     await lunge(action.side, action.uid, action.target);
@@ -835,7 +836,8 @@ function playedFx(c) {
   if (isPact(c)) popSymbols(document.querySelector(`.hero-portrait[data-side="${game.active}"]`), ["pact"]);
   sound("mana");
   cardSound(c, "enter");
-  if (c.type !== "Creatura") { sound("cast"); castPreview(c, "Hai giocato", 800); }
+  if (c.rarity === "Legendary") legendaryEntrance(c, game.active);
+  else if (c.type !== "Creatura") { sound("cast"); castPreview(c, "Hai giocato", 800); }
 }
 
 // ---------- Effetti ----------
@@ -851,6 +853,42 @@ function castPreview(c, label, ms, hidden = false) {
   if (!hidden && c.type !== "Creatura" && voiceOf(c.id)) layer.append(element("q", voiceOf(c.id), "cast-voice"));
   document.body.append(layer);
   return wait(ms).then(() => { layer.classList.add("leaving"); return wait(250); }).then(() => layer.remove());
+}
+
+// Impatto dell'attacco, diverso per fazione: sigillo d'oro (Corte), scariche al neon (Patto Neon),
+// raggi di luce (Senza Santi), artigli (Sottocittà).
+function impactFx(target, faction) {
+  if (!target || document.body.classList.contains("energy-save")) return;
+  const theme = heroFor(faction)?.theme ?? "plain";
+  const r = target.getBoundingClientRect();
+  const fx = element("div", undefined, `impact impact-${theme}`);
+  fx.setAttribute("aria-hidden", "true");
+  Object.assign(fx.style, { left: `${r.left + r.width / 2}px`, top: `${r.top + r.height / 2}px` });
+  if (theme === "neon") fx.innerHTML = `<svg viewBox="-50 -50 100 100"><polyline points="-44,-10 -20,-4 -26,8 0,2 -4,16 30,6"/><polyline points="40,-30 18,-12 26,-2 4,10 12,24"/><polyline points="-30,34 -8,14 -2,26 16,8"/></svg>`;
+  else if (theme === "undercity") fx.innerHTML = `<i></i><i></i><i></i>`;
+  else if (theme === "saints") fx.innerHTML = `<b></b>`;
+  else if (theme === "hollow") fx.innerHTML = `<b></b><span>✠</span>`;
+  else fx.innerHTML = `<b></b>`;
+  document.body.append(fx);
+  setTimeout(() => fx.remove(), 700);
+}
+
+// Entrata delle carte Leggendarie: lo schermo si scurisce, esplode la luce della fazione e la carta entra in grande con la sua battuta.
+function legendaryEntrance(c, side) {
+  const theme = heroFor(c.faction)?.theme ?? "hollow";
+  const art = illustrationFor(c.id);
+  const layer = element("div", undefined, `legend-entrance legend-${theme}${side === 0 || mode !== "cpu" ? "" : " foe"}`);
+  layer.setAttribute("aria-hidden", "true");
+  layer.append(element("div", undefined, "legend-burst"));
+  layer.append(element("small", side === 0 || mode !== "cpu" ? "Leggendaria" : "Leggendaria dell’avversario", "legend-label"));
+  if (art) layer.append(cardFace(c, art, {}, { className: "legend-card" })); else layer.append(drawCard(c));
+  if (voiceOf(c.id)) layer.append(element("q", voiceOf(c.id), "legend-voice"));
+  document.body.append(layer);
+  sound("reward"); buzz(60);
+  const quick = document.body.classList.contains("energy-save");
+  const close = () => { if (!layer.isConnected) return; layer.classList.add("leaving"); setTimeout(() => layer.remove(), 300); };
+  layer.addEventListener("click", close);
+  return wait(quick ? 900 : 2100).then(close).then(() => wait(300));
 }
 
 // L'attaccante scatta verso il bersaglio e torna indietro.
@@ -870,6 +908,7 @@ async function lunge(side, uid, targetChoice) {
   const go = from.animate([{ transform: "none" }, { transform: `translate(${dx}px, ${dy}px) scale(1.12)` }], { duration: 230, easing: "cubic-bezier(.5,0,.9,.5)", fill: "forwards" });
   await go.finished;
   if (targetChoice?.uid == null) sound("hit"); // le creature colpite hanno il loro suono (vedi track)
+  impactFx(to, attacker?.card ? byId.get(attacker.card)?.faction : null);
   buzz(25);
   to.animate([{ transform: "none" }, { transform: "translateX(-5px)" }, { transform: "translateX(5px)" }, { transform: "none" }], { duration: 240 });
   await from.animate([{ transform: `translate(${dx}px, ${dy}px) scale(1.12)` }, { transform: "none" }], { duration: 200, easing: "ease-out", fill: "forwards" }).finished;
@@ -1714,6 +1753,7 @@ function renderStory() {
   head.append(element("h2", `${t("Storia")} · ${t(storyTitle)}`), element("span", t("Capitoli superati {n}/{max}", { n: cleared, max: chapters.length }), "muted"));
   const list = element("ol", undefined, "chapter-list");
   chapters.forEach((chapter, i) => {
+    if (i === 0 || i === actOneLength) list.append(element("li", t(i === 0 ? "Atto I · La Notte del Velo Spezzato" : "Atto II · La Marea sotto la Città"), "act-title"));
     const unlocked = isUnlocked(i);
     const state = t(i < cleared ? "✓ Superato" : unlocked ? "Disponibile" : "Bloccato");
     const item = element("li");
@@ -1743,9 +1783,13 @@ function renderStory() {
     detail.append(again);
   }
   detail.append(pickFaction, start);
-  const final = element("p", cleared === chapters.length
-    ? t("Storia completata · Titolo {title}", { title: t(titles[finalReward.title].name) })
-    : t("Premio finale: {reward} e il titolo {title}", { reward: rewardText(finalReward), title: t(titles[finalReward.title].name) }), "muted");
+  const actOne = cleared >= actOneLength
+    ? t("Atto I completato · Titolo {title}", { title: t(titles[finalReward.title].name) })
+    : t("Premio dell’Atto I: {reward} e il titolo {title}", { reward: rewardText(finalReward), title: t(titles[finalReward.title].name) });
+  const actTwo = cleared >= chapters.length
+    ? t("Atto II completato · Titolo {title}", { title: t(titles[actTwoReward.title].name) })
+    : t("Premio dell’Atto II: {reward} e il titolo {title}", { reward: rewardText(actTwoReward), title: t(titles[actTwoReward.title].name) });
+  const final = element("p", `${actOne} · ${actTwo}`, "muted");
   panel.replaceChildren(head, list, detail, final);
 }
 
@@ -2029,6 +2073,11 @@ function drawShop() {
 if (!window.Capacitor && "serviceWorker" in navigator && location.protocol.startsWith("http")) {
   navigator.serviceWorker.register("./sw.js").catch(() => {});
 }
+// solo nei test automatici: richiamare gli effetti per fotografarli
+if (navigator.webdriver) window.__vb = {
+  legend: id => legendaryEntrance(byId.get(id), 0),
+  impact: (faction, selector) => impactFx(document.querySelector(selector), faction),
+};
 renderExtraModes();
 showSection("match");
 if (introEnabled() && !navigator.webdriver) playIntro({ onEnter: () => playMusic(musicTheme()) });

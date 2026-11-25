@@ -71,11 +71,22 @@ export const lockedHeroes = {
     power: { name: "Richiamo dei Cunicoli", text: "Evoca un Frammento di Veil 1/1.", summon: 60 } },
 };
 
+// Eroi dell'Atto II della Storia. Ritratti provvisori (ritagli di illustrazioni) finché non arrivano quelli definitivi.
+export const extraHeroes = [
+  { faction: "Corte di Hollow", id: "vittoria-sale", name: "Notaia Vittoria Sale", portrait: "assets/eroi/ritratti/vittoria-sale.webp",
+    power: { name: "Rogito Notturno", text: "Pesca 1 carta. Subisci 2 danni.", draw: 1, selfDamage: 2 } },
+  { faction: "Patto Neon", id: "kira-statica", name: "Kira Statica", portrait: "assets/eroi/ritratti/kira-statica.webp",
+    power: { name: "Picco di Tensione", text: "Una creatura alleata ottiene +2 Attacco fino alla fine del turno.", target: "ally", attack: 2 } },
+  { faction: "Senza Santi", id: "padre-lazzaro", name: "Padre Lazzaro, il Risorto", portrait: "assets/eroi/ritratti/padre-lazzaro.webp",
+    power: { name: "Seconda Veglia", text: "Cura 3 punti vita al tuo eroe.", heal: 3 } },
+];
+// Tutti gli eroi da sbloccare di una fazione (Atto I e Atto II)
+export const lockedHeroesOf = faction => [lockedHeroes[faction], ...extraHeroes.filter(h => h.faction === faction)].filter(Boolean);
 
 // Ogni eroe per identificativo: quelli base usano il nome della fazione, quelli da sbloccare il loro id.
 const heroById = new Map();
 for (const [faction, hero] of Object.entries(heroes)) heroById.set(faction, { ...hero, id: faction, faction });
-for (const [faction, hero] of Object.entries(lockedHeroes)) {
+for (const [faction, hero] of [...Object.entries(lockedHeroes), ...extraHeroes.map(h => [h.faction, h])]) {
   const base = heroes[faction];
   heroById.set(hero.id, { table: base.table, theme: base.theme, ...hero, faction, locked: true });
 }

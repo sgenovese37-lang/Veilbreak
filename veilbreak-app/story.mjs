@@ -62,9 +62,70 @@ export const chapters = [
     outro: "La penna si spezza e il Velo si richiude con un suono di vetro. All’alba Hollow Street riaccende i lampioni, uno dopo l’altro.",
     reward: { shards: 200, packs: 1 },
   },
+  // ---------- Atto II · La Marea sotto la Città ----------
+  {
+    act: 2, title: "La marea nera",
+    opponent: "Sottocittà", level: "Normale", lives: [25, 26],
+    intro: "Una settimana dopo la caduta del Sindaco, i tombini di Hollow Street traboccano di un’acqua nera che non riflette la luce. Nei cunicoli qualcosa cresce, e ogni notte la muffa sale di un gradino.",
+    outro: "Nel cuore della muffa trovi un registro di pietra. Ogni pagina porta lo stesso timbro: «Archivio Eterno · da conservare fino alla fine dei tempi».",
+    reward: { shards: 150, packs: 0 },
+  },
+  {
+    act: 2, title: "L’Archivio Eterno",
+    opponent: "Corte di Hollow", level: "Normale", lives: [25, 27],
+    intro: "Sotto il Municipio si apre un archivio che nessuna mappa riporta. Gli scaffali scendono per chilometri. Chi lo custodisce non ha volto, e cataloga tutto ciò che la città ha perso.",
+    outro: "L’Archivista indica una sola parola tra milioni di fascicoli: «Cisterne». Poi il suo volto vuoto si gira verso il basso, dove l’acqua nera sale.",
+    reward: { shards: 150, packs: 1 },
+  },
+  {
+    act: 2, title: "Frequenze fantasma",
+    opponent: "Patto Neon", level: "Normale", lives: [25, 28],
+    intro: "Le radio di tutta la città trasmettono lo stesso respiro, lento, profondo, bagnato. Al centro della rete una regina di statica ascolta il mare che sta sotto Hollow Street.",
+    outro: "Kira Statica stacca la spina della Regina e ti consegna una frequenza registrata: è il battito di qualcosa di enorme, sepolto sotto le cisterne.",
+    reward: { shards: 150, packs: 0, hero: "kira-statica" },
+  },
+  {
+    act: 2, title: "La santa delle candele",
+    opponent: "Senza Santi", level: "Difficile", lives: [25, 28],
+    intro: "Nella cripta della Cappella, Santa Lucrezia riaccende le candele dei morti. Per ogni fiamma un’anima torna a camminare, e tutte camminano verso le cisterne.",
+    outro: "Padre Lazzaro spegne l’ultima candela con le dita. «I morti non obbediscono alla santa», dice. «Obbediscono a chi li chiama dal fondo.»",
+    reward: { shards: 200, packs: 1, hero: "padre-lazzaro" },
+  },
+  {
+    act: 2, title: "Il notaio dei morti",
+    opponent: "Corte di Hollow", level: "Difficile", lives: [25, 29],
+    intro: "Ogni anima risvegliata firma un atto di cessione. La Notaia Vittoria Sale li timbra tutti, uno dopo l’altro, con un sigillo che gocciola acqua nera.",
+    outro: "Il sigillo della Notaia si incrina. Negli atti c’è un nome solo come beneficiario: «Il Gran Conservatore, per conto di Ciò che Dorme».",
+    reward: { shards: 200, packs: 0, hero: "vittoria-sale" },
+  },
+  {
+    act: 2, title: "Binari morti",
+    opponent: "Sottocittà", level: "Difficile", lives: [25, 30],
+    intro: "Per raggiungere le cisterne bisogna percorrere la linea chiusa nel 1953. Sui binari morti un guardiano senza riposo controlla i biglietti di chi non tornerà.",
+    outro: "Il Guardiano si fa da parte. In fondo alla galleria, una porta di bronzo con un catalogo inciso: è l’ingresso privato dell’Archivio Eterno.",
+    reward: { shards: 200, packs: 1 },
+  },
+  {
+    act: 2, title: "Il Gran Conservatore",
+    opponent: "Corte di Hollow", level: "Difficile", lives: [25, 32],
+    intro: "Il Gran Conservatore ha catalogato la città intera per offrirla in pasto a ciò che dorme sotto di essa. Nessun potere sfugge alla sua catalogazione. Il tuo sarà l’ultimo.",
+    outro: "Il catalogo brucia, pagina dopo pagina. Sotto i tuoi piedi il pavimento vibra: qualcosa, in fondo alle cisterne, si è appena svegliato.",
+    reward: { shards: 250, packs: 1 },
+  },
+  {
+    act: 2, title: "Il Leviatano delle Cisterne",
+    opponent: "Sottocittà", level: "Difficile", lives: [25, 38],
+    intro: "Sotto la città c’è un mare, e nel mare il Leviatano ha fame da mille anni. Hollow Street trema. Tutti i Binder che hai incontrato sono con te, sulla riva nera.",
+    outro: "Il Leviatano affonda nel buio da cui è venuto. L’acqua nera si ritira dai tombini e all’alba, per la prima volta da settimane, Hollow Street profuma di pioggia pulita.",
+    reward: { shards: 300, packs: 2 },
+  },
 ];
 
 export const finalReward = { shards: 500, packs: 2, title: "custode-del-velo" };
+// Fine dell'Atto II (capitolo 16)
+export const actTwoReward = { shards: 600, packs: 3, title: "signore-delle-cisterne" };
+export const actOneLength = 8;
+export const actOf = index => chapters[index]?.act ?? 1;
 
 export function storyProgress(profile = loadProfile()) {
   return Math.min(profile.story?.cleared ?? 0, chapters.length);
@@ -94,7 +155,15 @@ export function completeChapter(index, profile = loadProfile()) {
   if (chapter.reward.hero && storyProgress(profile) <= index) granted.hero = chapter.reward.hero;
   profile.story = { cleared: Math.max(storyProgress(profile), index + 1) };
   saveProfile(profile);
-  if (storyProgress(profile) === chapters.length) {
+  if (storyProgress(profile) >= chapters.length) {
+    rewardOnce("storia-atto-2", p => {
+      addShards(actTwoReward.shards, "Atto II completato", p);
+      addPacks(actTwoReward.packs, "Atto II completato", p);
+      grantTitle(actTwoReward.title, p);
+      granted.actTwo = actTwoReward;
+    }, profile);
+  }
+  if (storyProgress(profile) >= actOneLength) {
     rewardOnce("storia-finale", p => {
       addShards(finalReward.shards, "Storia completata", p);
       addPacks(finalReward.packs, "Storia completata", p);
