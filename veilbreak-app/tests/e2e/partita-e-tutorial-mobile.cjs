@@ -2,7 +2,7 @@ const { chromium, devices } = require('playwright');
 const shots = (process.env.SHOTS ?? require('os').tmpdir()) + '/';
 (async () => {
   const browser = await chromium.launch();
-  const ctx = await browser.newContext({ ...devices['iPhone 13'] });
+  const ctx = await browser.newContext({ ...devices['iPhone 13'], locale: 'it-IT' });
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push('pageerror: ' + e.message));
@@ -106,7 +106,7 @@ const shots = (process.env.SHOTS ?? require('os').tmpdir()) + '/';
   await page.evaluate(() => localStorage.removeItem('veilbreak-tutorial-progress'));
   await page.click('#missions');
   await page.screenshot({ path: shots + '09-tutorial-inizio.png' });
-  const answers = [1, 0, 2, 0, 1, 2, 0, 1, 2, 0];
+  const answers = [1, 0, 2, 0, 1, 2, 1, 1, 2, 0];
   // risposta sbagliata alla prima
   await page.locator('.mission-options button').nth(0).click();
   console.log('risposta sbagliata:', await page.locator('#tutorial [role=status]').innerText());

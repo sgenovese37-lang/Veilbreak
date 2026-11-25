@@ -2,6 +2,8 @@
 // Si salva nel browser. Senza memoria locale (per esempio nei test) resta in memoria.
 import { cards } from "./cards.mjs";
 import { starterDecks } from "./decks.mjs";
+import { copyLimit } from "./game.mjs";
+import { t } from "./i18n.mjs";
 
 const storageKey = "veilbreak-profile";
 export const packPrice = 100;
@@ -16,7 +18,6 @@ export const titles = {
 };
 
 const byId = new Map(cards.map(card => [card.id, card]));
-const copyLimit = card => card.rarity === "Legendary" ? 1 : 2;
 let memory = null;
 
 function storage() {
@@ -63,20 +64,20 @@ export function owned(id, profile = loadProfile()) {
 
 export function addShards(amount, reason, profile = loadProfile()) {
   profile.shards += amount;
-  note(profile, `+${amount} Schegge · ${reason}`);
+  note(profile, t("+{n} Schegge · {reason}", { n: amount, reason: t(reason) }));
   saveProfile(profile);
 }
 
 export function addPacks(amount, reason, profile = loadProfile()) {
   profile.packs += amount;
-  note(profile, `+${amount} ${amount === 1 ? "busta" : "buste"} · ${reason}`);
+  note(profile, t(amount === 1 ? "+{n} busta · {reason}" : "+{n} buste · {reason}", { n: amount, reason: t(reason) }));
   saveProfile(profile);
 }
 
 export function grantTitle(id, profile = loadProfile()) {
   if (!titles[id] || profile.titles.includes(id)) return false;
   profile.titles.push(id);
-  note(profile, `Titolo sbloccato · ${titles[id].name}`);
+  note(profile, t("Titolo sbloccato · {title}", { title: t(titles[id].name) }));
   saveProfile(profile);
   return true;
 }
@@ -122,7 +123,7 @@ export function openPack(random = Math.random, profile = loadProfile()) {
     }
   }
   if (cards.every(card => owned(card.id, profile) >= copyLimit(card))) grantTitle("collezionista", profile);
-  note(profile, "Busta aperta");
+  note(profile, t("Busta aperta"));
   saveProfile(profile);
   return results;
 }
@@ -138,7 +139,7 @@ export function rewardMatch(won, level, profile = loadProfile()) {
   const amount = won ? matchRewards[level] ?? matchRewards.Normale : matchRewards.sconfitta;
   profile.stats.played++;
   if (won) profile.stats.won++;
-  addShards(amount, won ? `vittoria (${level})` : "partita giocata", profile);
+  addShards(amount, won ? t("vittoria ({level})", { level: t(level) }) : t("partita giocata"), profile);
   return amount;
 }
 

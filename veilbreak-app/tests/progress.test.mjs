@@ -5,7 +5,7 @@ import {
   loadProfile, resetProfileForTests, owned, openPack, buyPack, packPrice, rewardMatch, collectionProgress, startingCopies,
 } from "../profile.mjs";
 import { currentMissions, recordEvent, claimMission, dayKey, weekKey } from "../missions.mjs";
-import { chapters, completeChapter, storyProgress, isUnlocked, finalReward } from "../story.mjs";
+import { chapters, completeChapter, storyProgress, isUnlocked, finalReward, unlockedHeroes } from "../story.mjs";
 import { factions, createGame, mulligan, computerTurn, useHeroPower, stats, defaultDeck } from "../game.mjs";
 import { smartTurn, runComputer } from "../ai.mjs";
 import { heroes } from "../heroes.mjs";
@@ -21,15 +21,15 @@ test("la collezione parte con una copia di ogni carta e una busta", () => {
     const deck = defaultDeck(faction);
     for (const id of new Set(deck)) assert.ok(owned(id) >= deck.filter(x => x === id).length, `${faction}: copie mancanti per ${id}`);
   }
-  assert.equal(collectionProgress().max, 60 * 2 - cards.filter(c => c.rarity === "Legendary").length);
+  assert.equal(collectionProgress().max, 60 * 3 - 2 * cards.filter(c => c.rarity === "Legendary").length);
 });
 
 test("le buste danno copie fino al massimo e poi Schegge", () => {
   const p = loadProfile();
-  p.packs = 200;
+  p.packs = 600;
   let shardsFromDupes = 0;
-  for (let i = 0; i < 200; i++) for (const r of openPack(seeded(i + 1))) shardsFromDupes += r.shards;
-  for (const c of cards) assert.ok(owned(c.id) <= (c.rarity === "Legendary" ? 1 : 2));
+  for (let i = 0; i < 600; i++) for (const r of openPack(seeded(i + 1))) shardsFromDupes += r.shards;
+  for (const c of cards) assert.ok(owned(c.id) <= (c.rarity === "Legendary" ? 1 : 3));
   assert.ok(shardsFromDupes > 0);
   assert.equal(p.shards, shardsFromDupes);
   assert.ok(p.titles.includes("collezionista"));
@@ -143,4 +143,16 @@ test("i due scontri sbilanciati restano vicini al 50% con i mazzi predefiniti", 
     const value = share(a, b);
     assert.ok(value > 0.35 && value < 0.65, `${a} contro ${b}: ${Math.round(value * 100)}%`);
   }
+});
+
+test("i quattro eroi della Storia si sbloccano vincendo i loro capitoli", () => {
+  assert.deepEqual(unlockedHeroes(), []);
+  const found = [];
+  for (let i = 0; i < chapters.length; i++) {
+    const granted = completeChapter(i);
+    if (granted.hero) found.push(granted.hero);
+  }
+  assert.deepEqual(found.sort(), ["dex-halogen", "nonna-ines", "orfeo-grimm", "ottavia"]);
+  assert.deepEqual(unlockedHeroes().sort(), found);
+  assert.equal(completeChapter(1).hero, null, "rigiocare un capitolo non ridà l'eroe");
 });

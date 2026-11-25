@@ -2,7 +2,7 @@
 // migliora di più la valutazione della posizione. Si ferma quando nessuna mossa aiuta.
 import {
   byId, canPlay, playTargets, play, attackTargets, attack, canUseHeroPower, powerTargets,
-  useHeroPower, endTurn, mulligan, stats, cardOf, rules, computerTurn,
+  useHeroPower, endTurn, mulligan, stats, cardOf, rules, computerTurn, essenceShardId, shardHelps,
 } from "./game.mjs";
 
 const fixedRandom = () => 0.5;
@@ -33,7 +33,8 @@ export function evaluate(g, side) {
       score += (owner === side ? 1 : -1) * unitValue(g, s, unit);
     }
   }
-  score += (me.hand.length - enemy.hand.length) * 0.9;
+  const cardsIn = p => p.hand.filter(id => id !== essenceShardId).length;
+  score += (cardsIn(me) - cardsIn(enemy)) * 0.9;
   score += (me.artifacts.length - enemy.artifacts.length) * 3 + (me.secrets.length - enemy.secrets.length) * 2.5;
   return score;
 }
@@ -43,7 +44,7 @@ function actions(g) {
   const p = g.players[side];
   const list = [];
   p.hand.forEach((id, index) => {
-    if (!canPlay(g, index)) return;
+    if (id === essenceShardId || !canPlay(g, index)) return;
     const targets = playTargets(g, id);
     if (targets.length) for (const target of targets) list.push({ kind: "play", index, target });
     else list.push({ kind: "play", index });
@@ -84,7 +85,13 @@ export function smartTurn(g, onStep = () => {}) {
       const score = evaluate(trial, side);
       if (score > bestScore) { best = action; bestScore = score; }
     }
-    if (!best) break;
+    if (!best) {
+      // nessuna mossa utile: se il Frammento di Essenza apre una giocata, lo usa e riprova
+      const shard = g.players[side].hand.indexOf(essenceShardId);
+      if (shard < 0 || !shardHelps(g, g.players[side]) || !play(g, shard)) break;
+      onStep({ kind: "play", index: shard, side, card: essenceShardId, target: null });
+      continue;
+    }
     const card = best.kind === "play" ? g.players[side].hand[best.index] : undefined;
     if (!apply(g, best)) break;
     onStep({ ...best, side, card, target: best.target ?? null });

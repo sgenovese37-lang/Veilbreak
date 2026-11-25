@@ -746,3 +746,18 @@ main { padding-top: 1.4rem; }
   position: fixed; inset: auto 1rem; top: 50%; transform: translateY(-50%); z-index: 50;
   max-height: calc(100dvh - 2rem); overflow-y: auto; max-width: 30rem; margin: 0 auto;
 }
+
+/* Fase 1: ordine di gioco, campo pieno, eroi bloccati */
+.arena .order-note {
+  position: relative; z-index: 6; margin: .4rem auto; max-width: 34rem; padding: .45rem .8rem;
+  text-align: center; font-size: .9rem; color: #f3e3c3; background: rgba(20, 12, 8, .82);
+  border: 1px solid var(--frame, #b87333); border-radius: .6rem;
+}
+.board .board-full {
+  position: absolute; right: .4rem; bottom: .2rem; font-size: .7rem; padding: .05rem .4rem;
+  color: #ffd9a8; background: rgba(60, 20, 10, .85); border: 1px solid #b87333; border-radius: .4rem; pointer-events: none;
+}
+.board { position: relative; }
+.hero-choice.locked { opacity: .55; filter: grayscale(.8); }
+.hero-choice.locked .emblem { filter: brightness(.6); }
+.wallet-row select.lang { width: auto; padding: .25rem .4rem; font-size: .8rem; }

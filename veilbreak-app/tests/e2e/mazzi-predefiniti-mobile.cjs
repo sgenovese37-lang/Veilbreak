@@ -2,7 +2,7 @@
 const { chromium, devices } = require('playwright');
 (async () => {
   const browser = await chromium.launch();
-  const page = await (await browser.newContext({ ...devices['iPhone 13'] })).newPage();
+  const page = await (await browser.newContext({ ...devices['iPhone 13'], locale: 'it-IT' })).newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
   await page.goto('http://127.0.0.1:8000/veilbreak-app/');

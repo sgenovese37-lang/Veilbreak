@@ -40,14 +40,19 @@ for (let it = 0; it < iters; it++) {
   const f = factions[Math.floor(rng() * factions.length)];
   const pool = cards.filter(c => c.faction === f).map(c => c.id);
   const trial = { ...decks, [f]: [...decks[f]] };
-  trial[f].splice(Math.floor(rng() * trial[f].length), 1);
-  trial[f].push(pool[Math.floor(rng() * pool.length)]);
+  // cambia da 1 a 3 carte alla volta
+  const swaps = 1 + Math.floor(rng() * 3);
+  for (let s = 0; s < swaps; s++) {
+    trial[f].splice(Math.floor(rng() * trial[f].length), 1);
+    trial[f].push(pool[Math.floor(rng() * pool.length)]);
+  }
   if (!validDeck(f, trial[f])) continue;
   const result = evaluate(trial);
   if (result.score < best.score) {
     decks[f] = trial[f].sort((x, y) => x - y);
     best = result;
     console.log(`tentativo ${it}`, JSON.stringify(best.mu));
+    console.log("PARZIALE", JSON.stringify(decks));
   }
 }
 console.log("MAZZI", JSON.stringify(decks));

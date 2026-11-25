@@ -1,4 +1,4 @@
-# Stato del progetto VEILBREAK (24 novembre 2026)
+# Stato del progetto VEILBREAK (25 novembre 2026)
 
 Riepilogo per riprendere il lavoro in una nuova sessione.
 
@@ -29,9 +29,14 @@ Riepilogo per riprendere il lavoro in una nuova sessione.
 - Musica generata dal gioco, a tema. Lingue: italiano, inglese, tedesco, spagnolo (illustrazioni in italiano, testi tradotti).
 - Play Store: a gioco finito. Gioco online: in valutazione dei costi.
 
-## Prossimi passi (Fase 1)
-1. Limite di 7 creature in campo.
-2. Carta extra e Frammento di Essenza per chi gioca per secondo (illustrazione pronta).
-3. Mazzi da 30 carte: nuove regole, nuovi mazzi predefiniti (`tools/cerca_mazzi.mjs`) e nuovo bilanciamento.
-4. Sblocco dei 4 nuovi eroi nella Storia.
-5. Musica, traduzioni, correzioni dalle partite dell'utente.
+## Fase 1 (fatta il 25 novembre)
+1. Limite di 7 creature in campo (le carte che evocano o prendono il controllo non hanno effetto oltre il limite).
+2. Chi gioca per secondo: una carta in più e il Frammento di Essenza (carta id 100, illustrazione ChatGPT).
+3. Mazzi da 30 carte con 3 copie (1 per le Leggendarie), nuovi mazzi predefiniti e nuovo potere di Elena Voss (vedi `BILANCIAMENTO.md`).
+4. I 4 eroi della Storia si sbloccano vincendo i capitoli 2 (Dex Halogen), 4 (Orfeo Grimm), 6 (Nonna Ines) e 7 (Suor Ottavia).
+5. Musica generata dal gioco (`music.mjs`): un tema per il menu e uno per ogni ambientazione, con pulsante «Musica».
+6. Lingue: italiano, inglese, tedesco, spagnolo (`i18n.mjs`, file in `lingue/`). La lingua parte da quella del telefono e si cambia dal menu in alto. Le frasi italiane fanno da chiave; per aggiungere frasi vedi `tools/crea_lingue.mjs` e il test `tests/i18n.test.mjs`.
+
+## Prossimi passi
+- Correzioni dalle partite dell'utente.
+- Vantaggio di chi gioca per primo ancora intorno al 60% contro il computer.

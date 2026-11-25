@@ -1,15 +1,16 @@
 // Service worker: rende il gioco installabile e giocabile offline.
 // Cambia VERSION quando pubblichi una nuova versione dei file.
-const VERSION = "veilbreak-v8";
+const VERSION = "veilbreak-v9";
 const SHELL = [
   "./", "./index.html", "./style.css", "./manifest.webmanifest",
-  "./app.mjs", "./game.mjs", "./ai.mjs", "./cards.mjs", "./heroes.mjs", "./illustrations.mjs",
+  "./app.mjs", "./music.mjs", "./game.mjs", "./ai.mjs", "./cards.mjs", "./heroes.mjs", "./illustrations.mjs",
   "./tutorial.mjs", "./profile.mjs", "./missions.mjs", "./story.mjs", "./audio.mjs", "./decks.mjs",
   "./assets/icone/icona-192.png", "./assets/icone/icona-512.png",
   "./assets/ornamenti/filigrana.webp", "./assets/ornamenti/divisore.webp", "./environments.mjs",
   "./assets/ambientazioni/hollow.webp", "./assets/ambientazioni/neon.webp", "./assets/ambientazioni/saints.webp", "./assets/ambientazioni/undercity.webp",
   "./assets/fonts/eb-garamond-latin-500-normal.woff", "./assets/fonts/eb-garamond-latin-600-normal.woff", "./assets/fonts/eb-garamond-latin-500-italic.woff",
   "./assets/ornamenti/dorso.webp", "./assets/eroi/ritratti/ada-vesper.webp", "./assets/eroi/ritratti/iona-volt.webp", "./assets/eroi/ritratti/elena-voss.webp", "./assets/eroi/ritratti/mara-sottorotaia.webp",
+  "./assets/eroi/ritratti/orfeo-grimm.webp", "./assets/eroi/ritratti/dex-halogen.webp", "./assets/eroi/ritratti/ottavia.webp", "./assets/eroi/ritratti/nonna-ines.webp", "./assets/miniature/frammento-essenza.webp", "./assets/originali-chatgpt/frammento-essenza.webp",
   "./assets/eroi/hollow.webp", "./assets/eroi/neon.webp", "./assets/eroi/saints.webp", "./assets/eroi/undercity.webp",
 ];
 

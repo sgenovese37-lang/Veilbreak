@@ -46,3 +46,22 @@ I mazzi sono stati trovati con `node tools/cerca_mazzi.mjs`, che cambia una cart
 - **Vantaggio di chi gioca per primo (circa 60%).** Si può compensare dando al secondo giocatore una carta in più nella mano iniziale o 1 Essenza extra al primo turno. È un cambio di regola, quindi non l’ho applicato.
 - **Patto Neon un po’ sotto la media (45%)**, soprattutto contro Senza Santi (39–42%). È dentro la fascia accettabile, ma è il prossimo candidato a un ritocco.
 - **Equilibrio misurato sul computer.** Giocatori reali potrebbero trovare combinazioni diverse: conviene ripetere l’analisi dopo i primi playtest.
+
+## Fase 1 (25 novembre 2026): mazzi da 30 carte
+
+Nuove regole: mazzi da 30 carte (3 copie, 1 per le Leggendarie), massimo 7 creature in campo, chi gioca per secondo pesca una carta in più e riceve il Frammento di Essenza.
+
+- Con 30 carte le partite non arrivano più all’esaurimento del mazzo: i Senza Santi, che vincevano curandosi fino alla fine, scendevano sotto il 20% e la Sottocittà dominava.
+- **Nuovo potere di Elena Voss** (Liturgia del Sangue): «Una creatura alleata ottiene +2 Difesa in modo permanente» al posto di «Cura 2 punti vita al tuo eroe».
+- **Nuovi mazzi predefiniti** (`decks.mjs`) trovati con `tools/cerca_mazzi.mjs` (ora cambia da 1 a 3 carte per tentativo) e verificati su due gruppi di partite nuove, mai usati nella ricerca.
+
+Risultati con 150 partite per coppia (Difficile contro Difficile):
+
+| Fazione | Vittorie |
+| --- | --- |
+| Corte di Hollow | 54,0% |
+| Patto Neon | 46,9% |
+| Senza Santi | 46,7% |
+| Sottocittà | 52,4% |
+
+Scontri tra il 41% e il 63% nelle verifiche su partite nuove. Chi gioca per primo vince ancora circa il 60% contro il computer: il Frammento di Essenza aiuta poco il computer, che lo usa solo quando gli apre una giocata. Va rivisto con le partite vere.

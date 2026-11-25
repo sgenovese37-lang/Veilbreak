@@ -18,6 +18,8 @@
       <div class="wallet-row">
         <button id="wallet" class="wallet" type="button" aria-live="polite" aria-label="Schegge e buste: apri il negozio"></button>
         <button id="sound-toggle" class="small" type="button"></button>
+        <button id="music-toggle" class="small" type="button"></button>
+        <select id="lang-select" class="small lang" aria-label="Lingua"></select>
       </div>
     </div>
     <nav aria-label="Sezioni">
@@ -35,7 +37,7 @@
       <h2>Nuova partita</h2>
       <form id="settings">
         <label>Modalità <select name="mode"><option value="cpu">Contro il computer</option><option value="local">Due giocatori sullo stesso dispositivo</option></select></label>
-        <label id="difficulty">Difficoltà <select name="level"><option>Facile</option><option selected>Normale</option><option>Difficile</option></select></label>
+        <label id="difficulty">Difficoltà <select name="level"><option value="Facile">Facile</option><option value="Normale" selected>Normale</option><option value="Difficile">Difficile</option></select></label>
         <label>Prima fazione <select name="first"></select></label>
         <label>Seconda fazione <select name="second"></select></label>
         <label>Ambientazione <select name="env">

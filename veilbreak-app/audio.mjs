@@ -19,6 +19,19 @@ function audio() {
   return context;
 }
 
+// Per la musica (music.mjs): stesso contesto audio e stessa uscita dei suoni.
+export const audioContext = () => audio();
+export const audioOutput = () => master;
+
+// Con l'app in secondo piano (telefono bloccato, altra app) l'audio si mette in pausa.
+if (typeof document !== "undefined") {
+  document.addEventListener("visibilitychange", () => {
+    if (!context) return;
+    if (document.hidden) context.suspend().catch(() => {});
+    else context.resume().catch(() => {});
+  });
+}
+
 // Sblocco al primo tocco, in qualunque punto dell'app.
 for (const ev of ["pointerdown", "touchstart", "keydown"]) {
   window.addEventListener(ev, () => { try { audio(); } catch { /* audio non disponibile */ } }, { passive: true });

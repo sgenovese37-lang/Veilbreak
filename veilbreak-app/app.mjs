@@ -3,21 +3,36 @@ import {
   factions, byId, createGame, mulligan, canPlay, playTargets, play,
   attackTargets, attack, endTurn, stats, cardOf, price,
   defaultDeck, copyLimit, deckSize, validDeck, rules, powerTargets, canUseHeroPower, useHeroPower,
+  essenceShard, essenceShardId,
 } from "./game.mjs";
 
 import { renderTutorial } from "./tutorial.mjs";
-import { heroFor, heroPowerCost } from "./heroes.mjs";
-import { illustrationFor } from "./illustrations.mjs";
+import { heroFor, heroPowerCost, heroesOf, lockedHeroes, heroWithId } from "./heroes.mjs";
+import { illustrationFor as catalogueArt } from "./illustrations.mjs";
 import { runComputer } from "./ai.mjs";
 import {
   loadProfile, owned, buyPack, openPack, packPrice, collectionProgress, rewardMatch, titles,
 } from "./profile.mjs";
 import { currentMissions, recordEvent, claimMission } from "./missions.mjs";
-import { chapters, storyTitle, storyProgress, isUnlocked, completeChapter, finalReward } from "./story.mjs";
+import { chapters, storyTitle, storyProgress, isUnlocked, completeChapter, finalReward, unlockedHeroes } from "./story.mjs";
 import { sound, soundEnabled, setSound, buzz, cardSound, startAmbience, stopAmbience } from "./audio.mjs";
 import { environments, environmentFor } from "./environments.mjs";
+import { playMusic, musicEnabled, setMusic } from "./music.mjs";
+import { t, languages, currentLang, setLang, translatePage } from "./i18n.mjs";
 
 const get = id => document.getElementById(id);
+// Lingua: i testi fissi della pagina si traducono subito; cambiando lingua la pagina si ricarica.
+translatePage(document.body);
+document.title = "VEILBREAK";
+{
+  const langSelect = document.getElementById("lang-select");
+  for (const [code, name] of Object.entries(languages)) langSelect.append(new Option(name, code));
+  langSelect.value = currentLang();
+  langSelect.onchange = () => { if (setLang(langSelect.value)) location.reload(); };
+}
+// Il Frammento di Essenza non fa parte del catalogo: ha la sua illustrazione.
+const shardArt = { src: essenceShard.art, thumb: "assets/miniature/frammento-essenza.webp", differences: [], correction: null, original: null };
+const illustrationFor = id => id === essenceShardId ? shardArt : catalogueArt(id);
 const form = get("settings");
 const setup = get("setup");
 const table = get("table");
@@ -37,6 +52,7 @@ let savedDecks;
 let storyChapter = null;
 let storyPick = null;
 let storyFaction = factions[0];
+let storyHero = factions[0];
 let lastPack = null;
 let outcome = null;
 let previous = new Map();
@@ -50,9 +66,10 @@ const decksKey = "veilbreak-custom-decks";
 try { savedDecks = new Map(Object.entries(JSON.parse(localStorage.getItem(decksKey) ?? "{}"))); }
 catch { savedDecks = new Map(); }
 
+// I testi passano da t(): se la frase ha una traduzione nella lingua scelta, compare tradotta.
 function element(tag, text, cls) {
   const e = document.createElement(tag);
-  if (text !== undefined) e.textContent = text;
+  if (text !== undefined) e.textContent = typeof text === "string" ? t(text) : text;
   if (cls) e.className = cls;
   return e;
 }
@@ -66,11 +83,16 @@ function button(text, action, cls) {
 
 function updateWallet() {
   const profile = loadProfile();
-  get("wallet").textContent = `◆ ${profile.shards} Schegge · ${profile.packs} ${profile.packs === 1 ? "busta" : "buste"}`;
+  get("wallet").textContent = `◆ ${t("{n} Schegge", { n: profile.shards })} · ${t(profile.packs === 1 ? "{n} busta" : "{n} buste", { n: profile.packs })}`;
   const toggle = get("sound-toggle");
-  toggle.textContent = soundEnabled() ? "Suoni: sì" : "Suoni: no";
+  toggle.textContent = t(soundEnabled() ? "Suoni: sì" : "Suoni: no");
   toggle.setAttribute("aria-pressed", soundEnabled());
+  const music = get("music-toggle");
+  music.textContent = t(musicEnabled() ? "Musica: sì" : "Musica: no");
+  music.setAttribute("aria-pressed", musicEnabled());
 }
+const musicTheme = () => game && document.body.classList.contains("in-match") ? matchEnv : "menu";
+get("music-toggle").onclick = () => { setMusic(!musicEnabled(), musicTheme()); updateWallet(); };
 get("wallet").onclick = () => showSection("shop-nav");
 get("sound-toggle").onclick = () => {
   setSound(!soundEnabled());
@@ -97,25 +119,39 @@ for (const select of [form.elements.first, form.elements.second, filter]) {
 }
 form.elements.second.selectedIndex = 1;
 
-// Scelta dell'eroe: una scheda per eroe con medaglione, fazione e potere.
+// Scelta dell'eroe: una scheda per eroe con ritratto, fazione e potere. Gli eroi della Storia
+// compaiono bloccati finché non si vince il capitolo che li sblocca.
+const chosenHero = { first: factions[0], second: factions[1] ?? factions[0] };
+const unlockChapter = id => chapters.findIndex(chapter => chapter.reward.hero === id);
 function heroChoices(current, onPick, id) {
   const grid = element("div", undefined, "hero-picker");
   if (id) grid.id = id;
+  const unlocked = unlockedHeroes();
   for (const faction of factions) {
-    const hero = heroFor(faction);
-    const choice = button(undefined, () => onPick(faction), "hero-choice");
-    choice.dataset.faction = faction;
-    choice.setAttribute("aria-pressed", current === faction);
-    if (hero?.theme || hero?.portrait) { const img = element("img", undefined, "emblem"); img.src = hero.portrait ?? `assets/eroi/${hero.theme}.webp`; img.alt = ""; choice.append(img); }
-    else choice.append(element("span", faction.slice(0, 1), "emblem initial"));
-    const text = element("span", undefined, "hero-choice-text");
-    text.append(element("strong", hero?.name ?? faction), element("small", faction));
-    if (hero) text.append(element("span", `${hero.power.name} · ${heroPowerCost} Essenza: ${hero.power.text}`, "hero-choice-power"));
-    choice.append(text);
-    grid.append(choice);
+    const list = heroesOf(faction, unlocked);
+    const locked = lockedHeroes[faction];
+    if (locked && !unlocked.includes(locked.id)) list.push({ ...heroWithId(locked.id), unavailable: true });
+    if (!list.length) list.push({ id: faction, faction, name: faction });
+    for (const hero of list) {
+      const choice = button(undefined, () => onPick(hero), `hero-choice${hero.unavailable ? " locked" : ""}`);
+      choice.dataset.faction = faction;
+      choice.dataset.hero = hero.id;
+      choice.disabled = Boolean(hero.unavailable);
+      choice.setAttribute("aria-pressed", current === hero.id);
+      if (hero.portrait || hero.theme) { const img = element("img", undefined, "emblem"); img.src = hero.portrait ?? `assets/eroi/${hero.theme}.webp`; img.alt = ""; choice.append(img); }
+      else choice.append(element("span", faction.slice(0, 1), "emblem initial"));
+      const text = element("span", undefined, "hero-choice-text");
+      text.append(element("strong", hero.name), element("small", faction));
+      if (hero.unavailable) text.append(element("span", t("🔒 Si sblocca vincendo il capitolo {n} della Storia", { n: unlockChapter(hero.id) + 1 }), "hero-choice-power"));
+      else if (hero.power) text.append(element("span", `${t(hero.power.name)} · ${t("{n} Essenza", { n: heroPowerCost })}: ${t(hero.power.text)}`, "hero-choice-power"));
+      choice.append(text);
+      grid.append(choice);
+    }
   }
   return grid;
 }
+// id dell'eroe da passare alla partita: null per quello base della fazione
+const heroOption = id => heroWithId(id)?.locked ? id : null;
 
 function mountPicker(select, heading) {
   const label = select.closest("label");
@@ -123,8 +159,11 @@ function mountPicker(select, heading) {
   const box = element("div", undefined, "picker-box");
   const title = element("h3", heading());
   const draw = () => {
-    title.textContent = heading();
-    box.replaceChildren(title, heroChoices(select.value, faction => { select.value = faction; sound("select"); draw(); }, `pick-${select.name}`));
+    title.textContent = t(heading());
+    if (heroWithId(chosenHero[select.name])?.faction !== select.value) chosenHero[select.name] = select.value;
+    box.replaceChildren(title, heroChoices(chosenHero[select.name], hero => {
+      select.value = hero.faction; chosenHero[select.name] = hero.id; sound("select"); draw();
+    }, `pick-${select.name}`));
   };
   label.after(box);
   draw();
@@ -156,15 +195,15 @@ function drawCard(c, options = {}) {
   head.append(element("strong", c.name));
   if (c.cost !== undefined && options.cost !== false) head.append(element("span", options.cost ?? c.cost, "cost"));
   e.append(head);
-  e.append(element("small", [options.remaining ?? c.type, options.meta ? rarity[c.rarity] : ""].filter(Boolean).join(" · ")));
+  e.append(element("small", [options.remaining ?? t(c.type), options.meta ? t(rarity[c.rarity]) : ""].filter(Boolean).join(" · ")));
   if (options.meta) e.append(element("small", c.faction));
   if (options.text !== false && c.text) e.append(element("p", c.text));
   if (c.type === "Creatura") {
     const strip = element("div", undefined, "stats");
-    strip.append(element("span", `ATT ${options.attack ?? c.attack}`, "att"), element("span", `DIF ${options.health ?? c.health}`, "dif"));
+    strip.append(element("span", `${t("ATT")} ${options.attack ?? c.attack}`, "att"), element("span", `${t("DIF")} ${options.health ?? c.health}`, "dif"));
     e.append(strip);
   }
-  if (options.copies !== undefined) e.append(element("small", `Copie possedute ${options.copies}/${copyLimit(c)}`, "copies"));
+  if (options.copies !== undefined) e.append(element("small", t("Copie possedute {n}/{max}", { n: options.copies, max: copyLimit(c) }), "copies"));
   if (options.meta && art && ruleDifferences(art).length) e.append(element("small", "⚠ L’illustrazione differisce dal catalogo", "warning"));
   if (options.badge) e.append(element("small", options.badge, "badge"));
   return e;
@@ -176,7 +215,7 @@ const ruleDifferences = art => art.differences.filter(text => !text.startsWith("
 function withDetails(cardElement, c) {
   const wrap = element("div", undefined, "card-wrap");
   const info = button("Dettagli", () => showCard(c), "details");
-  info.setAttribute("aria-label", `Dettagli di ${c.name}`);
+  info.setAttribute("aria-label", t("Dettagli di {card}", { card: c.name }));
   wrap.append(cardElement, info);
   return wrap;
 }
@@ -188,19 +227,20 @@ function showCard(c) {
   if (art) {
     const img = element("img", undefined, "viewer-art");
     img.src = art.src;
-    img.alt = `Illustrazione di ${c.name}`;
+    img.alt = t("Illustrazione di {card}", { card: c.name });
     body.append(img);
   }
   const rules = element("div", undefined, "viewer-rules");
   rules.append(element("h2", c.name));
-  rules.append(element("p", [c.faction, c.type, rarity[c.rarity], `${c.cost} Essenza`].join(" · "), "muted"));
-  if (c.type === "Creatura") rules.append(element("p", `Attacco ${c.attack} · Difesa ${c.health}`));
+  rules.append(element("p", [c.faction, t(c.type), t(rarity[c.rarity]), t("{n} Essenza", { n: c.cost })].join(" · "), "muted"));
+  if (c.type === "Creatura") rules.append(element("p", t("Attacco {a} · Difesa {d}", { a: c.attack, d: c.health })));
   rules.append(element("h3", "Regole in partita (catalogo)"));
   rules.append(element("p", c.text || "Nessun effetto."));
   if (art?.differences.length) {
     rules.append(element("h3", "Differenze dell’illustrazione"));
     const list = element("ul", undefined, "differences");
     for (const text of art.differences) list.append(element("li", text));
+    if (currentLang() !== "it") rules.append(element("p", "Le note sulle illustrazioni sono in italiano, come le immagini delle carte.", "muted"));
     rules.append(list);
   } else if (art) {
     rules.append(element("p", "L’illustrazione coincide con il catalogo.", "muted"));
@@ -213,7 +253,7 @@ function showCard(c) {
     const toggle = button("Vedi originale", () => {
       showingOriginal = !showingOriginal;
       img.src = showingOriginal ? art.original : art.src;
-      toggle.textContent = showingOriginal ? "Vedi versione corretta" : "Vedi originale";
+      toggle.textContent = t(showingOriginal ? "Vedi versione corretta" : "Vedi originale");
     });
     rules.append(toggle);
   }
@@ -236,7 +276,7 @@ function renderDeckEditor(message = "", focus) {
   const header = element("div", undefined, "section-head");
   header.append(element("h2", "Costruisci un mazzo"));
   const select = element("select");
-  select.setAttribute("aria-label", "Fazione del mazzo");
+  select.setAttribute("aria-label", t("Fazione del mazzo"));
   for (const name of factions) select.append(new Option(name, name));
   select.value = editing;
   select.onchange = () => {
@@ -246,7 +286,7 @@ function renderDeckEditor(message = "", focus) {
   };
   header.append(select);
   const controls = element("div", undefined, "actions");
-  controls.append(element("strong", `${used}/${deckSize} carte`));
+  controls.append(element("strong", t("{n}/{max} carte", { n: used, max: deckSize })));
   const save = button("Salva mazzo", () => {
     savedDecks.set(editing, [...draft]);
     try {
@@ -275,11 +315,11 @@ function renderDeckEditor(message = "", focus) {
     });
     remove.id = `remove-${c.id}`;
     plus.id = `plus-${c.id}`;
-    remove.setAttribute("aria-label", `Rimuovi ${c.name}`);
-    plus.setAttribute("aria-label", `Aggiungi ${c.name}`);
+    remove.setAttribute("aria-label", t("Rimuovi {card}", { card: c.name }));
+    plus.setAttribute("aria-label", t("Aggiungi {card}", { card: c.name }));
     remove.disabled = count === 0;
     plus.disabled = count >= copyLimit(c) || count >= owned(c.id) || used >= deckSize;
-    row.append(element("span", `${c.name} · ${c.cost} Essenza · possiedi ${owned(c.id)}`), remove, element("span", count), plus);
+    row.append(element("span", `${c.name} · ${t("{n} Essenza", { n: c.cost })} · ${t("possiedi {n}", { n: owned(c.id) })}`), remove, element("span", count), plus);
     list.append(row);
   }
   panel.replaceChildren(header, controls, status, list);
@@ -292,6 +332,7 @@ const sections = ["match", "story-nav", "quests-nav", "shop-nav", "library", "de
 function showSection(name) {
   updateWallet();
   document.body.classList.toggle("in-match", name === "match" && Boolean(game));
+  playMusic(musicTheme());
   get("story").hidden = name !== "story-nav";
   get("quests").hidden = name !== "quests-nav";
   catalogue.hidden = name !== "library";
@@ -321,7 +362,8 @@ form.onsubmit = event => {
   level = form.elements.level.value;
   const names = [form.elements.first.value, form.elements.second.value];
   const env = form.elements.env.value;
-  startMatch(names, names.map((name, side) => side === 1 && mode === "cpu" ? null : playableDeck(name)), env === "auto" ? {} : { env });
+  const heroes = [heroOption(chosenHero.first), heroOption(chosenHero.second)];
+  startMatch(names, names.map((name, side) => side === 1 && mode === "cpu" ? null : playableDeck(name)), { heroes, ...(env === "auto" ? {} : { env }) });
 };
 
 function startMatch(names, decks, options = {}) {
@@ -366,22 +408,23 @@ function settleOutcome() {
   const won = game.winner === 0;
   sound(won ? "win" : "lose");
   const shards = rewardMatch(won, level);
-  outcome.lines.push(`+${shards} Schegge`);
+  outcome.lines.push(`+${t("{n} Schegge", { n: shards })}`);
   const event = { won, level, faction: game.players[0].name, stats: game.stats[0] };
   if (storyChapter !== null && won) {
     const chapter = chapters[storyChapter];
     const granted = completeChapter(storyChapter);
     event.chapterCleared = true;
     outcome.story = chapter.outro;
-    if (granted?.chapter) outcome.lines.push(`Premio del capitolo: ${rewardText(granted.chapter)}`);
-    if (granted?.final) outcome.lines.push(`Premio finale della Storia: ${rewardText(granted.final)} e il titolo ${titles[finalReward.title].name}`);
+    if (granted?.chapter) outcome.lines.push(t("Premio del capitolo: {reward}", { reward: rewardText(granted.chapter) }));
+    if (granted?.hero) outcome.lines.push(t("Nuovo eroe sbloccato: {hero}. Sceglilo prima della partita!", { hero: heroWithId(granted.hero).name }));
+    if (granted?.final) outcome.lines.push(t("Premio finale della Storia: {reward} e il titolo {title}", { reward: rewardText(granted.final), title: t(titles[finalReward.title].name) }));
   }
   recordEvent(event);
   updateWallet();
 }
 
 function rewardText(reward) {
-  return [reward.shards ? `${reward.shards} Schegge` : "", reward.packs ? `${reward.packs} ${reward.packs === 1 ? "busta" : "buste"}` : ""].filter(Boolean).join(" e ");
+  return [reward.shards ? t("{n} Schegge", { n: reward.shards }) : "", reward.packs ? t(reward.packs === 1 ? "{n} busta" : "{n} buste", { n: reward.packs }) : ""].filter(Boolean).join(t(" e "));
 }
 
 function afterTurn() {
@@ -502,7 +545,7 @@ function playedFx(c) {
 function castPreview(c, label, ms) {
   const layer = element("div", undefined, "cast-preview");
   layer.setAttribute("aria-hidden", "true");
-  layer.append(element("small", label));
+  layer.append(element("small", label));  // label già tradotta da element()
   const art = illustrationFor(c.id);
   if (art) { const img = element("img"); img.src = art.src; img.alt = ""; layer.append(img); }
   else layer.append(drawCard(c));
@@ -536,7 +579,7 @@ async function lunge(side, uid, targetChoice) {
 const peekLayer = element("div", undefined, "peek-layer");
 peekLayer.hidden = true;
 peekLayer.setAttribute("role", "dialog");
-peekLayer.setAttribute("aria-label", "Anteprima della carta");
+peekLayer.setAttribute("aria-label", t("Anteprima della carta"));
 document.body.append(peekLayer);
 function showPeek(c, current) {
   const art = illustrationFor(c.id);
@@ -544,8 +587,8 @@ function showPeek(c, current) {
   if (art) { const img = element("img"); img.src = art.src; img.alt = ""; box.append(img); }
   else box.append(drawCard(c));
   const rulesBox = element("div", undefined, "peek-rules");
-  rulesBox.append(element("strong", `${c.name} · ${c.cost} Essenza`));
-  if (c.type === "Creatura") rulesBox.append(element("span", current ? `Ora: Attacco ${current.attack} · Difesa ${current.health}` : `Attacco ${c.attack} · Difesa ${c.health}`));
+  rulesBox.append(element("strong", `${c.name} · ${t("{n} Essenza", { n: c.cost })}`));
+  if (c.type === "Creatura") rulesBox.append(element("span", current ? t("Ora: Attacco {a} · Difesa {d}", { a: current.attack, d: current.health }) : t("Attacco {a} · Difesa {d}", { a: c.attack, d: c.health })));
   rulesBox.append(element("p", c.text || "Nessun effetto."));
   box.append(rulesBox, element("small", "Tocca lo schermo per chiudere", "peek-hint"));
   peekLayer.replaceChildren(box);
@@ -610,10 +653,10 @@ function track(key, value, node, card) {
 
 function heroPortrait(side, allow) {
   const p = game.players[side];
-  const hero = heroFor(p.name);
+  const hero = heroFor(p);
   const isTarget = allow && available(side, null);
   const portrait = isTarget ? button(undefined, () => target(side, null), "hero-portrait target") : element("div", undefined, "hero-portrait");
-  portrait.setAttribute("aria-label", `${hero?.name ?? p.name}: ${p.life} punti vita su ${p.maxLife}`);
+  portrait.setAttribute("aria-label", t("{hero}: {life} punti vita su {max}", { hero: hero?.name ?? p.name, life: p.life, max: p.maxLife }));
   portrait.dataset.side = side;
   if (hero?.theme || hero?.portrait) {
     const img = element("img", undefined, "emblem");
@@ -630,7 +673,7 @@ function heroPortrait(side, allow) {
 }
 
 function powerButton(side, own, allow) {
-  const hero = heroFor(game.players[side].name);
+  const hero = heroFor(game.players[side]);
   if (!hero) return element("span");
   const usable = allow && own && !selected && canUseHeroPower(game);
   const used = game.players[side].powerUsed;
@@ -640,15 +683,15 @@ function powerButton(side, own, allow) {
     render();
   }, `hero-power${used ? " used" : ""}${usable ? " ready" : ""}`);
   b.disabled = !usable;
-  b.title = `${hero.power.name}: ${hero.power.text}`;
-  b.setAttribute("aria-label", `${hero.power.name}, ${heroPowerCost} Essenza: ${hero.power.text}`);
+  b.title = `${t(hero.power.name)}: ${t(hero.power.text)}`;
+  b.setAttribute("aria-label", `${t(hero.power.name)}, ${t("{n} Essenza", { n: heroPowerCost })}: ${t(hero.power.text)}`);
   b.append(element("span", heroPowerCost, "gem"), element("span", "✦", "glyph"));
   return b;
 }
 
 function crystals(p, side, small = false) {
   const row = element("div", undefined, `crystals${small ? " small" : ""}`);
-  row.setAttribute("aria-label", `Essenza ${p.essence} su ${p.capacity}`);
+  row.setAttribute("aria-label", t("Essenza {n} su {max}", { n: p.essence, max: p.capacity }));
   const key = `essence-${side}`;
   const old = previous.get(key);
   previous.set(key, p.essence);
@@ -675,7 +718,7 @@ function extras(p, own) {
     const c = byId.get(id);
     const icon = button(undefined, () => showCard(c), "relic");
     attachPeek(icon, c);
-    icon.setAttribute("aria-label", `Artefatto: ${c.name}`);
+    icon.setAttribute("aria-label", t("Artefatto: {card}", { card: c.name }));
     icon.title = c.name;
     const art = illustrationFor(id);
     if (art) { const img = element("img"); img.src = art.thumb; img.alt = ""; icon.append(img); }
@@ -684,7 +727,7 @@ function extras(p, own) {
   p.secrets.forEach(id => {
     const c = byId.get(id);
     const icon = own ? button("?", () => showCard(c), "secret") : element("span", "?", "secret");
-    icon.setAttribute("aria-label", own ? `Segreto: ${c.name}` : "Segreto nascosto");
+    icon.setAttribute("aria-label", own ? t("Segreto: {card}", { card: c.name }) : t("Segreto nascosto"));
     row.append(icon);
   });
   return row;
@@ -692,10 +735,10 @@ function extras(p, own) {
 
 function heroStrip(side, own, allow) {
   const p = game.players[side];
-  const hero = heroFor(p.name);
+  const hero = heroFor(p);
   const strip = element("div", undefined, `hero-strip ${own ? "mine" : "enemy"}`);
   const info = element("div", undefined, "hero-info");
-  info.append(element("strong", hero?.name ?? p.name), element("small", `${p.name} · Mazzo ${p.deck.length} · Mano ${p.hand.length}`));
+  info.append(element("strong", hero?.name ?? p.name), element("small", `${p.name} · ${t("Mazzo {n}", { n: p.deck.length })} · ${t("Mano {n}", { n: p.hand.length })}`));
   if (!own) {
     const backs = element("div", undefined, "card-backs");
     backs.setAttribute("aria-hidden", "true");
@@ -718,22 +761,22 @@ function token(side, unit, own, allow) {
     : canAttack ? () => toggleAttacker(unit.uid)
     : details;
   const kw = unit.silenced ? {} : keywordOf(c);
-  const t = button(undefined, action, ["token", c.rarity ?? "", kw.taunt ? "taunt" : "", canAttack ? "can-attack" : "",
+  const tok = button(undefined, action, ["token", c.rarity ?? "", kw.taunt ? "taunt" : "", canAttack ? "can-attack" : "",
     isTarget ? "target" : "", unit.silenced ? "silenced" : "", chosen ? "attacking" : ""].filter(Boolean).join(" "));
-  t.setAttribute("aria-label", `${c.name}, Attacco ${current.attack}, Difesa ${current.health}${kw.taunt ? ", Provocazione" : ""}${canAttack ? ", può attaccare" : ""}`);
-  t.dataset.side = side;
-  t.dataset.uid = unit.uid;
-  if (unit.card) attachPeek(t, c, current);
+  tok.setAttribute("aria-label", `${c.name}, ${t("Attacco {a} · Difesa {d}", { a: current.attack, d: current.health })}${kw.taunt ? `, ${t("Provocazione")}` : ""}${canAttack ? `, ${t("può attaccare")}` : ""}`);
+  tok.dataset.side = side;
+  tok.dataset.uid = unit.uid;
+  if (unit.card) attachPeek(tok, c, current);
   const art = illustrationFor(c.id);
   const face = element("span", undefined, "face");
   if (art) { const img = element("img"); img.src = art.thumb; img.alt = ""; img.decoding = "async"; face.append(img); }
   else face.append(element("span", c.name, "face-name"));
-  t.append(face);
-  if (kw.rush) t.append(element("span", "⚡", "badge-rush"));
-  t.append(element("span", current.attack, "att"), element("span", current.health, `dif${current.health < current.maxHealth ? " wounded" : ""}`));
-  t.dataset.card = unit.card;
-  if (track(unit.uid, current.health, t, unit.card ? c : null)) t.classList.add("summoned");
-  return t;
+  tok.append(face);
+  if (kw.rush) tok.append(element("span", "⚡", "badge-rush"));
+  tok.append(element("span", current.attack, "att"), element("span", current.health, `dif${current.health < current.maxHealth ? " wounded" : ""}`));
+  tok.dataset.card = unit.card;
+  if (track(unit.uid, current.health, tok, unit.card ? c : null)) tok.classList.add("summoned");
+  return tok;
 }
 
 // Tocca una o più creature per attaccare insieme; un secondo tocco la toglie dalla selezione.
@@ -754,9 +797,10 @@ function selectAllAttackers() {
 
 function boardRow(side, own, allow) {
   const row = element("div", undefined, `board ${own ? "mine" : "enemy"}`);
-  row.setAttribute("aria-label", own ? "Il tuo campo" : "Campo avversario");
+  row.setAttribute("aria-label", t(own ? "Il tuo campo" : "Campo avversario"));
   for (const unit of game.players[side].board) row.append(token(side, unit, own, allow));
   if (!game.players[side].board.length) row.append(element("span", own ? "Il tuo campo è vuoto" : "", "empty"));
+  if (game.players[side].board.length >= rules.boardLimit) row.append(element("span", t("Campo pieno · {n}/{n}", { n: rules.boardLimit }), "board-full"));
   return row;
 }
 
@@ -773,7 +817,7 @@ function handCard(side, id, i) {
   }, `hand-card ${c.rarity}${playable ? " playable" : ""}`);
   card.disabled = !mull && !playable;
   card.setAttribute("aria-pressed", mull ? replacements.has(i) : selected?.index === i);
-  card.setAttribute("aria-label", `${c.name}, costo ${mull ? c.cost : price(game, side, c)}`);
+  card.setAttribute("aria-label", t("{card}, costo {n}", { card: c.name, n: mull ? c.cost : price(game, side, c) }));
   const art = illustrationFor(id);
   const cost = mull ? c.cost : price(game, side, c);
   if (art) {
@@ -784,12 +828,12 @@ function handCard(side, id, i) {
   } else {
     card.append(element("span", cost, "gem"), element("span", c.name, "mini-name"));
     if (c.type === "Creatura") card.append(element("span", c.attack, "att"), element("span", c.health, "dif"));
-    else card.append(element("span", c.type, "mini-type"));
+    else card.append(element("span", t(c.type), "mini-type"));
   }
   if (mull && replacements.has(i)) card.append(element("span", "Da cambiare", "swap-mark"));
   attachPeek(card, c);
   const info = button("i", () => showCard(c), "info");
-  info.setAttribute("aria-label", `Dettagli di ${c.name}`);
+  info.setAttribute("aria-label", t("Dettagli di {card}", { card: c.name }));
   wrap.append(card, info);
   wrap.style.setProperty("--tilt", `${(i - (game.players[side].hand.length - 1) / 2) * 1.5}deg`);
   return wrap;
@@ -798,7 +842,7 @@ function handCard(side, id, i) {
 function handRow(side) {
   const p = game.players[side];
   const hand = element("div", undefined, `hand${game.phase === "mulligan" ? " mulligan" : ""}`);
-  hand.setAttribute("aria-label", "La tua mano");
+  hand.setAttribute("aria-label", t("La tua mano"));
   p.hand.forEach((id, i) => hand.append(handCard(side, id, i)));
   return hand;
 }
@@ -848,7 +892,7 @@ function render() {
     if (key !== lastTurnKey) {
       lastTurnKey = key;
       const mine = mode !== "cpu" || game.active === 0;
-      announceTurn(mode === "cpu" ? (mine ? "Il tuo turno" : "Turno avversario") : `Turno di ${game.players[game.active].name}`, mine);
+      announceTurn(mode === "cpu" ? (mine ? "Il tuo turno" : "Turno avversario") : t("Turno di {name}", { name: game.players[game.active].name }), mine);
     }
   }
 }
@@ -862,19 +906,19 @@ function renderTable() {
   table.replaceChildren();
   if (handover) {
     const box = element("div", undefined, "handover");
-    box.append(element("p", `Passa il dispositivo al giocatore di ${game.players[active].name}.`));
+    box.append(element("p", t("Passa il dispositivo al giocatore di {name}.", { name: game.players[active].name })));
     box.append(button("Mostra la mia mano", () => { handover = false; render(); }, "primary"));
     table.append(box);
     return;
   }
-  let message = mull ? `Scegli fino a ${rules.mulliganLimit} carte da cambiare` : cpu ? "Turno avversario" : `Turno di ${game.players[active].name}`;
+  let message = mull ? t("Scegli fino a {n} carte da cambiare", { n: rules.mulliganLimit }) : cpu ? "Turno avversario" : t("Turno di {name}", { name: game.players[active].name });
   if (mode === "cpu" && !cpu && !mull) message = "Il tuo turno";
   if (selected) message = selected.kind === "attack"
-    ? `${selected.uids.length} ${selected.uids.length === 1 ? "creatura pronta" : "creature pronte"}: scegli il bersaglio`
+    ? t(selected.uids.length === 1 ? "{n} creatura pronta: scegli il bersaglio" : "{n} creature pronte: scegli il bersaglio", { n: selected.uids.length })
     : "Scegli un bersaglio";
   if (finished) {
     settleOutcome();
-    message = game.winner === "draw" ? "Pareggio" : mode === "cpu" ? (game.winner === 0 ? "Vittoria!" : "Sconfitta") : `Vince ${game.players[game.winner].name}!`;
+    message = game.winner === "draw" ? "Pareggio" : mode === "cpu" ? (game.winner === 0 ? "Vittoria!" : "Sconfitta") : t("Vince {name}!", { name: game.players[game.winner].name });
   }
   const view = mode === "cpu" ? 0 : active;
   const allow = !cpu && !finished;
@@ -885,27 +929,32 @@ function renderTable() {
     amb.setAttribute("aria-hidden", "true");
     for (let i = 0; i < 3; i++) amb.append(element("i"));
     arena.append(amb);
-    if (mull) arena.append(element("div", `Ambientazione · ${environments[matchEnv].name}`, "env-name"));
+    if (mull) arena.append(element("div", `${t("Ambientazione")} · ${t(environments[matchEnv].name)}`, "env-name"));
+  }
+  if (mull && !cpu) {
+    arena.append(element("p", view === 0
+      ? "Giochi per primo."
+      : "Giochi per secondo: hai una carta in più e, dopo il cambio, ricevi il Frammento di Essenza (0 Essenza: +1 Essenza per un turno).", "order-note"));
   }
   const top = element("div", undefined, "topbar");
   top.append(button("☰ Menu", () => {
-    if (finished || confirm("Abbandonare la partita?")) reset();
+    if (finished || confirm(t("Abbandonare la partita?"))) reset();
   }, "small menu-exit"));
   const status = element("strong", message, `banner${selected ? " targeting" : ""}${cpu ? " waiting" : ""}`);
   status.setAttribute("role", "status");
   top.append(status);
   const fresh = !mull && logSeenKey !== lastTurnKey ? previousTurn().length : 0;
-  const logButton = button(fresh ? `Registro · ${fresh}` : "Registro", () => { logSeenKey = lastTurnKey; showLog(); }, `small${fresh ? " has-new" : ""}`);
-  logButton.setAttribute("aria-label", fresh ? `Registro, ${fresh} mosse nuove` : "Registro della partita");
+  const logButton = button(fresh ? `${t("Registro")} · ${fresh}` : "Registro", () => { logSeenKey = lastTurnKey; showLog(); }, `small${fresh ? " has-new" : ""}`);
+  logButton.setAttribute("aria-label", fresh ? t("Registro, {n} mosse nuove", { n: fresh }) : t("Registro della partita"));
   top.append(logButton);
   arena.append(top);
   if (storyChapter !== null && !finished && game.round <= 1) {
     const box = element("div", undefined, "recap");
-    box.append(element("strong", `Capitolo ${storyChapter + 1} · ${chapters[storyChapter].title}`), element("p", chapters[storyChapter].intro));
+    box.append(element("strong", `${t("Capitolo {n}", { n: storyChapter + 1 })} · ${t(chapters[storyChapter].title)}`), element("p", chapters[storyChapter].intro));
     arena.append(box);
   }
-  const enemyTheme = heroFor(game.players[1 - view].name)?.theme ?? "default";
-  const myTheme = heroFor(game.players[view].name)?.theme ?? "default";
+  const enemyTheme = heroFor(game.players[1 - view])?.theme ?? "default";
+  const myTheme = heroFor(game.players[view])?.theme ?? "default";
   const enemyZone = element("section", undefined, "zone enemy");
   enemyZone.dataset.theme = enemyTheme;
   const myZone = element("section", undefined, "zone mine");
@@ -946,7 +995,7 @@ function renderTable() {
   } else side.append(button("Turno avversario", () => {}, "end-turn waiting"));
   side.querySelector("button")?.toggleAttribute("disabled", cpu);
   if (game.players[view].peek !== null && game.players[view].peek === game.players[view].deck[0] && !mull) {
-    myZone.append(element("p", `In cima al mazzo: ${byId.get(game.players[view].peek).name}`, "peek"));
+    myZone.append(element("p", t("In cima al mazzo: {card}", { card: byId.get(game.players[view].peek).name }), "peek"));
   }
   arena.append(enemyZone, veil, myZone);
   arena.classList.toggle("mulligan", mull);
@@ -976,7 +1025,7 @@ function showLog() {
 }
 
 function previousTurn() {
-  const starts = game.log.flatMap((entry, i) => entry.startsWith("Turno di ") ? [i] : []);
+  const starts = game.turnStarts ?? [];
   if (starts.length < 2) return [];
   return game.log.slice(starts.at(-2) + 1, starts.at(-1)).slice(-6);
 }
@@ -987,13 +1036,13 @@ function renderStory() {
   const cleared = storyProgress();
   storyPick ??= Math.min(cleared, chapters.length - 1);
   const head = element("div", undefined, "section-head");
-  head.append(element("h2", `Storia · ${storyTitle}`), element("span", `Capitoli superati ${cleared}/${chapters.length}`, "muted"));
+  head.append(element("h2", `${t("Storia")} · ${t(storyTitle)}`), element("span", t("Capitoli superati {n}/{max}", { n: cleared, max: chapters.length }), "muted"));
   const list = element("ol", undefined, "chapter-list");
   chapters.forEach((chapter, i) => {
     const unlocked = isUnlocked(i);
-    const state = i < cleared ? "✓ Superato" : unlocked ? "Disponibile" : "Bloccato";
+    const state = t(i < cleared ? "✓ Superato" : unlocked ? "Disponibile" : "Bloccato");
     const item = element("li");
-    const choose = button(`${i + 1}. ${chapter.title} · ${state}`, () => { storyPick = i; renderStory(); });
+    const choose = button(`${i + 1}. ${t(chapter.title)} · ${state}`, () => { storyPick = i; renderStory(); });
     choose.disabled = !unlocked;
     choose.setAttribute("aria-pressed", storyPick === i);
     item.append(choose);
@@ -1001,23 +1050,24 @@ function renderStory() {
   });
   const chapter = chapters[storyPick];
   const detail = element("article", undefined, "chapter");
-  detail.append(element("h3", `Capitolo ${storyPick + 1} · ${chapter.title}`), element("p", chapter.intro));
+  detail.append(element("h3", `${t("Capitolo {n}", { n: storyPick + 1 })} · ${t(chapter.title)}`), element("p", chapter.intro));
   const enemyHero = heroFor(chapter.opponent);
-  detail.append(element("p", `Avversario: ${enemyHero?.name ?? chapter.opponent} (${chapter.opponent}) · ${chapter.level} · ${chapter.lives[1]} PV contro i tuoi ${chapter.lives[0]}`, "muted"));
+  detail.append(element("p", t("Avversario: {hero} ({faction}) · {level} · {enemy} PV contro i tuoi {mine}", { hero: enemyHero?.name ?? chapter.opponent, faction: chapter.opponent, level: t(chapter.level), enemy: chapter.lives[1], mine: chapter.lives[0] }), "muted"));
   const firstTime = storyPick >= cleared;
-  detail.append(element("p", firstTime ? `Premio alla prima vittoria: ${rewardText(chapter.reward)}` : "Capitolo già superato: puoi rigiocarlo per le Schegge della vittoria.", "reward-line"));
+  const heroPrize = chapter.reward.hero && heroWithId(chapter.reward.hero);
+  detail.append(element("p", firstTime ? t("Premio alla prima vittoria: {reward}", { reward: rewardText(chapter.reward) }) + (heroPrize ? t(" e il nuovo eroe {hero}", { hero: heroPrize.name }) : "") : "Capitolo già superato: puoi rigiocarlo per le Schegge della vittoria.", "reward-line"));
   const pickFaction = element("div", undefined, "picker-box");
-  pickFaction.append(element("h3", "Il tuo eroe"), heroChoices(storyFaction, faction => { storyFaction = faction; sound("select"); renderStory(); }));
+  pickFaction.append(element("h3", "Il tuo eroe"), heroChoices(storyHero, hero => { storyFaction = hero.faction; storyHero = hero.id; sound("select"); renderStory(); }));
   const start = button("Gioca il capitolo", () => {
     storyChapter = storyPick;
     mode = "cpu";
     level = chapter.level;
-    startMatch([storyFaction, chapter.opponent], [playableDeck(storyFaction), null], { lives: chapter.lives, env: heroFor(chapter.opponent)?.theme });
+    startMatch([storyFaction, chapter.opponent], [playableDeck(storyFaction), null], { lives: chapter.lives, env: heroFor(chapter.opponent)?.theme, heroes: [heroOption(storyHero), null] });
   }, "primary");
   detail.append(pickFaction, start);
   const final = element("p", cleared === chapters.length
-    ? `Storia completata · Titolo ${titles[finalReward.title].name}`
-    : `Premio finale: ${rewardText(finalReward)} e il titolo ${titles[finalReward.title].name}`, "muted");
+    ? t("Storia completata · Titolo {title}", { title: t(titles[finalReward.title].name) })
+    : t("Premio finale: {reward} e il titolo {title}", { reward: rewardText(finalReward), title: t(titles[finalReward.title].name) }), "muted");
   panel.replaceChildren(head, list, detail, final);
 }
 
@@ -1037,13 +1087,13 @@ function renderQuests(message = "") {
     for (const m of list) {
       const li = element("li", undefined, m.claimed ? "claimed" : m.done ? "done" : "");
       const text = element("div");
-      text.append(element("strong", m.text), element("small", `Premio: ${rewardText(m)}`));
+      text.append(element("strong", t(m.text, m.vars)), element("small", t("Premio: {reward}", { reward: rewardText(m) })));
       const bar = element("progress");
       bar.max = m.goal; bar.value = m.value;
-      bar.setAttribute("aria-label", `${m.text}: ${m.value} su ${m.goal}`);
+      bar.setAttribute("aria-label", `${t(m.text, m.vars)}: ${t("{n} su {max}", { n: m.value, max: m.goal })}`);
       const claim = button(m.claimed ? "Riscattata" : m.done ? "Riscatta" : `${m.value}/${m.goal}`, () => {
         const got = claimMission(m.id);
-        if (got) { sound("reward"); updateWallet(); renderQuests(`Hai ottenuto ${rewardText(got)}.`); }
+        if (got) { sound("reward"); updateWallet(); renderQuests(t("Hai ottenuto {reward}.", { reward: rewardText(got) })); }
       }, m.done && !m.claimed ? "primary" : "");
       claim.disabled = !m.done || m.claimed;
       li.append(text, bar, claim);
@@ -1054,15 +1104,15 @@ function renderQuests(message = "") {
   };
   const profileBox = element("section", undefined, "quest-block");
   profileBox.append(element("h3", "Profilo"));
-  profileBox.append(element("p", `Partite contro il computer ${profile.stats.played} · Vittorie ${profile.stats.won}`));
+  profileBox.append(element("p", t("Partite contro il computer {n} · Vittorie {won}", { n: profile.stats.played, won: profile.stats.won })));
   const { have, max } = collectionProgress();
-  profileBox.append(element("p", `Collezione ${have}/${max} copie giocabili`));
-  profileBox.append(element("p", profile.titles.length ? `Titoli: ${profile.titles.map(id => titles[id]?.name).join(", ")}` : "Nessun titolo ancora: completa il tutorial e la Storia.", "muted"));
+  profileBox.append(element("p", t("Collezione {n}/{max} copie giocabili", { n: have, max })));
+  profileBox.append(element("p", profile.titles.length ? t("Titoli: {list}", { list: profile.titles.map(id => t(titles[id]?.name)).join(", ") }) : "Nessun titolo ancora: completa il tutorial e la Storia.", "muted"));
   if (profile.history.length) {
     const details = element("details");
     details.append(element("summary", "Ultimi premi"));
     const ol = element("ul", undefined, "log");
-    for (const line of profile.history.slice(0, 10)) ol.append(element("li", line));
+    for (const line of profile.history.slice(0, 10)) ol.append(element("li", typeof line === "string" ? line : t(line.text, line.vars)));
     details.append(ol);
     profileBox.append(details);
   }
@@ -1078,7 +1128,7 @@ function drawShop() {
   const profile = loadProfile();
   const { have, max } = collectionProgress();
   const head = element("div", undefined, "section-head");
-  head.append(element("h2", "Negozio"), element("span", `Collezione ${have}/${max}`, "muted"));
+  head.append(element("h2", "Negozio"), element("span", t("Collezione {n}/{max}", { n: have, max }), "muted"));
   const wallet = element("div", undefined, "wallet-card");
   const coins = element("div", undefined, "coin-total");
   coins.append(element("span", "◆", "coin-icon"), element("strong", profile.shards), element("span", "Schegge"));
@@ -1087,11 +1137,11 @@ function drawShop() {
   wallet.append(coins, packsBox,
     element("p", "Le Schegge sono le monete del gioco: le guadagni vincendo le partite (15, 25 o 40 secondo la difficoltà, 5 se perdi), con le missioni, la Storia e il tutorial.", "muted"));
   const actions = element("div", undefined, "actions");
-  const buy = button(`Compra una busta · ${packPrice} Schegge`, () => {
+  const buy = button(t("Compra una busta · {n} Schegge", { n: packPrice }), () => {
     if (buyPack()) { sound("reward"); lastPack = null; updateWallet(); drawShop(); }
   });
   buy.disabled = profile.shards < packPrice;
-  const open = button(`Apri una busta (${profile.packs})`, () => {
+  const open = button(t("Apri una busta ({n})", { n: profile.packs }), () => {
     lastPack = openPack();
     if (lastPack) sound("pack");
     updateWallet();
@@ -1100,12 +1150,12 @@ function drawShop() {
   }, "primary");
   open.disabled = profile.packs < 1;
   actions.append(buy, open);
-  const children = [head, wallet, element("h3", "Buste di carte"), element("p", "Ogni busta contiene 5 carte. Le copie oltre il massimo giocabile (2, o 1 per le Leggendarie) diventano Schegge.", "muted"), actions];
+  const children = [head, wallet, element("h3", "Buste di carte"), element("p", "Ogni busta contiene 5 carte. Le copie oltre il massimo giocabile (3, o 1 per le Leggendarie) diventano Schegge.", "muted"), actions];
   if (lastPack) {
     const row = element("div", undefined, "cards pack-result");
     for (const result of lastPack) {
       const c = byId.get(result.id);
-      row.append(drawCard(c, { meta: true, art: "full", badge: result.newCopy ? "Nuova copia!" : `Doppione · +${result.shards} Schegge`, action: () => showCard(c) }));
+      row.append(drawCard(c, { meta: true, art: "full", badge: result.newCopy ? "Nuova copia!" : t("Doppione · +{n} Schegge", { n: result.shards }), action: () => showCard(c) }));
     }
     children.push(row);
   }

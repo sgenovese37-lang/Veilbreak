@@ -1,19 +1,28 @@
 import { cards } from "./cards.mjs";
 import { heroFor, heroPowerCost } from "./heroes.mjs";
 import { starterDecks } from "./decks.mjs";
+import { t } from "./i18n.mjs";
 
-export const rules = Object.freeze({ maxLife: 30, openingHand: 6, mulliganLimit: 2, maxEssence: 10, handLimit: 10 });
+export const rules = Object.freeze({ maxLife: 30, openingHand: 6, mulliganLimit: 2, maxEssence: 10, handLimit: 10, boardLimit: 7 });
 
 export const factions = [...new Set(cards.map(card => card.faction))];
 const byId = new Map(cards.map(card => [card.id, card]));
 const fragment = { id: 0, name: "Frammento", type: "Creatura", attack: 1, health: 1, text: "" };
+// Frammento di Essenza: lo riceve chi gioca per secondo. Costa 0, dà 1 Essenza in questo turno e scompare.
+export const essenceShardId = 100;
+export const essenceShard = Object.freeze({
+  id: essenceShardId, name: "Frammento di Essenza", faction: "Neutrale", type: "Incantesimo", rarity: "Common",
+  cost: 0, text: "Ottieni 1 Essenza solo in questo turno.", art: "assets/originali-chatgpt/frammento-essenza.webp",
+});
+byId.set(essenceShardId, essenceShard);
 const rush = new Set([24, 46, 47, 48]);
 const taunt = new Set([4, 13, 32, 34, 37, 45, 49, 51]);
 const targeted = new Set([1, 9, 12, 17, 23, 55]);
 export const cardOf = unit => byId.get(unit.card) ?? fragment;
+export const boardFull = player => player.board.length >= rules.boardLimit;
 export const has = (player, id) => player.board.some(unit => unit.card === id && !unit.silenced);
 const rival = side => 1 - side;
-const damageText = n => n === 1 ? "1 danno" : `${n} danni`;
+const damageText = n => n === 1 ? t("1 danno") : t("{n} danni", { n });
 const heal = (p, n) => { p.life = Math.min(p.maxLife, p.life + n); };
 const emptyStats = () => ({ cards: 0, creatures: 0, spells: 0, artifacts: 0, secrets: 0, heroDamage: 0, kills: 0, powers: 0, turns: 0 });
 
@@ -32,15 +41,22 @@ function draw(p, count, g) {
   const overflow = drawn.slice(room);
   p.discard.push(...overflow);
   if (overflow.length && g) {
-    note(g, `${p.name} scarta ${overflow.length} dalla cima del mazzo: mano piena.`);
+    note(g, t("{name} scarta {n} dalla cima del mazzo: mano piena.", { name: p.name, n: overflow.length }));
   }
 }
 
-export const deckSize = 15;
-export const defaultDeck = name => validDeck(name, starterDecks[name])
-  ? [...starterDecks[name]]
-  : cards.filter(card => card.faction === name).slice(0, deckSize).map(card => card.id);
-export const copyLimit = card => card.rarity === "Legendary" ? 1 : 2;
+export const deckSize = 30;
+export const copyLimit = card => card.rarity === "Legendary" ? 1 : 3;
+// Senza mazzo predefinito (fazione nuova): le carte della fazione in ordine, ripetute fino a 30.
+function fallbackDeck(name) {
+  const pool = cards.filter(card => card.faction === name);
+  const deck = [];
+  for (let copy = 0; copy < 3 && deck.length < deckSize; copy++) {
+    for (const card of pool) if (copy < copyLimit(card) && deck.length < deckSize) deck.push(card.id);
+  }
+  return deck;
+}
+export const defaultDeck = name => validDeck(name, starterDecks[name]) ? [...starterDecks[name]] : fallbackDeck(name);
 
 export function validDeck(name, deck) {
   if (!Array.isArray(deck) || deck.length !== deckSize) return false;
@@ -60,8 +76,9 @@ export function createGame(names, random = Math.random, customDecks = [], option
     const forced = options.decks?.[side];
     const deck = shuffle(forced?.length ? [...forced] : validDeck(name, custom) ? [...custom] : defaultDeck(name), random);
     const maxLife = options.lives?.[side] ?? rules.maxLife;
-    const player = { name, life: maxLife, maxLife, capacity: 0, essence: 0, deck, hand: [], discard: [], powerUsed: false, board: [], artifacts: [], secrets: [], discount: 0, fatigue: 0, peek: null };
-    draw(player, rules.openingHand);
+    const player = { name, hero: options.heroes?.[side] ?? null, life: maxLife, maxLife, capacity: 0, essence: 0, deck, hand: [], discard: [], powerUsed: false, board: [], artifacts: [], secrets: [], discount: 0, fatigue: 0, peek: null };
+    // chi gioca per secondo pesca una carta in più (e dopo la sostituzione riceve il Frammento di Essenza)
+    draw(player, rules.openingHand + (side === 1 ? 1 : 0));
     return player;
   });
   return { players, active: 0, phase: "mulligan", round: 0, next: 1, winner: null, log: [], random, stats: [emptyStats(), emptyStats()] };
@@ -82,6 +99,7 @@ export function mulligan(g, indexes) {
   if (g.active === 0) g.active = 1;
   else {
     g.phase = "play";
+    p.hand.push(essenceShardId);
     startTurn(g, 0);
   }
   return true;
@@ -98,11 +116,12 @@ export function stats(g, side, unit) {
   const boost = aura(p, 31, unit.uid);
   const loss = enemy.artifacts.filter(id => id === 53).length;
   const bonus = unit.bonus ?? 0;
-  const maxHealth = c.health + boost + bonus + unit.guard[0] + unit.guard[1] + p.artifacts.filter(id => id === 44).length;
+  const maxHealth = c.health + boost + bonus + (unit.healthBonus ?? 0) + unit.guard[0] + unit.guard[1] + p.artifacts.filter(id => id === 44).length;
   return { attack: Math.max(0, c.attack + boost + bonus + unit.powerAttack - loss - unit.weakened), health: maxHealth - unit.damage, maxHealth };
 }
 
 function summon(g, side, card) {
+  if (boardFull(g.players[side])) return null;
   const unit = { uid: g.next++, card, damage: 0, weakened: 0, powerAttack: 0, guard: [0, 0], entered: g.round, attacked: false, silenced: false, borrowed: null, haste: false };
   g.players[side].board.push(unit);
   return unit;
@@ -126,7 +145,7 @@ function damageHero(g, side, value, credited = true) {
   p.life = Math.max(0, p.life - value);
   if (takeSecret(p, 39)) {
     draw(p, 2, g);
-    note(g, "Testimone Finale si attiva.");
+    note(g, t("Testimone Finale si attiva."));
   }
 }
 
@@ -184,7 +203,7 @@ function unitAt(g, target) {
 
 export function powerTargets(g) {
   const side = g.active;
-  const power = heroFor(g.players[side].name)?.power;
+  const power = heroFor(g.players[side])?.power;
   if (!power?.target) return [];
   const owner = power.target === "enemy" ? rival(side) : side;
   return g.players[owner].board.map(unit => ({ side: owner, uid: unit.uid }));
@@ -192,16 +211,17 @@ export function powerTargets(g) {
 
 export function canUseHeroPower(g) {
   const p = g.players[g.active];
-  const power = heroFor(p.name)?.power;
+  const power = heroFor(p)?.power;
   return Boolean(g.phase === "play" && power && !p.powerUsed && p.essence >= heroPowerCost
-    && (!power.target || powerTargets(g).length) && (!power.heal || p.life < p.maxLife));
+    && (!power.target || powerTargets(g).length) && (!power.heal || p.life < p.maxLife)
+    && (!power.summon || !boardFull(p)) && (!power.selfDamage || p.life > power.selfDamage));
 }
 
 export function useHeroPower(g, target) {
   if (!canUseHeroPower(g)) return false;
   const side = g.active;
   const p = g.players[side];
-  const hero = heroFor(p.name);
+  const hero = heroFor(p);
   const power = hero.power;
   if (power.target && !powerTargets(g).some(choice => matchTarget(choice, target))) return false;
   const unit = unitAt(g, target);
@@ -215,17 +235,23 @@ export function useHeroPower(g, target) {
   if (power.heal) heal(p, power.heal);
   if (power.summon) summon(g, side, power.summon);
   if (power.heroDamage) damageHero(g, rival(side), power.heroDamage);
-  note(g, `${hero.name} usa ${power.name}.`);
+  if (power.health) unit.healthBonus = (unit.healthBonus ?? 0) + power.health;
+  if (power.selfDamage) damageHero(g, side, power.selfDamage, false);
+  if (power.draw) draw(p, power.draw, g);
+  note(g, t("{hero} usa {power}.", { hero: hero.name, power: t(power.name) }));
   settle(g);
   return true;
 }
 
+// Con il campo pieno la creatura presa in controllo resta all'avversario.
 function transfer(g, from, to, unit, haste) {
+  if (boardFull(g.players[to])) return false;
   const p = g.players[from];
   p.board = p.board.filter(other => other.uid !== unit.uid);
   unit.borrowed ??= from;
   unit.haste = haste;
   g.players[to].board.push(unit);
+  return true;
 }
 
 function hitAll(p, value) {
@@ -238,10 +264,10 @@ function resolve(g, side, id, target) {
   const enemy = g.players[opponent];
   const unit = unitAt(g, target);
   switch (id) {
-    case 1: if (unit) transfer(g, opponent, side, unit, true); break;
+    case 1: if (unit && !transfer(g, opponent, side, unit, true)) note(g, t("Campo pieno: la creatura resta all’avversario.")); break;
     case 3: heal(p, 4); break;
     case 5: draw(p, 1, g); break;
-    case 7: note(g, enemy.deck.length ? `Carta rivelata: ${byId.get(enemy.deck[0]).name}.` : "Il mazzo avversario è vuoto."); break;
+    case 7: note(g, enemy.deck.length ? t("Carta rivelata: {card}.", { card: byId.get(enemy.deck[0]).name }) : t("Il mazzo avversario è vuoto.")); break;
     case 9:
     case 55: unit.damage += 2; break;
     case 12: unit.silenced = true; unit.damage += 2; break;
@@ -270,6 +296,7 @@ function resolve(g, side, id, target) {
     case 46: draw(p, enemy.board.length, g); break;
     case 52: p.peek = p.deck[0] ?? null; break;
     case 58: discard(p, g); draw(p, 2, g); break;
+    case essenceShardId: p.essence = Math.min(rules.maxEssence, p.essence + 1); break;
   }
 }
 
@@ -277,6 +304,7 @@ export function canPlay(g, index) {
   const p = g.players[g.active];
   const c = byId.get(p.hand[index]);
   return g.phase === "play" && c && p.essence >= price(g, g.active, c)
+    && !(c.type === "Creatura" && boardFull(p))
     && (!targeted.has(c.id) || c.id === 1 || playTargets(g, c.id).length > 0);
 }
 
@@ -292,9 +320,11 @@ export function play(g, index, target) {
   p.hand.splice(index, 1);
   const tally = g.stats[side];
   tally.cards++;
-  tally[{ Creatura: "creatures", Incantesimo: "spells", Artefatto: "artifacts", Segreto: "secrets" }[c.type]]++;
-  if (c.type === "Incantesimo") p.discount = 0;
-  note(g, c.type === "Segreto" ? `${p.name} prepara un Segreto.` : `${p.name} gioca ${c.name}.`);
+  if (c.id !== essenceShardId) {
+    tally[{ Creatura: "creatures", Incantesimo: "spells", Artefatto: "artifacts", Segreto: "secrets" }[c.type]]++;
+    if (c.type === "Incantesimo") p.discount = 0;
+  } else tally.cards--;
+  note(g, c.type === "Segreto" ? t("{name} prepara un Segreto.", { name: p.name }) : t("{name} gioca {card}.", { name: p.name, card: c.name }));
   const unit = c.type === "Creatura" ? summon(g, side, c.id) : null;
   if (c.type === "Artefatto") p.artifacts.push(c.id);
   if (c.type === "Segreto") p.secrets.push(c.id);
@@ -302,7 +332,7 @@ export function play(g, index, target) {
   if (unit && enemy.secrets.includes(50)) {
     takeSecret(enemy, 50);
     unit.damage += 3;
-    note(g, "Imboscata si attiva.");
+    note(g, t("Imboscata si attiva."));
   }
   settle(g);
   return true;
@@ -336,12 +366,12 @@ export function attack(g, uid, target) {
     const retaliation = stats(g, target.side, defender).attack;
     defender.damage += power;
     unit.damage += retaliation;
-    note(g, `${cardOf(unit).name} attacca ${cardOf(defender).name}.`);
+    note(g, t("{card} attacca {target}.", { card: cardOf(unit).name, target: cardOf(defender).name }));
     if (settle(g).has(defender.uid) && unit.card === 56 && !unit.silenced) draw(p, 1, g);
   } else {
     damageHero(g, target.side, power);
     if (!unit.silenced && unit.card === 18) discard(g.players[target.side], g);
-    note(g, `${cardOf(unit).name} infligge ${damageText(power)} all’eroe.`);
+    note(g, t("{card} infligge {damage} all’eroe.", { card: cardOf(unit).name, damage: damageText(power) }));
     settle(g);
   }
   return true;
@@ -362,12 +392,13 @@ function startTurn(g, side) {
   p.essence = p.capacity;
   p.discount = p.artifacts.filter(id => id === 22).length;
   for (const unit of p.board) unit.attacked = false;
-  note(g, `Turno di ${p.name}.`);
+  (g.turnStarts ??= []).push(g.log.length);
+  note(g, t("Turno di {name}.", { name: p.name }));
   if (p.deck.length) draw(p, 1, g);
   else {
     p.fatigue++;
     damageHero(g, side, p.fatigue, false);
-    note(g, `${p.name} subisce ${damageText(p.fatigue)} da esaurimento del mazzo.`);
+    note(g, t("{name} subisce {damage} da esaurimento del mazzo.", { name: p.name, damage: damageText(p.fatigue) }));
   }
   if (p.life === 0) { settle(g); return; }
   for (const id of p.artifacts) {
@@ -402,13 +433,21 @@ export function endTurn(g) {
       unit.haste = false;
       if (owner !== original) {
         player.board = player.board.filter(other => other.uid !== unit.uid);
-        g.players[original].board.push(unit);
+        if (!boardFull(g.players[original])) g.players[original].board.push(unit);
       }
     }
   }
   settle(g);
   if (g.phase === "play") startTurn(g, opponent);
   return true;
+}
+
+// Il Frammento di Essenza serve solo se con 1 Essenza in più si può giocare qualcosa che ora non si può.
+export function shardHelps(g, p) {
+  return p.hand.some(id => {
+    const c = byId.get(id);
+    return id !== essenceShardId && price(g, g.active, c) === p.essence + 1 && !(c.type === "Creatura" && boardFull(p));
+  }) || (!p.powerUsed && p.essence === heroPowerCost - 1);
 }
 
 // onStep(azione), facoltativo: chiamato dopo ogni mossa per animarla nell'interfaccia.
@@ -426,6 +465,7 @@ export function computerTurn(g, level, onStep = () => {}) {
       const targets = playTargets(g, id).filter(t => t.side !== side);
       if (targeted.has(id) && id !== 1 && !targets.length) return [];
       if (id === 16 && p.board.length >= g.players[rival(side)].board.length) return [];
+      if (id === essenceShardId && !shardHelps(g, p)) return [];
       const target = targets.sort((a, b) => (unitAt(g, b) ? stats(g, b.side, unitAt(g, b)).attack : 3) - (unitAt(g, a) ? stats(g, a.side, unitAt(g, a)).attack : 3))[0];
       return [{ index, target, value: easy ? g.random() : c.cost + (high && c.type === "Creatura" ? 1 : 0) }];
     });
@@ -437,7 +477,7 @@ export function computerTurn(g, level, onStep = () => {}) {
   }
   if (canUseHeroPower(g)) {
     const options = powerTargets(g);
-    const power = heroFor(p.name).power;
+    const power = heroFor(p).power;
     const best = options.find(t => power.damage
       ? stats(g, t.side, unitAt(g, t)).health <= power.damage
       : attackTargets(g, t.uid).length);

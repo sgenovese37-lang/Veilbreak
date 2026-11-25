@@ -33,9 +33,12 @@ export const heroes = {
     table: "Cappella dell’Aureola Spezzata",
     theme: "saints",
     power: {
+      // Versione precedente: «Cura 2 punti vita al tuo eroe» ({ heal: 2 }). Con i mazzi da 30 carte
+      // le partite non arrivano più all'esaurimento del mazzo e i Senza Santi vincevano meno del 20%.
       name: "Liturgia del Sangue",
-      text: "Cura 2 punti vita al tuo eroe.",
-      heal: 2,
+      text: "Una creatura alleata ottiene +2 Difesa in modo permanente.",
+      target: "ally",
+      health: 2,
     },
   },
   "Sottocittà": {
@@ -52,18 +55,40 @@ export const heroes = {
   },
 };
 
-export function heroFor(faction) {
-  return Object.hasOwn(heroes, faction) ? heroes[faction] : null;
-}
-
-// Eroi da sbloccare nella Storia (uno per fazione): ritratti pronti, regole e sblocco nelle prossime aggiunte.
+// Eroi da sbloccare nella Storia (uno per fazione): si sbloccano vincendo il capitolo indicato in story.mjs.
 export const lockedHeroes = {
-  "Corte di Hollow": { name: "Cancelliere Orfeo Grimm", portrait: "assets/eroi/ritratti/orfeo-grimm.webp",
+  "Corte di Hollow": { id: "orfeo-grimm", name: "Cancelliere Orfeo Grimm", portrait: "assets/eroi/ritratti/orfeo-grimm.webp",
     power: { name: "Sigillo d’Ufficio", text: "Evoca un Passerotto 1/1.", summon: 8 } },
-  "Patto Neon": { name: "Dex Halogen, il Glitch", portrait: "assets/eroi/ritratti/dex-halogen.webp",
+  "Patto Neon": { id: "dex-halogen", name: "Dex Halogen, il Glitch", portrait: "assets/eroi/ritratti/dex-halogen.webp",
     power: { name: "Sovraccarico", text: "Infliggi 1 danno all’eroe nemico.", heroDamage: 1 } },
-  "Senza Santi": { name: "Suor Ottavia delle Ceneri", portrait: "assets/eroi/ritratti/ottavia.webp",
+  "Senza Santi": { id: "ottavia", name: "Suor Ottavia delle Ceneri", portrait: "assets/eroi/ritratti/ottavia.webp",
     power: { name: "Lama Votiva", text: "Infliggi 1 danno a una creatura nemica.", target: "enemy", damage: 1 } },
-  "Sottocittà": { name: "Nonna Ines delle Gallerie", portrait: "assets/eroi/ritratti/nonna-ines.webp",
+  "Sottocittà": { id: "nonna-ines", name: "Nonna Ines delle Gallerie", portrait: "assets/eroi/ritratti/nonna-ines.webp",
     power: { name: "Richiamo dei Cunicoli", text: "Evoca un Frammento di Veil 1/1.", summon: 60 } },
 };
+
+
+// Ogni eroe per identificativo: quelli base usano il nome della fazione, quelli da sbloccare il loro id.
+const heroById = new Map();
+for (const [faction, hero] of Object.entries(heroes)) heroById.set(faction, { ...hero, id: faction, faction });
+for (const [faction, hero] of Object.entries(lockedHeroes)) {
+  const base = heroes[faction];
+  heroById.set(hero.id, { table: base.table, theme: base.theme, ...hero, faction, locked: true });
+}
+
+export const heroWithId = id => heroById.get(id) ?? null;
+
+// heroFor accetta il nome di una fazione oppure un giocatore della partita ({ name, hero }).
+export function heroFor(who) {
+  if (who && typeof who === "object") {
+    const chosen = who.hero && heroById.get(who.hero);
+    if (chosen && chosen.faction === who.name) return chosen;
+    who = who.name;
+  }
+  return heroById.get(who) ?? null;
+}
+
+// Eroi disponibili per una fazione: quello base e, se sbloccato, quello della Storia.
+export function heroesOf(faction, unlocked = []) {
+  return [heroById.get(faction), ...[...heroById.values()].filter(h => h.locked && h.faction === faction && unlocked.includes(h.id))].filter(Boolean);
+}

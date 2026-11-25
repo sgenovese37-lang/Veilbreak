@@ -2,6 +2,7 @@
 // sempre le stesse per tutti nello stesso periodo. Valgono le partite contro il computer e la Storia.
 import { factions } from "./game.mjs";
 import { loadProfile, saveProfile, addShards, addPacks } from "./profile.mjs";
+import { t } from "./i18n.mjs";
 
 const perPeriod = 3;
 
@@ -15,7 +16,7 @@ const dailyPool = [
   { id: "d-uccisioni", text: "Distruggi 6 creature nemiche", goal: 6, shards: 50, count: e => e.stats.kills },
   { id: "d-poteri", text: "Usa il potere dell’eroe 4 volte", goal: 4, shards: 40, count: e => e.stats.powers },
   ...factions.map((faction, i) => ({
-    id: `d-fazione-${i}`, text: `Vinci una partita con ${faction}`, goal: 1, shards: 60,
+    id: `d-fazione-${i}`, text: "Vinci una partita con {faction}", vars: { faction }, goal: 1, shards: 60,
     count: e => e.won && e.faction === faction ? 1 : 0,
   })),
 ];
@@ -91,8 +92,9 @@ export function claimMission(id, date = new Date(), profile = loadProfile()) {
     const mission = list.find(m => m.id === id);
     if (!mission || !mission.done || mission.claimed) continue;
     profile.missions[slot].claimed.push(id);
-    addShards(mission.shards, `missione «${mission.text}»`, profile);
-    if (mission.packs) addPacks(mission.packs, `missione «${mission.text}»`, profile);
+    const reason = t("missione «{name}»", { name: t(mission.text, mission.vars) });
+    addShards(mission.shards, reason, profile);
+    if (mission.packs) addPacks(mission.packs, reason, profile);
     return mission;
   }
   return null;
