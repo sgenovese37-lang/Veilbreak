@@ -109,7 +109,7 @@ test("le statistiche di partita alimentano le missioni", () => {
 
 test("il computer Difficile batte il Normale più spesso", () => {
   let wins = 0, games = 0;
-  for (const a of factions) for (const b of factions) for (const smart of [0, 1]) {
+  for (const a of factions) for (const b of factions) for (const smart of [0, 1]) for (let k = 0; k < 3; k++) {
     const g = createGame([a, b], seeded(500 + games));
     for (let i = 0; i < 400 && g.phase !== "finished"; i++) g.active === smart ? smartTurn(g) : computerTurn(g, "Normale");
     games++;

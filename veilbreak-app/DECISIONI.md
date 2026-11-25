@@ -18,3 +18,9 @@ Risposte alle domande del documento «Cosa manca per il gioco completo» (24 nov
 
 1. **Mazzi da 30 carte: opzione A.** Fino all’arrivo di nuove carte sono ammesse **3 copie** delle carte non leggendarie; le Leggendarie restano a **1**. Quando arriveranno carte neutrali o il secondo set si torna a valutare il limite.
 2. **Lingue: illustrazioni in italiano.** Le immagini delle carte restano in italiano; si traducono interfaccia, regole delle carte, anteprima a dito premuto e scheda della carta (italiano, inglese, tedesco, spagnolo).
+
+## Decise il 25 novembre
+
+3. **Secondo set di 30 carte** («Gli Archivi del Velo»): nomi, regole e prompt scritti da Claude, illustrazioni create dall’utente con ChatGPT (PDF con una pagina per carta).
+4. **Quattro parole chiave nuove**: Velato (non bersagliabile finché non attacca), Lascito (effetto quando muore), Furia (attacca due volte), Patto (si paga con punti vita invece che con Essenza).
+5. **Lingua**: il gioco parte sempre in italiano; le altre lingue solo dalle impostazioni.

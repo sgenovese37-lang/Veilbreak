@@ -37,6 +37,11 @@ Riepilogo per riprendere il lavoro in una nuova sessione.
 5. Musica generata dal gioco (`music.mjs`), rifatta il 25 novembre in stile horror cinematografico (archi, cori, campane, riverbero): un tema per il menu e uno per ogni ambientazione, con pulsante «Musica». Per ascoltarla fuori dal gioco: `node tools/registra_musica.cjs <cartella>`.
 6. Lingue: italiano, inglese, tedesco, spagnolo (`i18n.mjs`, file in `lingue/`). La lingua parte da quella del telefono e si cambia dal menu in alto. Le frasi italiane fanno da chiave; per aggiungere frasi vedi `tools/crea_lingue.mjs` e il test `tests/i18n.test.mjs`.
 
+## Secondo set (25 novembre)
+- 30 carte nuove (61-90) in `cards.mjs`, dati e descrizioni in `set2-carte.json` e `SET-2.md`, PDF dei prompt per ChatGPT mandato all'utente.
+- Parole chiave nuove nel motore: Velato, Lascito, Furia, Patto (si paga con la vita). Grafica provvisoria (dorso e simbolo di fazione) finché non arrivano le illustrazioni: vanno messe come le altre in `assets/` e collegate in `illustrations.mjs`.
+- Mazzi predefiniti rifatti con le carte nuove (vedi `BILANCIAMENTO.md`).
+
 ## Prossimi passi
 - Correzioni dalle partite dell'utente.
 - Vantaggio di chi gioca per primo ancora intorno al 60% contro il computer.

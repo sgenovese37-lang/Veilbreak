@@ -65,3 +65,22 @@ Risultati con 150 partite per coppia (Difficile contro Difficile):
 | Sottocittà | 52,4% |
 
 Scontri tra il 41% e il 63% nelle verifiche su partite nuove. Chi gioca per primo vince ancora circa il 60% contro il computer: il Frammento di Essenza aiuta poco il computer, che lo usa solo quando gli apre una giocata. Va rivisto con le partite vere.
+
+## Secondo set (25 novembre 2026): 30 carte nuove
+
+Le 30 carte di «Gli Archivi del Velo» (61-90) entrano in tutte le fazioni, con quattro parole chiave nuove: Velato, Lascito, Furia e Patto.
+
+- Le prime simulazioni mostravano i Senza Santi troppo forti (oltre l’80% contro la Sottocittà). Le prove togliendo una carta alla volta hanno indicato tre responsabili, ritoccati prima di creare le illustrazioni:
+  - **Reliquiario Ambulante**: il Lascito evoca un’Infermiera Stanca invece di due.
+  - **Confessionale Infestato**: costa 3 e cura 3 punti vita alla creatura più ferita, invece di curarla completamente.
+  - **Santa Lucrezia delle Candele**: costa 9; lei e Resurrezione Profana riportano solo creature non Leggendarie.
+- **Nuovi mazzi predefiniti** con 9-16 carte del secondo set ciascuno, trovati con `tools/cerca_mazzi.mjs` e verificati su partite nuove.
+
+| Fazione | Vittorie (150 partite per coppia) |
+| --- | --- |
+| Corte di Hollow | 52,5% |
+| Patto Neon | 44,0% |
+| Senza Santi | 53,9% |
+| Sottocittà | 49,6% |
+
+Lo scontro più sbilanciato è Patto Neon contro Sottocittà (30-41% per il Patto). Il computer Difficile ora valuta anche Velato, Furia e Lascito e vince circa il 61% contro il Normale.

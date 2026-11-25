@@ -2,7 +2,7 @@
 // migliora di più la valutazione della posizione. Si ferma quando nessuna mossa aiuta.
 import {
   byId, canPlay, playTargets, play, attackTargets, attack, canUseHeroPower, powerTargets,
-  useHeroPower, endTurn, mulligan, stats, cardOf, rules, computerTurn, essenceShardId, shardHelps,
+  useHeroPower, endTurn, mulligan, stats, cardOf, rules, computerTurn, essenceShardId, shardHelps, maxAttacks, isVeiled,
 } from "./game.mjs";
 
 const fixedRandom = () => 0.5;
@@ -13,13 +13,19 @@ function clone(g) {
   return copy;
 }
 
+// Valore di ciò che resta quando una creatura con Lascito muore (secondo set)
+const legacyValue = { 61: 1, 62: 1.5, 77: 1.5, 82: 3 };
 const isTaunt = unit => !unit.silenced && /Provocazione/.test(cardOf(unit).text ?? "");
 
 function unitValue(g, side, unit) {
   const c = cardOf(unit);
   const s = stats(g, side, unit);
   if (s.health <= 0) return 0;
-  return s.attack * 1.6 + s.health * 1.1 + (isTaunt(unit) ? 2 : 0) + (c.cost ?? 1) * 0.3;
+  const fury = maxAttacks(unit) > 1 ? 1.5 : 1;
+  const veil = isVeiled(unit) ? 1.5 : 0;
+  const legacy = !unit.silenced && legacyValue[unit.card] ? legacyValue[unit.card] : 0;
+  const stun = unit.stunned ? -s.attack * 0.8 : 0;
+  return s.attack * 1.6 * fury + s.health * 1.1 + (isTaunt(unit) ? 2 : 0) + (c.cost ?? 1) * 0.3 + veil + legacy + stun;
 }
 
 export function evaluate(g, side) {
