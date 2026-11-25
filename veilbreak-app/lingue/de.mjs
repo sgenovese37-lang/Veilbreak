@@ -375,5 +375,11 @@ export default {
  "Modalità Storia": "Story-Modus",
  "Dettaglio carta": "Kartendetail",
  "ATT": "ANG",
- "DIF": "VER"
+ "DIF": "VER",
+ "Due giocatori": "Zwei Spieler",
+ "Automatica": "Automatisch",
+ "Il Velo si è spezzato. Scegli il tuo Binder.": "Der Schleier ist zerbrochen. Wähle deinen Binder.",
+ "Impostazioni": "Einstellungen",
+ "busta": "Kartenpack",
+ "buste": "Kartenpacks"
 };

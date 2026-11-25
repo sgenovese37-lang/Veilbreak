@@ -8,7 +8,7 @@ const shots = (process.env.SHOTS ?? require('os').tmpdir()) + '/';
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
   await page.goto('http://127.0.0.1:8000/veilbreak-app/');
-  await page.selectOption('select[name=level]', 'Facile');
+  await page.click('[data-level="Facile"]');
   await page.click('#pick-first [data-faction="Sottocittà"]');
   await page.click('#pick-second [data-faction="Senza Santi"]');
   await page.click('text=Inizia partita');

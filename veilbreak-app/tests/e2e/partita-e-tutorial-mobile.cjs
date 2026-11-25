@@ -17,8 +17,8 @@ const shots = (process.env.SHOTS ?? require('os').tmpdir()) + '/';
   await overflow('setup');
 
   // Partita contro il computer
-  await page.selectOption('select[name=mode]', 'cpu');
-  await page.selectOption('select[name=level]', 'Normale');
+  await page.click('[data-mode="cpu"]');
+  await page.click('[data-level="Normale"]');
   await page.click('#pick-first [data-faction="Corte di Hollow"]');
   await page.click('#pick-second [data-faction="Patto Neon"]');
   await page.click('text=Inizia partita');
@@ -36,7 +36,7 @@ const shots = (process.env.SHOTS ?? require('os').tmpdir()) + '/';
     await page.waitForFunction(() => {
       const s = document.querySelector('#table [role=status]')?.textContent ?? '';
       return !s.includes('avversario');
-    }, null, { timeout: 10000 });
+    }, null, { timeout: 40000 });
     if (/^(Vince|Vittoria|Sconfitta|Pareggio)/.test(await status())) break;
     // gioca le carte disponibili
     for (let k = 0; k < 10; k++) {

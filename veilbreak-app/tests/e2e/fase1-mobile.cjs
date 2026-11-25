@@ -18,7 +18,7 @@ const url = 'http://127.0.0.1:8000/veilbreak-app/';
   console.log('pulsante musica:', await page.locator('#music-toggle').innerText(), '| lingua:', await page.locator('#lang-select').inputValue());
 
   // Due giocatori: il secondo riceve una carta in più e il Frammento di Essenza
-  await page.selectOption('select[name=mode]', 'local');
+  await page.click('[data-mode="local"]');
   await page.click('text=Inizia partita');
   console.log('mano del primo:', await page.locator('.hand .hand-card').count(), '|', await page.locator('.order-note').innerText());
   await page.click('text=Conferma mano');
@@ -60,6 +60,7 @@ const url = 'http://127.0.0.1:8000/veilbreak-app/';
 
   // Lingue
   for (const [lang, start, card] of [['en', 'Start match', 'Draw 2 cards.'], ['de', 'Partie starten', 'Ziehe 2 Karten.'], ['es', 'Empezar partida', 'Roba 2 cartas.']]) {
+    await page.click('#settings-open');
     await page.selectOption('#lang-select', lang);
     await page.waitForLoadState('load');
     await page.waitForSelector('#settings button.primary');
@@ -74,7 +75,7 @@ const url = 'http://127.0.0.1:8000/veilbreak-app/';
   await page.waitForSelector('.order-note');
   console.log('es partita:', await page.locator('.banner').innerText(), '|', await page.locator('.end-turn').innerText());
   await page.screenshot({ path: shots + '84-partita-es.png' });
-  await page.selectOption('#lang-select', 'it').catch(() => {});
+  await page.click('text=☰ Menu').catch(() => {});
   console.log('larghezza', await page.evaluate(() => document.documentElement.scrollWidth));
   console.log('errori:', errors.length ? errors.join(' | ') : 'nessuno');
   await browser.close();

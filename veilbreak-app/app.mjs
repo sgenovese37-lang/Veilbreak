@@ -19,10 +19,14 @@ import { sound, soundEnabled, setSound, buzz, cardSound, startAmbience, stopAmbi
 import { environments, environmentFor } from "./environments.mjs";
 import { playMusic, musicEnabled, setMusic } from "./music.mjs";
 import { t, languages, currentLang, setLang, translatePage } from "./i18n.mjs";
+import { icon, mountIcons } from "./icons.mjs";
+import { startEmbers } from "./embers.mjs";
 
 const get = id => document.getElementById(id);
 // Lingua: i testi fissi della pagina si traducono subito; cambiando lingua la pagina si ricarica.
+mountIcons();
 translatePage(document.body);
+startEmbers(document.getElementById("embers"));
 document.title = "VEILBREAK";
 {
   const langSelect = document.getElementById("lang-select");
@@ -83,7 +87,11 @@ function button(text, action, cls) {
 
 function updateWallet() {
   const profile = loadProfile();
-  get("wallet").textContent = `◆ ${t("{n} Schegge", { n: profile.shards })} · ${t(profile.packs === 1 ? "{n} busta" : "{n} buste", { n: profile.packs })}`;
+  const shards = element("span", undefined, "res shards");
+  shards.append(icon("gem"), element("b", profile.shards), element("small", "Schegge"));
+  const packs = element("span", undefined, "res packs");
+  packs.append(icon("pack"), element("b", profile.packs), element("small", profile.packs === 1 ? "busta" : "buste"));
+  get("wallet").replaceChildren(shards, packs);
   const toggle = get("sound-toggle");
   toggle.textContent = t(soundEnabled() ? "Suoni: sì" : "Suoni: no");
   toggle.setAttribute("aria-pressed", soundEnabled());
@@ -94,6 +102,11 @@ function updateWallet() {
 const musicTheme = () => game && document.body.classList.contains("in-match") ? matchEnv : "menu";
 get("music-toggle").onclick = () => { setMusic(!musicEnabled(), musicTheme()); updateWallet(); };
 get("wallet").onclick = () => showSection("shop-nav");
+// Impostazioni: suoni, musica e lingua in un pannello a parte
+const settingsPanel = get("settings-panel");
+get("settings-open").onclick = () => { updateWallet(); settingsPanel.showModal(); };
+get("settings-close").onclick = () => settingsPanel.close();
+settingsPanel.addEventListener("click", event => { if (event.target === settingsPanel) settingsPanel.close(); });
 get("sound-toggle").onclick = () => {
   setSound(!soundEnabled());
   updateWallet();
@@ -138,12 +151,20 @@ function heroChoices(current, onPick, id) {
       choice.dataset.hero = hero.id;
       choice.disabled = Boolean(hero.unavailable);
       choice.setAttribute("aria-pressed", current === hero.id);
-      if (hero.portrait || hero.theme) { const img = element("img", undefined, "emblem"); img.src = hero.portrait ?? `assets/eroi/${hero.theme}.webp`; img.alt = ""; choice.append(img); }
-      else choice.append(element("span", faction.slice(0, 1), "emblem initial"));
+      const slug = hero.portrait?.split("/").pop();
+      if (slug) { const img = element("img", undefined, "hero-art"); img.src = `assets/eroi/carte/${slug}`; img.alt = ""; img.decoding = "async"; choice.append(img); }
+      else choice.append(element("span", faction.slice(0, 1), "hero-art initial"));
+      if (hero.theme) { const crest = element("img", undefined, "crest"); crest.src = `assets/eroi/${hero.theme}.webp`; crest.alt = ""; choice.append(crest); }
       const text = element("span", undefined, "hero-choice-text");
-      text.append(element("strong", hero.name), element("small", faction));
-      if (hero.unavailable) text.append(element("span", t("🔒 Si sblocca vincendo il capitolo {n} della Storia", { n: unlockChapter(hero.id) + 1 }), "hero-choice-power"));
-      else if (hero.power) text.append(element("span", `${t(hero.power.name)} · ${t("{n} Essenza", { n: heroPowerCost })}: ${t(hero.power.text)}`, "hero-choice-power"));
+      text.append(element("small", faction), element("strong", hero.name));
+      if (hero.unavailable) {
+        choice.append(icon("lock", "ico lock-mark"));
+        text.append(element("span", t("🔒 Si sblocca vincendo il capitolo {n} della Storia", { n: unlockChapter(hero.id) + 1 }).replace(/^🔒\s*/u, ""), "hero-choice-power"));
+      } else if (hero.power) {
+        const power = element("span", undefined, "hero-choice-power");
+        power.append(element("span", heroPowerCost, "mini-gem"), element("b", t(hero.power.name)), element("span", t(hero.power.text)));
+        text.append(power);
+      }
       choice.append(text);
       grid.append(choice);
     }
@@ -158,12 +179,22 @@ function mountPicker(select, heading) {
   label.hidden = true;
   const box = element("div", undefined, "picker-box");
   const title = element("h3", heading());
-  const draw = () => {
+  const draw = (smooth = false) => {
     title.textContent = t(heading());
     if (heroWithId(chosenHero[select.name])?.faction !== select.value) chosenHero[select.name] = select.value;
-    box.replaceChildren(title, heroChoices(chosenHero[select.name], hero => {
-      select.value = hero.faction; chosenHero[select.name] = hero.id; sound("select"); draw();
-    }, `pick-${select.name}`));
+    const scroller = heroChoices(chosenHero[select.name], hero => {
+      select.value = hero.faction; chosenHero[select.name] = hero.id; sound("select"); draw(true);
+    }, `pick-${select.name}`);
+    const before = box.querySelector(".hero-picker")?.scrollLeft ?? 0;
+    box.replaceChildren(title, scroller);
+    scroller.scrollLeft = before;
+    // l'eroe scelto scorre al centro del carosello
+    requestAnimationFrame(() => {
+      const chosen = scroller.querySelector('[aria-pressed="true"]');
+      if (!chosen) return;
+      const left = chosen.offsetLeft - (scroller.clientWidth - chosen.offsetWidth) / 2;
+      if (scroller.scrollTo) scroller.scrollTo({ left, behavior: smooth ? "smooth" : "auto" }); else scroller.scrollLeft = left;
+    });
   };
   label.after(box);
   draw();
@@ -176,6 +207,43 @@ form.elements.mode.onchange = () => {
   redrawFirst();
   redrawSecond();
 };
+
+// Scelte a tessere al posto dei menu a tendina (le tendine restano nascoste e tengono il valore).
+function segmented(select, cls, options) {
+  const label = select.closest("label");
+  const box = element("div", undefined, `seg ${cls}`);
+  box.setAttribute("role", "group");
+  box.setAttribute("aria-label", t(label.firstChild.nodeValue.trim()));
+  const draw = () => box.replaceChildren(...options.map(o => {
+    const b = button(undefined, () => {
+      if (o.action) return o.action();
+      select.value = o.value; select.dispatchEvent(new Event("change")); sound("select"); draw();
+    }, "seg-item");
+    b.dataset.value = o.value ?? "";
+    b.dataset[o.key] = o.value ?? "";
+    if (!o.action) b.setAttribute("aria-pressed", select.value === o.value);
+    if (o.image) { b.style.setProperty("--thumb", `url("${o.image}")`); b.classList.add("thumb"); }
+    if (o.icon) b.append(icon(o.icon));
+    b.append(element("span", o.label));
+    if (o.note) b.append(element("small", o.note));
+    return b;
+  }));
+  label.classList.add("seg-label");
+  select.classList.add("visually-hidden");
+  label.append(box);
+  draw();
+  return draw;
+}
+segmented(form.elements.mode, "modes", [
+  { key: "mode", value: "cpu", icon: "skull", label: "Contro il computer" },
+  { key: "mode", value: "local", icon: "users", label: "Due giocatori" },
+  { key: "mode", icon: "book", label: "Storia", action: () => showSection("story-nav") },
+]);
+segmented(form.elements.level, "levels", ["Facile", "Normale", "Difficile"].map(value => ({ key: "level", value, label: value })));
+segmented(form.elements.env, "envs", [
+  { key: "env", value: "auto", label: "Automatica", icon: "moon" },
+  ...Object.entries(environments).map(([value, env]) => ({ key: "env", value, label: env.name, image: `assets/sfondi/home-${value}.webp` })),
+]);
 
 function drawCard(c, options = {}) {
   const e = options.action ? button(undefined, options.action) : element("article");
@@ -319,7 +387,12 @@ function renderDeckEditor(message = "", focus) {
     plus.setAttribute("aria-label", t("Aggiungi {card}", { card: c.name }));
     remove.disabled = count === 0;
     plus.disabled = count >= copyLimit(c) || count >= owned(c.id) || used >= deckSize;
-    row.append(element("span", `${c.name} · ${t("{n} Essenza", { n: c.cost })} · ${t("possiedi {n}", { n: owned(c.id) })}`), remove, element("span", count), plus);
+    const thumb = element("img", undefined, "deck-thumb");
+    thumb.src = illustrationFor(c.id)?.thumb ?? ""; thumb.alt = ""; thumb.loading = "lazy";
+    const label = element("span", undefined, "deck-name");
+    label.append(element("b", c.name), element("small", `${t("{n} Essenza", { n: c.cost })} · ${t("possiedi {n}", { n: owned(c.id) })}`));
+    row.dataset.rarity = c.rarity;
+    row.append(thumb, label, remove, element("span", count, "deck-count"), plus);
     list.append(row);
   }
   panel.replaceChildren(header, controls, status, list);
@@ -1045,11 +1118,15 @@ function renderStory() {
     const choose = button(`${i + 1}. ${t(chapter.title)} · ${state}`, () => { storyPick = i; renderStory(); });
     choose.disabled = !unlocked;
     choose.setAttribute("aria-pressed", storyPick === i);
+    choose.classList.add("chapter-tile");
+    choose.dataset.state = i < cleared ? "done" : unlocked ? "open" : "locked";
+    choose.style.setProperty("--bg", `url("assets/sfondi/home-${heroFor(chapter.opponent)?.theme ?? "hollow"}.webp")`);
     item.append(choose);
     list.append(item);
   });
   const chapter = chapters[storyPick];
   const detail = element("article", undefined, "chapter");
+  detail.style.setProperty("--bg", `url("assets/sfondi/home-${heroFor(chapter.opponent)?.theme ?? "hollow"}.webp")`);
   detail.append(element("h3", `${t("Capitolo {n}", { n: storyPick + 1 })} · ${t(chapter.title)}`), element("p", chapter.intro));
   const enemyHero = heroFor(chapter.opponent);
   detail.append(element("p", t("Avversario: {hero} ({faction}) · {level} · {enemy} PV contro i tuoi {mine}", { hero: enemyHero?.name ?? chapter.opponent, faction: chapter.opponent, level: t(chapter.level), enemy: chapter.lives[1], mine: chapter.lives[0] }), "muted"));
@@ -1131,9 +1208,9 @@ function drawShop() {
   head.append(element("h2", "Negozio"), element("span", t("Collezione {n}/{max}", { n: have, max }), "muted"));
   const wallet = element("div", undefined, "wallet-card");
   const coins = element("div", undefined, "coin-total");
-  coins.append(element("span", "◆", "coin-icon"), element("strong", profile.shards), element("span", "Schegge"));
+  coins.append(icon("gem", "ico coin-icon"), element("strong", profile.shards), element("span", "Schegge"));
   const packsBox = element("div", undefined, "coin-total");
-  packsBox.append(element("span", "▣", "coin-icon pack"), element("strong", profile.packs), element("span", profile.packs === 1 ? "busta da aprire" : "buste da aprire"));
+  packsBox.append(icon("pack", "ico coin-icon pack"), element("strong", profile.packs), element("span", profile.packs === 1 ? "busta da aprire" : "buste da aprire"));
   wallet.append(coins, packsBox,
     element("p", "Le Schegge sono le monete del gioco: le guadagni vincendo le partite (15, 25 o 40 secondo la difficoltà, 5 se perdi), con le missioni, la Storia e il tutorial.", "muted"));
   const actions = element("div", undefined, "actions");
@@ -1150,7 +1227,11 @@ function drawShop() {
   }, "primary");
   open.disabled = profile.packs < 1;
   actions.append(buy, open);
-  const children = [head, wallet, element("h3", "Buste di carte"), element("p", "Ogni busta contiene 5 carte. Le copie oltre il massimo giocabile (3, o 1 per le Leggendarie) diventano Schegge.", "muted"), actions];
+  const packArt = element("div", undefined, `pack-art${profile.packs ? " ready" : ""}`);
+  packArt.setAttribute("aria-hidden", "true");
+  const back = element("img"); back.src = "assets/originali-chatgpt/dorso-carte.webp"; back.alt = "";
+  packArt.append(back, element("span", profile.packs, "pack-count"));
+  const children = [head, wallet, packArt, element("h3", "Buste di carte"), element("p", "Ogni busta contiene 5 carte. Le copie oltre il massimo giocabile (3, o 1 per le Leggendarie) diventano Schegge.", "muted"), actions];
   if (lastPack) {
     const row = element("div", undefined, "cards pack-result");
     for (const result of lastPack) {

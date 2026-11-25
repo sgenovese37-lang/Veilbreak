@@ -375,5 +375,11 @@ export default {
  "Modalità Storia": "Story mode",
  "Dettaglio carta": "Card detail",
  "ATT": "ATK",
- "DIF": "DEF"
+ "DIF": "DEF",
+ "Due giocatori": "Two players",
+ "Automatica": "Automatic",
+ "Il Velo si è spezzato. Scegli il tuo Binder.": "The Veil is broken. Choose your Binder.",
+ "Impostazioni": "Settings",
+ "busta": "pack",
+ "buste": "packs"
 };

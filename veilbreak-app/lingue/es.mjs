@@ -375,5 +375,11 @@ export default {
  "Modalità Storia": "Modo Historia",
  "Dettaglio carta": "Detalle de la carta",
  "ATT": "ATQ",
- "DIF": "DEF"
+ "DIF": "DEF",
+ "Due giocatori": "Dos jugadores",
+ "Automatica": "Automática",
+ "Il Velo si è spezzato. Scegli il tuo Binder.": "El Velo se ha roto. Elige a tu Binder.",
+ "Impostazioni": "Ajustes",
+ "busta": "sobre",
+ "buste": "sobres"
 };

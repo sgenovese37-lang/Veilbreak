@@ -12,29 +12,43 @@
   <script type="module" src="./app.mjs"></script>
 </head>
 <body>
-  <header class="masthead">
-    <div class="brand">
-      <h1>VEILBREAK</h1>
-      <div class="wallet-row">
-        <button id="wallet" class="wallet" type="button" aria-live="polite" aria-label="Schegge e buste: apri il negozio"></button>
-        <button id="sound-toggle" class="small" type="button"></button>
-        <button id="music-toggle" class="small" type="button"></button>
-        <select id="lang-select" class="small lang" aria-label="Lingua"></select>
-      </div>
-    </div>
-    <nav aria-label="Sezioni">
-      <button id="match" aria-controls="table">Partita</button>
-      <button id="story-nav" aria-controls="story">Storia</button>
-      <button id="quests-nav" aria-controls="quests">Missioni</button>
-      <button id="shop-nav" aria-controls="negozio">Negozio</button>
-      <button id="library" aria-controls="catalogue">Collezione</button>
-      <button id="decks" aria-controls="deck-editor">Mazzi</button>
-      <button id="missions" aria-controls="tutorial">Tutorial</button>
-    </nav>
+  <div class="backdrop" aria-hidden="true">
+    <div class="slide" style="--img: url('assets/sfondi/home-hollow.webp'); --n: 0"></div>
+    <div class="slide" style="--img: url('assets/sfondi/home-neon.webp'); --n: 1"></div>
+    <div class="slide" style="--img: url('assets/sfondi/home-saints.webp'); --n: 2"></div>
+    <div class="slide" style="--img: url('assets/sfondi/home-undercity.webp'); --n: 3"></div>
+    <div class="fog"></div><div class="fog two"></div><div class="vignette"></div>
+  </div>
+  <canvas id="embers" aria-hidden="true"></canvas>
+  <header class="topstrip">
+    <span class="sigil" aria-hidden="true">V</span>
+    <button id="wallet" class="wallet" type="button" aria-live="polite" aria-label="Schegge e buste: apri il negozio"></button>
+    <button id="settings-open" class="icon-button" type="button" aria-label="Impostazioni"><i data-icon="gear"></i></button>
   </header>
+  <dialog id="settings-panel" aria-label="Impostazioni">
+    <div class="settings-body">
+      <h2>Impostazioni</h2>
+      <div class="settings-row"><button id="sound-toggle" type="button"></button><button id="music-toggle" type="button"></button></div>
+      <label>Lingua <select id="lang-select" class="lang" aria-label="Lingua"></select></label>
+      <button id="settings-close" class="primary" type="button">Chiudi</button>
+    </div>
+  </dialog>
+  <nav class="dock" aria-label="Sezioni">
+    <button id="match" aria-controls="table"><i data-icon="swords"></i><span>Partita</span></button>
+    <button id="story-nav" aria-controls="story"><i data-icon="book"></i><span>Storia</span></button>
+    <button id="quests-nav" aria-controls="quests"><i data-icon="scroll"></i><span>Missioni</span></button>
+    <button id="decks" aria-controls="deck-editor"><i data-icon="layers"></i><span>Mazzi</span></button>
+    <button id="library" aria-controls="catalogue"><i data-icon="cards"></i><span>Collezione</span></button>
+    <button id="shop-nav" aria-controls="negozio"><i data-icon="chest"></i><span>Negozio</span></button>
+    <button id="missions" aria-controls="tutorial"><i data-icon="candle"></i><span>Tutorial</span></button>
+  </nav>
   <main>
-    <section id="setup" class="sheet">
-      <h2>Nuova partita</h2>
+    <section id="setup" class="home">
+      <div class="home-hero">
+        <h1 class="logo">VEILBREAK</h1>
+        <p class="tagline">Il Velo si è spezzato. Scegli il tuo Binder.</p>
+      </div>
+      <h2 class="visually-hidden">Nuova partita</h2>
       <form id="settings">
         <label>Modalità <select name="mode"><option value="cpu">Contro il computer</option><option value="local">Due giocatori sullo stesso dispositivo</option></select></label>
         <label id="difficulty">Difficoltà <select name="level"><option value="Facile">Facile</option><option value="Normale" selected>Normale</option><option value="Difficile">Difficile</option></select></label>
