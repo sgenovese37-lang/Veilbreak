@@ -34,7 +34,7 @@ Riepilogo per riprendere il lavoro in una nuova sessione.
 2. Chi gioca per secondo: una carta in più e il Frammento di Essenza (carta id 100, illustrazione ChatGPT).
 3. Mazzi da 30 carte con 3 copie (1 per le Leggendarie), nuovi mazzi predefiniti e nuovo potere di Elena Voss (vedi `BILANCIAMENTO.md`).
 4. I 4 eroi della Storia si sbloccano vincendo i capitoli 2 (Dex Halogen), 4 (Orfeo Grimm), 6 (Nonna Ines) e 7 (Suor Ottavia).
-5. Musica generata dal gioco (`music.mjs`): un tema per il menu e uno per ogni ambientazione, con pulsante «Musica».
+5. Musica generata dal gioco (`music.mjs`), rifatta il 25 novembre in stile horror cinematografico (archi, cori, campane, riverbero): un tema per il menu e uno per ogni ambientazione, con pulsante «Musica». Per ascoltarla fuori dal gioco: `node tools/registra_musica.cjs <cartella>`.
 6. Lingue: italiano, inglese, tedesco, spagnolo (`i18n.mjs`, file in `lingue/`). La lingua parte da quella del telefono e si cambia dal menu in alto. Le frasi italiane fanno da chiave; per aggiungere frasi vedi `tools/crea_lingue.mjs` e il test `tests/i18n.test.mjs`.
 
 ## Prossimi passi

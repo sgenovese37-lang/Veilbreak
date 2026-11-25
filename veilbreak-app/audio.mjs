@@ -90,7 +90,7 @@ export function sound(name) {
       osc.type = type;
       osc.frequency.setValueAtTime(from, at);
       osc.frequency.exponentialRampToValueAtTime(Math.max(20, to), at + length);
-      gain.gain.setValueAtTime(0.0001, at);
+      gain.gain.value = 0.0001; gain.gain.setValueAtTime(0.0001, at);
       gain.gain.exponentialRampToValueAtTime(volume, at + 0.012);
       gain.gain.exponentialRampToValueAtTime(0.0001, at + length);
       osc.connect(gain).connect(master);
@@ -128,7 +128,7 @@ function voice(ctx, at, freq, length, t, volume, glide = 1) {
     lfo.frequency.value = t.vibrato; depth.gain.value = freq * 0.02;
     lfo.connect(depth).connect(osc.frequency); lfo.start(at); lfo.stop(at + length + 0.05);
   }
-  gain.gain.setValueAtTime(0.0001, at);
+  gain.gain.value = 0.0001; gain.gain.setValueAtTime(0.0001, at);
   gain.gain.exponentialRampToValueAtTime(volume, at + 0.015);
   gain.gain.exponentialRampToValueAtTime(0.0001, at + length);
   osc.connect(gain).connect(master);
@@ -137,7 +137,7 @@ function voice(ctx, at, freq, length, t, volume, glide = 1) {
     const o2 = ctx.createOscillator(); const g2 = ctx.createGain();
     o2.type = "sine"; o2.frequency.setValueAtTime(freq * t.overtone, at);
     o2.frequency.exponentialRampToValueAtTime(Math.max(30, freq * t.overtone * glide), at + length);
-    g2.gain.setValueAtTime(0.0001, at); g2.gain.exponentialRampToValueAtTime(volume * 0.35, at + 0.01);
+    g2.gain.value = 0.0001; g2.gain.setValueAtTime(0.0001, at); g2.gain.exponentialRampToValueAtTime(volume * 0.35, at + 0.01);
     g2.gain.exponentialRampToValueAtTime(0.0001, at + length * 0.7);
     o2.connect(g2).connect(master); o2.start(at); o2.stop(at + length);
   }
@@ -185,7 +185,7 @@ export function startAmbience(theme) {
     const ctx = audio();
     if (!ctx) return;
     const bus = ctx.createGain();
-    bus.gain.setValueAtTime(0.0001, ctx.currentTime);
+    bus.gain.value = 0.0001; bus.gain.setValueAtTime(0.0001, ctx.currentTime);
     bus.gain.exponentialRampToValueAtTime(0.5, ctx.currentTime + 2);
     bus.connect(master);
     const nodes = [];
@@ -205,7 +205,7 @@ export function startAmbience(theme) {
     const ping = (freq, length, vol, type = "sine") => {
       const at = ctx.currentTime; const o = ctx.createOscillator(); const g = ctx.createGain();
       o.type = type; o.frequency.value = freq;
-      g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(vol, at + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, at + length);
+      g.gain.value = 0.0001; g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(vol, at + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, at + length);
       o.connect(g).connect(bus); o.start(at); o.stop(at + length + 0.05);
     };
     let tick = null;
@@ -214,7 +214,7 @@ export function startAmbience(theme) {
       tick = () => { ping(220, 4, 0.05); ping(220 * 2.76, 2.5, 0.015); };
     } else if (theme === "neon") {       // stazione elettrica: ronzio e pioggia
       drone(60, "sawtooth", 0.03); loopNoise(0.05, "highpass", 3000);
-      tick = () => { if (Math.random() < 0.6) ping(1200 + Math.random() * 800, 0.08, 0.02, "square"); };
+      tick = () => { if (Math.random() < 0.5) ping(2400 + Math.random() * 1600, 0.05, 0.006); };   // scintille elettriche lontane
     } else if (theme === "saints") {     // cappella: accordo da coro che respira
       drone(196, "triangle", 0.025); drone(246.9, "triangle", 0.02); drone(293.7, "triangle", 0.015);
       tick = () => ping(587.3, 3, 0.02, "triangle");
