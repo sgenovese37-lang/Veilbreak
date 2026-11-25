@@ -104,14 +104,74 @@ function pickRarity(random) {
   return "Common";
 }
 
+// Offerte del Negozio. Le buste normali si conservano e si aprono quando vuoi; le speciali si aprono subito.
+// filter: quali carte possono uscire; legendary: l'ultima carta è sicuramente Leggendaria.
+export const packOffers = [
+  { id: "busta", name: "Busta del Velo", text: "5 carte di tutte le fazioni.", price: packPrice, count: 1 },
+  { id: "scorta", name: "Scorta di mezzanotte", text: "5 buste del Velo con uno sconto.", price: 450, count: 5 },
+  { id: "archivi", name: "Busta degli Archivi", text: "5 carte del secondo set «Gli Archivi del Velo».", price: 130, special: true, filter: card => card.set === 2 },
+  ...[...new Set(cards.map(c => c.faction))].map(faction => ({
+    id: `fazione-${faction}`, name: `Busta: ${faction}`, text: "5 carte di una sola fazione.", price: 150, special: true, faction,
+    filter: card => card.faction === faction,
+  })),
+  { id: "leggenda", name: "Reliquiario Leggendario", text: "5 carte, l’ultima è sicuramente Leggendaria.", price: 400, special: true, legendary: true },
+];
+
+// Dorsi delle carte: si comprano con le Schegge e si scelgono nel Negozio.
+export const cardBacks = [
+  { id: "velo", name: "Dorso del Velo", price: 0 },
+  { id: "corte", name: "Dorso della Corte", price: 300 },
+  { id: "neon", name: "Dorso al Neon", price: 300 },
+  { id: "santi", name: "Dorso dei Santi", price: 300 },
+  { id: "sottocitta", name: "Dorso della Sottocittà", price: 300 },
+  { id: "sangue", name: "Dorso Insanguinato", price: 600 },
+  { id: "ossa", name: "Dorso d’Ossa", price: 800 },
+];
+export const ownedBacks = (profile = loadProfile()) => ["velo", ...(profile.backs ?? [])];
+export const currentBack = (profile = loadProfile()) => (ownedBacks(profile).includes(profile.back) ? profile.back : "velo");
+export function buyBack(id, profile = loadProfile()) {
+  const back = cardBacks.find(b => b.id === id);
+  if (!back || ownedBacks(profile).includes(id) || profile.shards < back.price) return false;
+  profile.shards -= back.price;
+  profile.backs = [...(profile.backs ?? []), id];
+  profile.back = id;
+  note(profile, t("Dorso sbloccato · {name}", { name: t(back.name) }));
+  saveProfile(profile);
+  return true;
+}
+export function setBack(id, profile = loadProfile()) {
+  if (!ownedBacks(profile).includes(id)) return false;
+  profile.back = id;
+  saveProfile(profile);
+  return true;
+}
+
+// Compra un'offerta: le buste normali vanno nella scorta, le speciali si aprono subito (restituisce le carte).
+export function buyOffer(id, random = Math.random, profile = loadProfile()) {
+  const offer = packOffers.find(o => o.id === id);
+  if (!offer || profile.shards < offer.price) return null;
+  profile.shards -= offer.price;
+  if (!offer.special) {
+    profile.packs += offer.count;
+    saveProfile(profile);
+    return { stored: offer.count };
+  }
+  return { cards: rollPack(random, profile, offer), offer: offer.id };
+}
+
 // Apre una busta: 5 carte. Le copie oltre il massimo giocabile diventano Schegge.
 export function openPack(random = Math.random, profile = loadProfile()) {
   if (profile.packs < 1) return null;
   profile.packs--;
+  return rollPack(random, profile, {});
+}
+
+function rollPack(random, profile, { filter = () => true, legendary = false } = {}) {
   const results = [];
   for (let i = 0; i < packSize; i++) {
-    const rarity = pickRarity(random);
-    const pool = cards.filter(card => card.rarity === rarity);
+    let rarity = legendary && i === packSize - 1 ? "Legendary" : pickRarity(random);
+    let pool = cards.filter(card => card.rarity === rarity && filter(card));
+    if (!pool.length) pool = cards.filter(filter);
     const card = pool[Math.floor(random() * pool.length)] ?? cards[0];
     if (owned(card.id, profile) < copyLimit(card)) {
       profile.extra[card.id] = (profile.extra[card.id] ?? 0) + 1;

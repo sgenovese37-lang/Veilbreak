@@ -12,6 +12,7 @@ import { illustrationFor as catalogueArt } from "./illustrations.mjs";
 import { runComputer } from "./ai.mjs";
 import {
   loadProfile, owned, buyPack, openPack, packPrice, collectionProgress, rewardMatch, titles,
+  packOffers, buyOffer, cardBacks, ownedBacks, currentBack, buyBack, setBack,
 } from "./profile.mjs";
 import { currentMissions, recordEvent, claimMission } from "./missions.mjs";
 import { chapters, storyTitle, storyProgress, isUnlocked, completeChapter, finalReward, unlockedHeroes } from "./story.mjs";
@@ -21,6 +22,8 @@ import { playMusic, musicEnabled, setMusic } from "./music.mjs";
 import { t, languages, currentLang, setLang, translatePage } from "./i18n.mjs";
 import { icon, mountIcons } from "./icons.mjs";
 import { voiceOf } from "./voci.mjs";
+import { playIntro } from "./intro.mjs";
+import { suggestDeck, analyzeDeck, curveLabels } from "./advisor.mjs";
 import { scenes, cast } from "./scene.mjs";
 import { startEmbers } from "./embers.mjs";
 
@@ -97,10 +100,17 @@ function updateWallet() {
   const toggle = get("sound-toggle");
   toggle.textContent = t(soundEnabled() ? "Suoni: sì" : "Suoni: no");
   toggle.setAttribute("aria-pressed", soundEnabled());
+  const introButton = get("intro-toggle");
+  introButton.textContent = t(introEnabled() ? "Introduzione: sì" : "Introduzione: no");
+  introButton.setAttribute("aria-pressed", introEnabled());
   const music = get("music-toggle");
   music.textContent = t(musicEnabled() ? "Musica: sì" : "Musica: no");
   music.setAttribute("aria-pressed", musicEnabled());
 }
+// Introduzione animata all'avvio (si può disattivare dalle impostazioni; le prove automatiche la saltano).
+const introKey = "veilbreak-intro";
+const introEnabled = () => { try { return localStorage.getItem(introKey) !== "off"; } catch { return true; } };
+get("intro-toggle").onclick = () => { try { localStorage.setItem(introKey, introEnabled() ? "off" : "on"); } catch { /* solo per ora */ } updateWallet(); };
 const musicTheme = () => game && document.body.classList.contains("in-match") ? matchEnv : "menu";
 get("music-toggle").onclick = () => { setMusic(!musicEnabled(), musicTheme()); updateWallet(); };
 get("wallet").onclick = () => showSection("shop-nav");
@@ -457,7 +467,30 @@ function renderDeckEditor(message = "", focus) {
       list.append(row);
     }
   }
-  panel.replaceChildren(header, factionBox, controls, status, list);
+  // Consigliere: crea un mazzo con le carte possedute e analizza quello in costruzione
+  const advisor = element("section", undefined, "advisor");
+  const advHead = element("div", undefined, "advisor-head");
+  advHead.append(icon("candle"), element("strong", "Consigliere dei mazzi"));
+  const make = button("✦ Crea mazzo per me", () => {
+    draft = suggestDeck(editing, draftAlly, id => owned(id));
+    sound("reward");
+    renderDeckEditor(t("Mazzo creato con le carte che possiedi ({n} carte). Controllalo e salvalo.", { n: draft.length }), "make-deck");
+  }, "primary advisor-make");
+  make.id = "make-deck";
+  const report = analyzeDeck(draft);
+  const bars = element("div", undefined, "curve");
+  const peak = Math.max(1, ...report.curve);
+  report.curve.forEach((n, i) => {
+    const col = element("div", undefined, "curve-col");
+    const bar = element("span", undefined, "curve-bar"); bar.style.height = `${Math.round((n / peak) * 100)}%`;
+    col.append(element("b", n), bar, element("small", curveLabels[i]));
+    bars.append(col);
+  });
+  const facts = element("p", t("{c} creature · {s} altre carte · costo medio {a}", { c: report.creatures, s: report.spells, a: report.average.toFixed(1) }), "muted");
+  const tips = element("ul", undefined, "advisor-tips");
+  for (const tip of report.tips) tips.append(element("li", tip));
+  advisor.append(advHead, element("small", "Curva di Essenza del mazzo", "advisor-label"), bars, facts, tips, make);
+  panel.replaceChildren(header, factionBox, advisor, controls, status, list);
   if (focus === "faction") select.focus();
   else if (focus === "save") save.focus();
   else if (focus) (get(focus)?.disabled ? get(focus)?.parentElement?.querySelector("button:not(:disabled)") : get(focus))?.focus();
@@ -857,7 +890,11 @@ function keywordNotes(c) {
 // Grafica provvisoria delle carte senza illustrazione (secondo set): sfondo della fazione.
 // Grafica provvisoria: il dorso delle carte (si capisce subito che l'illustrazione deve ancora arrivare).
 const placeholderArt = () => "assets/originali-chatgpt/dorso-carte.webp";
-const cardBackSrc = () => "assets/ornamenti/dorso.webp";
+// Dorso delle carte scelto nel Negozio (piccolo per il tavolo, grande per le buste).
+const backSrc = (id, big = false) => `assets/dorsi/${id}${big ? "-grande" : ""}.webp`;
+const cardBackSrc = () => backSrc(currentBack());
+function applyCardBack() { document.documentElement.style.setProperty("--card-back", `url("${cardBackSrc()}")`); }
+applyCardBack();
 const crestOf = c => { const img = element("img", undefined, "ph-crest"); img.src = `assets/eroi/${heroFor(c.faction)?.theme ?? "hollow"}.webp`; img.alt = ""; return img; };
 
 // Numero di danno o cura che compare sopra un elemento appena aggiornato.
@@ -1497,6 +1534,7 @@ function renderQuests(message = "") {
 }
 
 // ---------- Buste ----------
+let shopTab = "buste";
 function drawShop() {
   const shop = get("shop");
   const profile = loadProfile();
@@ -1510,32 +1548,81 @@ function drawShop() {
   packsBox.append(icon("pack", "ico coin-icon pack"), element("strong", profile.packs), element("span", profile.packs === 1 ? "busta da aprire" : "buste da aprire"));
   wallet.append(coins, packsBox,
     element("p", "Le Schegge sono le monete del gioco: le guadagni vincendo le partite (15, 25 o 40 secondo la difficoltà, 5 se perdi), con le missioni, la Storia e il tutorial.", "muted"));
-  const actions = element("div", undefined, "actions");
-  const buy = button(t("Compra una busta · {n} Schegge", { n: packPrice }), () => {
-    if (buyPack()) { sound("reward"); lastPack = null; updateWallet(); drawShop(); }
-  });
-  buy.disabled = profile.shards < packPrice;
-  const open = button(t("Apri una busta ({n})", { n: profile.packs }), () => {
-    lastPack = openPack();
-    if (lastPack) sound("pack");
+  // schede del Negozio
+  const tabs = element("div", undefined, "seg shop-tabs");
+  for (const [id, label, ico] of [["buste", "Buste", "pack"], ["dorsi", "Dorsi delle carte", "cards"]]) {
+    const b = button(undefined, () => { shopTab = id; drawShop(); }, "seg-item");
+    b.setAttribute("aria-pressed", shopTab === id);
+    b.append(icon(ico), element("span", label));
+    tabs.append(b);
+  }
+  const children = [head, wallet, tabs];
+  const showResult = cardsWon => {
+    lastPack = cardsWon;
+    sound("pack");
     updateWallet();
     drawShop();
     get("shop").querySelector(".pack-result")?.scrollIntoView({ block: "start", behavior: "smooth" });
-  }, "primary");
-  open.disabled = profile.packs < 1;
-  actions.append(buy, open);
-  const packArt = element("div", undefined, `pack-art${profile.packs ? " ready" : ""}`);
-  packArt.setAttribute("aria-hidden", "true");
-  const back = element("img"); back.src = "assets/originali-chatgpt/dorso-carte.webp"; back.alt = "";
-  packArt.append(back, element("span", profile.packs, "pack-count"));
-  const children = [head, wallet, packArt, element("h3", "Buste di carte"), element("p", "Ogni busta contiene 5 carte. Le copie oltre il massimo giocabile (3, o 1 per le Leggendarie) diventano Schegge.", "muted"), actions];
-  if (lastPack) {
-    const row = element("div", undefined, "cards pack-result");
-    for (const result of lastPack) {
-      const c = byId.get(result.id);
-      row.append(drawCard(c, { meta: true, art: "full", badge: result.newCopy ? "Nuova copia!" : t("Doppione · +{n} Schegge", { n: result.shards }), action: () => showCard(c) }));
+  };
+  if (shopTab === "buste") {
+    // scorta di buste da aprire
+    const packArt = element("div", undefined, `pack-art${profile.packs ? " ready" : ""}`);
+    packArt.setAttribute("aria-hidden", "true");
+    const back = element("img"); back.src = backSrc(currentBack(profile), true); back.alt = "";
+    packArt.append(back, element("span", profile.packs, "pack-count"));
+    const open = button(t("Apri una busta ({n})", { n: profile.packs }), () => { const r = openPack(); if (r) showResult(r); }, "primary");
+    open.disabled = profile.packs < 1;
+    children.push(packArt, open);
+    if (lastPack) {
+      const row = element("div", undefined, "cards pack-result");
+      for (const result of lastPack) {
+        const c = byId.get(result.id);
+        row.append(drawCard(c, { meta: true, art: "full", badge: result.newCopy ? "Nuova copia!" : t("Doppione · +{n} Schegge", { n: result.shards }), action: () => showCard(c) }));
+      }
+      children.push(row);
     }
-    children.push(row);
+    children.push(element("h3", "Buste di carte"), element("p", "Ogni busta contiene 5 carte. Le copie oltre il massimo giocabile (3, o 1 per le Leggendarie) diventano Schegge.", "muted"));
+    const grid = element("div", undefined, "offer-grid");
+    for (const offer of packOffers) {
+      const tile = element("div", undefined, `offer${offer.legendary ? " legendary" : ""}${offer.faction ? " faction" : ""}`);
+      if (offer.faction) tile.dataset.faction = offer.faction;
+      const art = element("img", undefined, "offer-art");
+      art.src = offer.faction ? backSrc({ "Corte di Hollow": "corte", "Patto Neon": "neon", "Senza Santi": "santi", "Sottocittà": "sottocitta" }[offer.faction] ?? "velo")
+        : offer.legendary ? backSrc("santi") : offer.id === "archivi" ? backSrc("ossa") : backSrc(currentBack(profile));
+      art.alt = "";
+      const name = offer.faction ? `${t("Busta")}: ${offer.faction}` : t(offer.name);
+      const buy = button(t("{n} Schegge", { n: offer.price }), () => {
+        const r = buyOffer(offer.id);
+        if (!r) return;
+        if (r.cards) showResult(r.cards);
+        else { sound("reward"); updateWallet(); drawShop(); }
+      }, "primary");
+      buy.disabled = profile.shards < offer.price;
+      buy.setAttribute("aria-label", t("Compra {name} per {n} Schegge", { name, n: offer.price }));
+      if (offer.count > 1) tile.append(element("span", `×${offer.count}`, "offer-count"));
+      tile.append(art, element("strong", name), element("small", offer.text), element("small", offer.special ? "Si apre subito" : "Va nella tua scorta", "offer-note"), buy);
+      grid.append(tile);
+    }
+    children.push(grid);
+  } else {
+    children.push(element("p", "I dorsi cambiano il retro delle tue carte in partita e delle buste nel Negozio.", "muted"));
+    const grid = element("div", undefined, "offer-grid backs");
+    const mine = ownedBacks(profile);
+    for (const back of cardBacks) {
+      const tile = element("div", undefined, `offer back-tile${currentBack(profile) === back.id ? " equipped" : ""}`);
+      const art = element("img", undefined, "offer-art"); art.src = backSrc(back.id, true); art.alt = "";
+      tile.append(art, element("strong", back.name));
+      let action;
+      if (currentBack(profile) === back.id) action = element("span", "In uso", "offer-note equipped-note");
+      else if (mine.includes(back.id)) action = button("Usa", () => { setBack(back.id); applyCardBack(); drawShop(); });
+      else {
+        action = button(t("{n} Schegge", { n: back.price }), () => { if (buyBack(back.id)) { sound("reward"); applyCardBack(); updateWallet(); drawShop(); } }, "primary");
+        action.disabled = profile.shards < back.price;
+      }
+      tile.append(action);
+      grid.append(tile);
+    }
+    children.push(grid);
   }
   shop.replaceChildren(...children);
 }
@@ -1545,3 +1632,4 @@ if (!window.Capacitor && "serviceWorker" in navigator && location.protocol.start
   navigator.serviceWorker.register("./sw.js").catch(() => {});
 }
 showSection("match");
+if (introEnabled() && !navigator.webdriver) playIntro({ onEnter: () => playMusic(musicTheme()) });

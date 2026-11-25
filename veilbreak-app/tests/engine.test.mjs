@@ -339,3 +339,14 @@ test("mazzi con al massimo due fazioni: la principale e una alleata", () => {
   const all = [...g.players[0].deck, ...g.players[0].hand];
   assert.ok(all.includes(17) && all.includes(1), "il mazzo misto entra in partita");
 });
+
+test("il consigliere crea mazzi validi con le carte possedute", async () => {
+  const { suggestDeck, analyzeDeck } = await import("../advisor.mjs");
+  for (const faction of factions) {
+    const deck = suggestDeck(faction, null, id => (cards.find(c => c.id === id).rarity === "Legendary" ? 1 : 2));
+    assert.ok(validDeck(faction, deck), faction);
+    assert.equal(analyzeDeck(deck).curve.reduce((a, b) => a + b, 0), 30);
+  }
+  const mixed = suggestDeck("Corte di Hollow", "Patto Neon", () => 3);
+  assert.ok(validDeck("Corte di Hollow", { cards: mixed, ally: "Patto Neon" }));
+});

@@ -1294,3 +1294,90 @@ body.in-match { background: var(--ink); }
 .cast-preview .cast-voice { max-width: 18rem; margin-top: .5rem; font: italic 500 1rem/1.35 "EB Garamond", serif; color: #f3e3c3; text-align: center; text-shadow: 0 2px 6px #000; quotes: "«" "»"; }
 .cast-preview img.back { width: min(60vw, 15rem); border-radius: .8rem; }
 .scene-title { margin-top: 2.6rem; text-align: center; padding: 0 .5rem; }
+
+/* ---------- Introduzione animata ---------- */
+.intro { position: fixed; inset: 0; z-index: 200; overflow: hidden; background: #000; display: grid; place-items: center; cursor: pointer; }
+.intro.leaving { animation: intro-out .65s ease-in forwards; }
+@keyframes intro-out { to { opacity: 0; transform: scale(1.06); } }
+.intro-city {
+  position: absolute; inset: -6%; background: linear-gradient(180deg, #000a, #0006 40%, #000d), url("assets/sfondi/home-hollow.webp") center / cover;
+  filter: brightness(.55) saturate(.8); opacity: 0; animation: intro-city 6.2s ease-out forwards;
+}
+@keyframes intro-city { 0% { opacity: 0; transform: scale(1.18); } 30% { opacity: .9; } 55% { filter: brightness(.55) saturate(.8); } 62% { filter: brightness(.25) saturate(.5); } 100% { opacity: 1; transform: scale(1.02); filter: brightness(.35) saturate(.7); } }
+.intro-lamp {
+  position: absolute; left: 62%; top: 30%; width: 40vmin; height: 40vmin; border-radius: 50%; transform: translate(-50%, -50%);
+  background: radial-gradient(circle, #ffd9a0cc, #ff9a4a44 30%, transparent 65%); mix-blend-mode: screen; opacity: 0;
+  animation: intro-lamp 3.2s steps(1, end) .6s forwards;
+}
+@keyframes intro-lamp { 0% { opacity: 1; } 18% { opacity: .2; } 26% { opacity: 1; } 40% { opacity: .1; } 46% { opacity: .9; } 70% { opacity: 1; } 76% { opacity: 0; } 100% { opacity: 0; } }
+.intro-crack { position: absolute; inset: 0; width: 100%; height: 100%; }
+.intro-crack path { fill: none; stroke: #e9dcff; stroke-width: 3; stroke-linecap: round; filter: drop-shadow(0 0 6px #b98cff) drop-shadow(0 0 18px #7a3cff); stroke-dasharray: 1200; stroke-dashoffset: 1200; animation: intro-crack 1.3s cubic-bezier(.6, 0, .4, 1) 2.4s forwards; }
+.intro-crack path.branch { stroke-width: 1.8; stroke-dasharray: 200; stroke-dashoffset: 200; animation-delay: 3s; animation-duration: .7s; }
+@keyframes intro-crack { to { stroke-dashoffset: 0; } }
+.intro-flash { position: absolute; inset: 0; background: radial-gradient(circle at 50% 45%, #fff, #c9a8ff 40%, #3a1a6a 80%); opacity: 0; animation: intro-flash .9s ease-out 3.6s forwards; }
+@keyframes intro-flash { 0% { opacity: 0; } 15% { opacity: .95; } 100% { opacity: 0; } }
+.intro-logo { position: relative; text-align: center; opacity: 0; animation: intro-logo 1.6s ease-out 3.9s forwards; }
+.intro-logo h1 {
+  font: 900 clamp(2.6rem, 13vw, 5rem)/1 "Cinzel", serif; letter-spacing: .14em; margin: 0;
+  background: linear-gradient(180deg, #fff3d6 0%, #f3c27e 38%, #a2602c 56%, #ffd9a0 74%, #8a4a1f 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 0 1.4rem #ff4a2a88) drop-shadow(0 0 3rem #7a3cff66);
+}
+.intro-logo p { margin-top: .8rem; font: italic 500 1.15rem "EB Garamond", serif; color: #e2d3bf; opacity: 0; animation: intro-fade .8s ease-out 5s forwards; }
+@keyframes intro-logo { 0% { opacity: 0; letter-spacing: .6em; filter: blur(8px); } 100% { opacity: 1; letter-spacing: 0; filter: none; } }
+@keyframes intro-fade { to { opacity: 1; } }
+.intro-enter {
+  position: absolute; bottom: calc(12% + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
+  padding: .8rem 1.6rem; border-radius: 99rem; font: 700 1rem var(--display); letter-spacing: .14em; text-transform: uppercase;
+  color: #fff4e6; background: linear-gradient(180deg, #e04a32, #6e1018); box-shadow: inset 0 0 0 1px #ffb38a, 0 0 1.6rem #ff4a3d88;
+  opacity: 0; pointer-events: none; transition: opacity .5s;
+}
+.intro.ready .intro-enter { opacity: 1; pointer-events: auto; animation: cta-pulse 2.2s ease-in-out infinite; }
+/* saltata con un tocco: tutto subito nello stato finale */
+.intro.skipped .intro-city { animation: none; opacity: 1; transform: none; filter: brightness(.35) saturate(.7); }
+.intro.skipped .intro-lamp, .intro.skipped .intro-flash { animation: none; opacity: 0; }
+.intro.skipped .intro-crack path { animation: none; stroke-dashoffset: 0; }
+.intro.skipped .intro-logo, .intro.skipped .intro-logo p { animation: none; opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .intro * { animation-duration: .01s !important; animation-delay: 0s !important; } }
+body.intro-on .backdrop, body.intro-on #embers { visibility: hidden; }
+.intro-city, .intro-lamp, .intro-crack, .intro-flash, .intro-logo { pointer-events: none; }
+.intro-enter { z-index: 3; }
+.intro-crack { animation: intro-crack-dim 1s ease-out 4.2s forwards; }
+@keyframes intro-crack-dim { to { opacity: .28; } }
+.intro.skipped .intro-crack { animation: none; opacity: .28; }
+.intro-logo { z-index: 2; padding: 1rem 0; background: radial-gradient(ellipse 60% 55% at 50% 50%, #000a, transparent 75%); }
+.intro-enter { white-space: nowrap; }
+
+/* ---------- Negozio ---------- */
+.card-backs i { background-image: var(--card-back, url("assets/ornamenti/dorso.webp")); }
+.shop-tabs { margin: .6rem 0; }
+.shop .pack-art { margin: .4rem auto .6rem; }
+.offer-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; margin-top: .5rem; }
+.offer {
+  position: relative; display: grid; justify-items: center; gap: .3rem; padding: .7rem .55rem .65rem; text-align: center;
+  border-radius: 1rem; background: linear-gradient(180deg, #1d1520cc, #0b080ee6); box-shadow: inset 0 0 0 1px #f0c27b33, 0 .5rem 1.2rem #000a;
+}
+.offer-art { width: 4.6rem; aspect-ratio: 2 / 3; object-fit: cover; border-radius: .5rem; box-shadow: 0 0 0 1px #f0c27b66, 0 .5rem 1rem #000; transform: rotate(-4deg); }
+.offer.legendary { box-shadow: inset 0 0 0 1px #ffcf78, 0 0 1.4rem #ffcf7855; }
+.offer.legendary .offer-art { box-shadow: 0 0 0 1px #ffe3a6, 0 0 1.2rem #ffcf78; }
+.offer strong { font: 700 .88rem/1.15 var(--display); color: var(--gold-hi); }
+.offer small { font-size: .74rem; line-height: 1.25; color: #d1c3b3; }
+.offer .offer-note { font-size: .66rem; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+.offer button { width: 100%; min-height: 2.5rem; font-size: .85rem; letter-spacing: .04em; }
+.offer-count { position: absolute; top: .4rem; right: .5rem; font: 800 1rem var(--display); color: #fff; background: #b3162c; padding: .1rem .45rem; border-radius: 99rem; box-shadow: 0 0 .6rem #ff4a3d88; }
+.back-tile .offer-art { width: 5.4rem; transform: none; }
+.back-tile.equipped { box-shadow: inset 0 0 0 2px #7fd4ff, 0 0 1.2rem #4fb8ff55; }
+.equipped-note { color: #9fdcff !important; font-weight: 700; }
+
+/* ---------- Consigliere dei mazzi ---------- */
+.advisor { display: grid; gap: .45rem; margin: 0 0 .8rem; padding: .8rem; border-radius: 1rem; background: linear-gradient(180deg, #1d1428cc, #0b080ee6); box-shadow: inset 0 0 0 1px #b98cff55, 0 .5rem 1.2rem #000a; }
+.advisor-head { display: flex; align-items: center; gap: .45rem; }
+.advisor-head .ico { width: 1.3rem; height: 1.3rem; color: #d2b8ff; }
+.advisor-head strong { font: 700 .95rem var(--display); color: #e6d7ff; letter-spacing: .04em; }
+.advisor-label { font: 700 .66rem var(--display); letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+.curve { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .5rem; height: 6rem; align-items: end; }
+.curve-col { display: grid; grid-template-rows: auto 1fr auto; justify-items: center; height: 100%; gap: .15rem; }
+.curve-col b { font: 800 .9rem var(--display); color: #e6f0ff; }
+.curve-bar { align-self: end; width: 70%; min-height: 3px; border-radius: .35rem .35rem 0 0; background: linear-gradient(180deg, #9cc6ff, #2f5fb7); box-shadow: 0 0 .6rem #4f8fff66; }
+.curve-col small { font-size: .7rem; color: var(--muted); }
+.advisor-tips { margin: 0; padding-left: 1.1rem; font-size: .85rem; color: #d8ccbf; }
+.advisor-make { min-height: 2.8rem; }
