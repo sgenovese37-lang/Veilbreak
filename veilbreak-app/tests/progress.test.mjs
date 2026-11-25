@@ -1,6 +1,7 @@
 import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { cards } from "../cards.mjs";
+import { endTurn } from "../game.mjs";
 import {
   loadProfile, resetProfileForTests, owned, openPack, buyPack, packPrice, rewardMatch, collectionProgress, startingCopies,
 } from "../profile.mjs";
@@ -78,9 +79,9 @@ test("la Storia si sblocca in ordine e dà il premio finale una volta", () => {
 });
 
 test("i punti vita della Storia valgono anche per le cure", () => {
-  const g = createGame(["Senza Santi", "Corte di Hollow"], seeded(4), [], { lives: [30, 40] });
-  assert.equal(g.players[1].life, 40);
-  assert.equal(g.players[1].maxLife, 40);
+  const g = createGame(["Senza Santi", "Corte di Hollow"], seeded(4), [], { lives: [25, 33] });
+  assert.equal(g.players[1].life, 33);
+  assert.equal(g.players[1].maxLife, 33);
 });
 
 test("le ricompense di partita dipendono dalla difficoltà", () => {
@@ -89,14 +90,16 @@ test("le ricompense di partita dipendono dalla difficoltà", () => {
   assert.equal(loadProfile().stats.played, 2);
 });
 
-test("il nuovo potere della Corte dà +1/+1 permanente", () => {
-  assert.equal(heroes["Corte di Hollow"].power.buff, 1);
+test("il potere della Corte dà +1 Attacco permanente", () => {
+  assert.equal(heroes["Corte di Hollow"].power.atk, 1);
   const g = createGame(["Corte di Hollow", "Patto Neon"], seeded(2));
   mulligan(g, []); mulligan(g, []);
   g.players[0].board.push({ uid: 77, card: 8, damage: 0, weakened: 0, powerAttack: 0, guard: [0, 0], entered: 0, attacked: false, silenced: false, borrowed: null, haste: false });
   assert.ok(useHeroPower(g, { side: 0, uid: 77 }));
   const unit = g.players[0].board.find(u => u.uid === 77);
-  assert.deepEqual([stats(g, 0, unit).attack, stats(g, 0, unit).health], [2, 2]);
+  assert.deepEqual([stats(g, 0, unit).attack, stats(g, 0, unit).health], [2, 1]);
+  endTurn(g); endTurn(g);
+  assert.equal(stats(g, 0, unit).attack, 2, "resta anche nei turni successivi");
 });
 
 test("le statistiche di partita alimentano le missioni", () => {
@@ -139,9 +142,11 @@ test("i due scontri sbilanciati restano vicini al 50% con i mazzi predefiniti", 
     }
     return aw / decided;
   };
-  for (const [a, b] of [["Corte di Hollow", "Patto Neon"], ["Corte di Hollow", "Senza Santi"]]) {
+  // Gli scontri più delicati dopo il playtest 2 (Provocazione corretta, vita 25). Con 120 partite
+  // l'incertezza è di circa ±9 punti, per questo il margine è 30–70%.
+  for (const [a, b] of [["Corte di Hollow", "Patto Neon"], ["Patto Neon", "Senza Santi"]]) {
     const value = share(a, b);
-    assert.ok(value > 0.35 && value < 0.65, `${a} contro ${b}: ${Math.round(value * 100)}%`);
+    assert.ok(value > 0.30 && value < 0.70, `${a} contro ${b}: ${Math.round(value * 100)}%`);
   }
 });
 

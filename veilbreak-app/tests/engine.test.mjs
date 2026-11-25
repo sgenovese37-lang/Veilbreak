@@ -93,7 +93,7 @@ test("i quattro eroi hanno poteri da 1 Essenza utilizzabili", () => {
   g.players[0].board.push({ uid: 77, card: 34, damage: 0, weakened: 0, powerAttack: 0, guard: [0, 0], entered: 0, attacked: false, silenced: false, borrowed: null, haste: false });
   assert.ok(canUseHeroPower(g));
   assert.ok(useHeroPower(g, { side: 0, uid: 77 }));
-  assert.equal(stats(g, 0, g.players[0].board[0]).health, 5);
+  assert.equal(stats(g, 0, g.players[0].board[0]).health, 4, "Infermiera 1/3 → +1 Difesa");
   assert.equal(g.players[0].essence, 0);
 });
 
@@ -193,7 +193,7 @@ test("gli eroi della Storia giocano con il loro potere", () => {
   const d = createGame(["Patto Neon", "Corte di Hollow"], seeded(16), [], { heroes: ["dex-halogen", null] });
   mulligan(d, []); mulligan(d, []);
   assert.ok(useHeroPower(d));
-  assert.equal(d.players[1].life, 29);
+  assert.equal(d.players[1].life, rules.maxLife - 1);
   const wrong = createGame(["Patto Neon", "Corte di Hollow"], seeded(17), [], { heroes: ["orfeo-grimm", null] });
   assert.equal(heroFor(wrong.players[0]).name, heroes["Patto Neon"].name, "un eroe di un'altra fazione non vale");
 });
@@ -226,7 +226,7 @@ test("Furia: attacca due volte nello stesso turno", () => {
   assert.ok(attack(g, 511, { side: 1, uid: null }));
   assert.ok(attack(g, 511, { side: 1, uid: null }));
   assert.equal(attack(g, 511, { side: 1, uid: null }), false, "non una terza volta");
-  assert.equal(g.players[1].life, 28);
+  assert.equal(g.players[1].life, rules.maxLife - 2);
 });
 
 test("Lascito: effetti quando la creatura muore", () => {
@@ -302,7 +302,7 @@ test("Trappole: Firewall Infernale e Trappola a Ganascia", () => {
   assert.ok(!g.players[0].board.some(u => u.uid === 552), "la Ganascia uccide il Gatto 1/1");
   assert.ok(attack(g, 551, { side: 1, uid: null }));
   assert.ok(!g.players[0].board.some(u => u.uid === 551), "il Firewall distrugge chi attacca l'eroe");
-  assert.equal(g.players[1].life, 30);
+  assert.equal(g.players[1].life, rules.maxLife);
 });
 
 test("Resurrezione, Santa Lucrezia, Riflesso, Leviatano e Madre della Muffa", () => {
@@ -349,4 +349,30 @@ test("il consigliere crea mazzi validi con le carte possedute", async () => {
   }
   const mixed = suggestDeck("Corte di Hollow", "Patto Neon", () => 3);
   assert.ok(validDeck("Corte di Hollow", { cards: mixed, ally: "Patto Neon" }));
+});
+
+test("Provocazione: si attaccano prima le creature con Provocazione, che però possono attaccare chiunque", () => {
+  const g = createGame(["Corte di Hollow", "Sottocittà"], seeded(8));
+  mulligan(g, []); mulligan(g, []);
+  const me = g.players[0], foe = g.players[1];
+  // 4 = creatura con Provocazione, 29 = creatura normale
+  me.board.push(unitOf(10, 29), unitOf(11, 4));
+  foe.board.push(unitOf(20, 29), unitOf(21, 4));
+  const targetsOf = uid => attackTargets(g, uid).map(t => t.uid);
+  assert.deepEqual(targetsOf(10), [21], "con una Provocazione nemica si può colpire solo lei");
+  assert.deepEqual(targetsOf(11), [21], "vale anche per chi ha Provocazione");
+  foe.board = foe.board.filter(u => u.uid !== 21);
+  assert.deepEqual(targetsOf(11).sort(), [20, null].sort(), "senza Provocazione nemica si attacca chiunque, eroe compreso");
+});
+
+test("la mano ha un limite: la carta pescata in più va persa", () => {
+  const g = createGame(["Corte di Hollow", "Sottocittà"], seeded(9));
+  mulligan(g, []); mulligan(g, []);
+  const p = g.players[1];
+  while (p.hand.length < rules.handLimit) p.hand.push(29);
+  const deckBefore = p.deck.length;
+  endTurn(g);
+  assert.equal(p.hand.length, rules.handLimit);
+  assert.equal(p.deck.length, deckBefore - 1);
+  assert.equal(p.burned, 1);
 });

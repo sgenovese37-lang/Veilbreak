@@ -50,6 +50,10 @@ Riepilogo per riprendere il lavoro in una nuova sessione.
 - Introduzione animata (`intro.mjs`), Negozio con offerte e 7 dorsi (`assets/dorsi/`), consigliere dei mazzi (`advisor.mjs`).
 - Nuovi suoni di attacco, ambientazioni più ricche, menu più grandi, risparmio energetico (anche automatico sotto il 20% di batteria).
 
+## Playtest 2 (25 novembre)
+- Provocazione corretta, IA che non vede più i segreti nemici, vita 25, poteri e mazzi riequilibrati (vedi `BILANCIAMENTO.md`).
+- In partita: contatori di mazzo e mano sempre visibili, avvisi al centro per mazzo finito, danni da mazzo vuoto e carta persa per mano piena; battute delle carte più grandi.
+
 ## Prossimi passi
 - Correzioni dalle partite dell'utente.
 - Vantaggio di chi gioca per primo ancora intorno al 60% contro il computer.

@@ -6,7 +6,7 @@ export const tutorialReward = { perMission: 20, final: 100 };
 const missions = [
   {
     title: "Benvenuto a VEILBREAK",
-    lesson: "Tu e l’altro Binder iniziate con 30 punti vita. Vinci portando l’eroe avversario a 0.",
+    lesson: "Tu e l’altro Binder iniziate con 25 punti vita. Vinci portando l’eroe avversario a 0.",
     prompt: "L’eroe nemico ha 2 punti vita. Quale azione ti fa vincere adesso?",
     choices: ["Pescare 2 carte.", "Infliggere 2 danni all’eroe nemico.", "Curare il tuo eroe di 2."],
     answer: 1,
@@ -27,7 +27,7 @@ const missions = [
   },
   {
     title: "Le creature",
-    lesson: "Una creatura con Rapidità può attaccare nel turno in cui entra in gioco. Provocazione protegge il suo eroe dagli attacchi. Puoi avere al massimo 7 creature in campo.",
+    lesson: "Una creatura con Rapidità può attaccare nel turno in cui entra in gioco. Finché c’è una creatura con Provocazione, gli avversari possono attaccare solo lei: né le altre creature né l’eroe. Lei invece può attaccare chiunque. Puoi avere al massimo 7 creature in campo.",
     prompt: "Giochi Spettro dell’Ufficio. L’avversario ha una Guardia del Turno di Notte con Provocazione. Chi puoi attaccare subito?",
     choices: ["La Guardia del Turno di Notte.", "L’eroe nemico.", "Nessuno."],
     answer: 0,

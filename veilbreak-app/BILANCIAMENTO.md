@@ -84,3 +84,30 @@ Le 30 carte di «Gli Archivi del Velo» (61-90) entrano in tutte le fazioni, con
 | Sottocittà | 49,6% |
 
 Lo scontro più sbilanciato è Patto Neon contro Sottocittà (30-41% per il Patto). Il computer Difficile ora valuta anche Velato, Furia e Lascito e vince circa il 61% contro il Normale.
+
+## Playtest 2 (25 novembre): Provocazione, durata delle partite, limite della mano
+
+Problemi segnalati: la Provocazione non obbligava ad attaccarla per prima (si potevano colpire le altre creature) e una partita è durata 24 turni.
+
+- **Provocazione corretta**: finché c'è una creatura nemica con Provocazione (non Velata), si possono attaccare solo le creature con Provocazione. Il Cecchino sul Tetto può comunque colpire l'eroe. Le creature con Provocazione attaccano chiunque.
+- **Difetto del computer**: l'IA Difficile vedeva i segreti nemici. Con un Firewall Infernale avversario non attaccava mai l'eroe e la partita andava avanti fino all'esaurimento del mazzo. Ora i segreti nemici sono nascosti anche al computer.
+- **Computer più aggressivo**: la vita nemica pesa di più nella valutazione (1,8 e 2,5 sotto i 12 PV).
+- **Vita iniziale 25** (era 30); i capitoli della Storia sono riproporzionati.
+- **Poteri degli eroi**:
+  - Ada Vesper: +1 Attacco permanente (era +1/+1);
+  - Elena Voss: +1 Difesa permanente (era +2);
+  - Iona Volt: 2 danni a una creatura nemica (era 1).
+- **Mazzi predefiniti**:
+  - Patto Neon: meno Protocollo Blackout e Commutatore, più Luce Rossa, Corriere e Spirito nel Cavo;
+  - Sottocittà: meno segreti;
+  - Senza Santi: due Provocazioni in meno.
+
+Risultati (Difficile contro Difficile, 50 partite per coppia su tre serie di semi nuove):
+
+| | Prima | Dopo |
+|---|---|---|
+| Turni per giocatore (mediana) | 13 | 10 |
+| Turni per giocatore (90% delle partite entro) | 23 | 17 |
+| Partite finite all'esaurimento del mazzo | 35% | 11–12% |
+| Vittorie per fazione | — | 40–55% |
+| Vittorie di chi gioca per primo | — | circa 58% |

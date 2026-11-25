@@ -9,10 +9,12 @@ export const heroes = {
     power: {
       // Versione precedente (playtest 1): +1 Difesa fino all'inizio del prossimo turno, con
       // { target: "ally", defense: 1 }. Cambiata perché la Corte vinceva solo il 30% delle partite.
+      // Playtest 2 (novembre): era +1/+1 permanente; con la Provocazione corretta e il computer più
+      // aggressivo la Corte vinceva il 60% delle partite.
       name: "Decreto di Investitura",
-      text: "Una creatura alleata ottiene +1/+1 in modo permanente.",
+      text: "Una creatura alleata ottiene +1 Attacco in modo permanente.",
       target: "ally",
-      buff: 1,
+      atk: 1,
     },
   },
   "Patto Neon": {
@@ -21,10 +23,11 @@ export const heroes = {
     table: "Centrale delle Frequenze",
     theme: "neon",
     power: {
+      // Playtest 2: era 1 danno; senza il difetto del Firewall Infernale il Patto Neon vinceva il 17%.
       name: "Scarica Mirata",
-      text: "Infliggi 1 danno a una creatura nemica.",
+      text: "Infliggi 2 danni a una creatura nemica.",
       target: "enemy",
-      damage: 1,
+      damage: 2,
     },
   },
   "Senza Santi": {
@@ -35,10 +38,11 @@ export const heroes = {
     power: {
       // Versione precedente: «Cura 2 punti vita al tuo eroe» ({ heal: 2 }). Con i mazzi da 30 carte
       // le partite non arrivano più all'esaurimento del mazzo e i Senza Santi vincevano meno del 20%.
+      // Playtest 2: era +2 Difesa; con la Provocazione corretta i Senza Santi diventavano un muro (85% contro il Neon).
       name: "Liturgia del Sangue",
-      text: "Una creatura alleata ottiene +2 Difesa in modo permanente.",
+      text: "Una creatura alleata ottiene +1 Difesa in modo permanente.",
       target: "ally",
-      health: 2,
+      health: 1,
     },
   },
   "Sottocittà": {

@@ -855,18 +855,18 @@ function symbolBadge(kind, extra) {
 // Fumetto con la battuta della carta appena entrata in gioco.
 let lastSpeech = 0;
 function speak(anchor, line, side) {
-  if (!line || !anchor || Date.now() - lastSpeech < 700) return;
+  if (!line || !anchor || Date.now() - lastSpeech < 900) return;
   lastSpeech = Date.now();
   const show = () => {
     const rect = anchor.getBoundingClientRect();
     if (!rect.width) return;
     const bubble = element("div", line, `speech ${side === 0 || side === undefined ? "mine" : "enemy"}`);
     bubble.setAttribute("aria-live", "polite");
-    const x = Math.min(window.innerWidth - 110, Math.max(110, rect.left + rect.width / 2));
+    const x = Math.min(window.innerWidth - 150, Math.max(150, rect.left + rect.width / 2));
     Object.assign(bubble.style, { left: `${x}px`, top: `${rect.top - 8}px` });
     document.body.append(bubble);
-    setTimeout(() => bubble.classList.add("leaving"), 2300);
-    setTimeout(() => bubble.remove(), 2700);
+    setTimeout(() => bubble.classList.add("leaving"), 3400);
+    setTimeout(() => bubble.remove(), 3800);
   };
   requestAnimationFrame(() => requestAnimationFrame(show));
 }
@@ -889,7 +889,7 @@ function popSymbols(anchor, kinds) {
 
 // Spiegazione delle parole chiave che compaiono nel testo di una carta (anteprima e scheda).
 const glossary = {
-  Provocazione: "I nemici devono attaccare questa creatura prima del tuo eroe.",
+  Provocazione: "I nemici devono attaccare prima questa creatura: finché è in campo non possono colpire le altre né il tuo eroe. Lei può attaccare chiunque.",
   Rapidità: "Può attaccare nel turno in cui entra in gioco.",
   "Urlo di battaglia": "Effetto che si attiva quando la carta viene giocata.",
   Lascito: "Effetto che si attiva quando la creatura muore.",
@@ -1039,7 +1039,16 @@ function heroStrip(side, own, allow) {
   const hero = heroFor(p);
   const strip = element("div", undefined, `hero-strip ${own ? "mine" : "enemy"}`);
   const info = element("div", undefined, "hero-info");
-  info.append(element("strong", hero?.name ?? p.name), element("small", `${p.ally ? `${p.name} + ${p.ally}` : p.name} · ${t("Mazzo {n}", { n: p.deck.length })} · ${t("Mano {n}", { n: p.hand.length })}`));
+  info.append(element("strong", hero?.name ?? p.name), element("small", p.ally ? `${p.name} + ${p.ally}` : p.name));
+  // Mazzo e mano sempre in vista: in rosso il mazzo vuoto (danni a ogni pescata) e la mano piena.
+  const counts = element("div", undefined, "pile-counts");
+  const deckChip = element("span", p.deck.length ? t("Mazzo {n}", { n: p.deck.length }) : t("Mazzo vuoto: −{n} PV a turno", { n: (p.fatigue ?? 0) + 1 }),
+    `pile pile-deck${p.deck.length === 0 ? " empty" : p.deck.length <= 3 ? " low" : ""}`);
+  deckChip.prepend(icon("layers"));
+  const handChip = element("span", t("Mano {n}/{max}", { n: p.hand.length, max: rules.handLimit }), `pile pile-hand${p.hand.length >= rules.handLimit ? " full" : ""}`);
+  handChip.prepend(icon("cards"));
+  counts.append(deckChip, handChip);
+  info.append(counts);
   if (!own) {
     const backs = element("div", undefined, "card-backs");
     backs.setAttribute("aria-hidden", "true");
@@ -1226,7 +1235,42 @@ function render() {
   }
 }
 
+// Avvisi grandi al centro dello schermo: mazzo finito, danni da mazzo vuoto, carta persa per mano piena.
+let alertState = null;
+function centerAlert(title, text, kind = "") {
+  const box = element("div", undefined, `center-alert ${kind}`);
+  box.setAttribute("role", "alert");
+  box.append(icon(kind === "hand" ? "cards" : "skull"), element("strong", title), element("p", text));
+  document.querySelectorAll(".center-alert").forEach(old => old.remove());
+  document.body.append(box);
+  setTimeout(() => box.classList.add("leaving"), 3200);
+  setTimeout(() => box.remove(), 3700);
+}
+function matchAlerts() {
+  if (alertState?.game !== game) {
+    alertState = { game, fatigue: game.players.map(p => p.fatigue ?? 0), burned: game.players.map(p => p.burned ?? 0), empty: game.players.map(p => !p.deck.length) };
+    return;
+  }
+  game.players.forEach((p, side) => {
+    const mine = mode !== "cpu" || side === 0;
+    const who = mode === "cpu" ? (side === 0 ? t("Tu") : t("L'avversario")) : p.name;
+    if ((p.fatigue ?? 0) > alertState.fatigue[side]) {
+      centerAlert(t("Mazzo esaurito!"), t("{who}: nessuna carta da pescare, {damage}. Il danno aumenta di 1 a ogni turno.", { who, damage: p.fatigue === 1 ? t("1 danno") : t("{n} danni", { n: p.fatigue }) }), mine ? "" : "foe");
+      sound("hit");
+    } else if (!p.deck.length && !alertState.empty[side] && mine) {
+      centerAlert(t("Ultima carta pescata"), t("Il tuo mazzo è finito: da ora, a ogni turno senza carte da pescare subirai danni crescenti (1, poi 2, poi 3…)."), "");
+    }
+    else if ((p.burned ?? 0) > alertState.burned[side] && mine) {
+      centerAlert(t("Mano piena"), t("Puoi tenere al massimo {max} carte in mano: la carta pescata è andata persa.", { max: rules.handLimit }), "hand");
+    }
+    alertState.fatigue[side] = p.fatigue ?? 0;
+    alertState.burned[side] = p.burned ?? 0;
+    alertState.empty[side] = !p.deck.length;
+  });
+}
+
 function renderTable() {
+  matchAlerts();
   const active = game.active;
   const cpu = mode === "cpu" && (active === 1 || replaying);
   const finished = game.phase === "finished";

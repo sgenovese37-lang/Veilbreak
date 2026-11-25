@@ -7,9 +7,13 @@ import {
 
 const fixedRandom = () => 0.5;
 
+// Copia per provare una mossa. I segreti dell'avversario sono nascosti, come per un giocatore:
+// il computer non deve conoscerli (prima, vedendo Firewall Infernale, rinunciava ad attaccare l'eroe
+// per molti turni e la partita non finiva più).
 function clone(g) {
   const copy = structuredClone({ ...g, random: undefined, log: [] });
   copy.random = fixedRandom;
+  copy.players[1 - g.active].secrets = [];
   return copy;
 }
 
@@ -32,7 +36,8 @@ export function evaluate(g, side) {
   if (g.phase === "finished") return g.winner === side ? 1e5 : g.winner === "draw" ? 0 : -1e5;
   const me = g.players[side];
   const enemy = g.players[1 - side];
-  let score = me.life * (me.life <= 12 ? 1.2 : 0.7) - enemy.life * (enemy.life <= 12 ? 1.4 : 1);
+  // peso alto alla vita nemica: il computer cerca di chiudere la partita invece di scambiare all'infinito
+  let score = me.life * (me.life <= 12 ? 1.2 : 0.7) - enemy.life * (enemy.life <= 12 ? 2.5 : 1.8);
   for (const [s, p] of g.players.entries()) {
     for (const unit of p.board) {
       const owner = unit.borrowed ?? s;
@@ -82,7 +87,7 @@ export function smartTurn(g, onStep = () => {}) {
   }
   if (g.phase !== "play") return;
   for (let step = 0; step < 40 && g.phase === "play" && g.active === side; step++) {
-    const current = evaluate(g, side);
+    const current = evaluate(clone(g), side);   // stessa visione delle prove (senza segreti nemici)
     let best = null;
     let bestScore = current + 0.05;
     for (const action of actions(g)) {

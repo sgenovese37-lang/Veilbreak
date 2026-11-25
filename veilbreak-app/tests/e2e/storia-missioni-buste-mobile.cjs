@@ -73,7 +73,13 @@ const shots = (process.env.SHOTS ?? require('os').tmpdir()) + '/';
     await page.click('text=Fine turno');
     await page.waitForTimeout(600);
   }
+  // con la vittoria parte il dialogo finale del capitolo: si salta
   const result = await status();
+  if (result === 'Vittoria!') {
+    await page.waitForSelector('.scene', { timeout: 8000 }).catch(() => {});
+    if (await page.locator('.scene').count()) await page.click('text=Salta ›');
+    await page.waitForSelector('.scene', { state: 'detached', timeout: 5000 }).catch(() => {});
+  }
   console.log('esito capitolo 1:', result, '|', await page.locator('.reward-line').first().innerText().catch(() => ''));
   if (result === 'Vittoria!') console.log('epilogo:', (await page.locator('.story-outro').innerText()).split('\n')[0]);
   await page.screenshot({ path: shots + '22-fine-capitolo.png', fullPage: true });

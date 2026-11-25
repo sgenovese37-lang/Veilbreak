@@ -3,7 +3,7 @@ import { heroFor, heroPowerCost } from "./heroes.mjs";
 import { starterDecks } from "./decks.mjs";
 import { t } from "./i18n.mjs";
 
-export const rules = Object.freeze({ maxLife: 30, openingHand: 6, mulliganLimit: 2, maxEssence: 10, handLimit: 10, boardLimit: 7 });
+export const rules = Object.freeze({ maxLife: 25, openingHand: 6, mulliganLimit: 2, maxEssence: 10, handLimit: 10, boardLimit: 7 });
 
 export const factions = [...new Set(cards.map(card => card.faction))];
 const byId = new Map(cards.map(card => [card.id, card]));
@@ -49,8 +49,9 @@ function draw(p, count, g) {
   p.hand.push(...drawn.slice(0, room));
   const overflow = drawn.slice(room);
   p.discard.push(...overflow);
+  p.burned = (p.burned ?? 0) + overflow.length;   // carte perse per mano piena (l'interfaccia lo segnala)
   if (overflow.length && g) {
-    note(g, t("{name} scarta {n} dalla cima del mazzo: mano piena.", { name: p.name, n: overflow.length }));
+    note(g, t("{name} ha la mano piena: {n} carta pescata va persa.", { name: p.name, n: overflow.length }));
   }
 }
 
@@ -255,8 +256,11 @@ export function powerTargets(g) {
   const side = g.active;
   const power = heroFor(g.players[side])?.power;
   if (!power?.target) return [];
-  const owner = power.target === "enemy" ? rival(side) : side;
-  return g.players[owner].board.filter(unit => owner === side || !isVeiled(unit)).map(unit => ({ side: owner, uid: unit.uid }));
+  const owner = power.target === "ally" ? side : rival(side);
+  const list = g.players[owner].board.filter(unit => owner === side || !isVeiled(unit)).map(unit => ({ side: owner, uid: unit.uid }));
+  // "foe": una creatura nemica oppure l'eroe nemico
+  if (power.target === "foe") list.push({ side: owner, uid: null });
+  return list;
 }
 
 export function canUseHeroPower(g) {
@@ -281,11 +285,13 @@ export function useHeroPower(g, target) {
   if (power.defense) unit.guard[side] = power.defense;
   if (power.attack) unit.powerAttack += power.attack;
   if (power.buff) unit.bonus = (unit.bonus ?? 0) + power.buff;
-  if (power.damage) unit.damage += power.damage;
+  if (power.damage && unit) unit.damage += power.damage;
+  if (power.damage && !unit) damageHero(g, target.side, power.damage);
   if (power.heal) heal(p, power.heal);
   if (power.summon) summon(g, side, power.summon);
   if (power.heroDamage) damageHero(g, rival(side), power.heroDamage);
   if (power.health) unit.healthBonus = (unit.healthBonus ?? 0) + power.health;
+  if (power.atk) unit.atkBonus = (unit.atkBonus ?? 0) + power.atk;   // +Attacco permanente
   if (power.selfDamage) damageHero(g, side, power.selfDamage, false);
   if (power.draw) draw(p, power.draw, g);
   note(g, t("{hero} usa {power}.", { hero: hero.name, power: t(power.name) }));
@@ -432,6 +438,8 @@ export function play(g, index, target) {
   return true;
 }
 
+export const isGuard = unit => !unit.silenced && taunt.has(unit.card) && !isVeiled(unit);
+
 export function attackTargets(g, uid) {
   if (g.phase !== "play") return [];
   const side = g.active;
@@ -441,10 +449,12 @@ export function attackTargets(g, uid) {
   if (unit.entered === g.round && !(unit.haste || (!unit.silenced && rush.has(unit.card)) || has(p, 59))) return [];
   const opponent = rival(side);
   const enemy = g.players[opponent];
-  const targets = enemy.board.filter(other => !isVeiled(other)).map(other => ({ side: opponent, uid: other.uid }));
-  if (!enemy.board.some(other => !other.silenced && taunt.has(other.card) && !isVeiled(other)) || (!unit.silenced && unit.card === 20)) {
-    targets.push({ side: opponent, uid: null });
-  }
+  const visible = enemy.board.filter(other => !isVeiled(other));
+  // Provocazione: finché c'è una creatura con Provocazione, si possono attaccare solo quelle.
+  // Le creature con Provocazione invece attaccano chi vogliono, come le altre.
+  const guards = visible.filter(isGuard);
+  const targets = (guards.length ? guards : visible).map(other => ({ side: opponent, uid: other.uid }));
+  if (!guards.length || (!unit.silenced && unit.card === 20)) targets.push({ side: opponent, uid: null });
   return targets;
 }
 

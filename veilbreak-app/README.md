@@ -15,14 +15,14 @@ Manca ancora il gioco 1 contro 1 online, che richiede un server.
 
 ## Regole di partita
 
-Ogni giocatore inizia con 30 punti vita e 6 carte. Prima del primo turno può sostituirne fino a 2, senza ripescare subito le stesse copie. A ogni turno il massimo di Essenza aumenta di 1 fino a 10 e la riserva si ricarica. La mano contiene al massimo 10 carte. Le carte pescate in eccesso vanno negli scarti.
+Ogni giocatore inizia con 25 punti vita e 6 carte. Prima del primo turno può sostituirne fino a 2, senza ripescare subito le stesse copie. A ogni turno il massimo di Essenza aumenta di 1 fino a 10 e la riserva si ricarica. La mano contiene al massimo 10 carte. Le carte pescate in eccesso vanno perse. Con il mazzo vuoto, a ogni pescata mancata si subiscono danni crescenti (1, 2, 3…).
 
 Ogni metà del tavolo usa il tema del suo eroe, anche quando si affrontano fazioni diverse. I poteri costano 1 Essenza e sono attivabili una volta durante il proprio turno. Stati e bersagli validi vengono controllati anche dal motore.
 
 | Fazione | Eroe | Potere |
 | --- | --- | --- |
 | Corte di Hollow | Prefetta Ada Vesper | +1/+1 permanente a una creatura alleata (prima: +1 Difesa fino al proprio prossimo turno; cambiato per il bilanciamento) |
-| Patto Neon | Iona Volt, la Frequenza | 1 danno a una creatura nemica |
+| Patto Neon | Iona Volt, la Frequenza | 2 danni a una creatura nemica |
 | Senza Santi | Elena Voss, il Contratto | Cura di 2 punti vita al proprio eroe |
 | Sottocittà | Mara Sottorotaia | +1 Attacco a una creatura alleata fino alla fine del turno |
 

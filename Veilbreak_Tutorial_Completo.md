@@ -2,7 +2,7 @@
 
 ## Capitolo 1: Benvenuto a Veilbreak
 In Veilbreak combatti come Binder. Il tuo obiettivo è portare i punti vita dell’avversario a 0.  
-Ogni giocatore inizia con 30 punti vita.
+Ogni giocatore inizia con 25 punti vita.
 
 ## Capitolo 2: Essence e Turni
 - All’inizio del turno la tua Essence aumenta di 1 (massimo 10).

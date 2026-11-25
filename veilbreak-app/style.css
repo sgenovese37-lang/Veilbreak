@@ -1281,8 +1281,8 @@ body.in-match { background: var(--ink); }
 
 /* ---------- Battute delle carte ---------- */
 .speech {
-  position: fixed; z-index: 55; max-width: 13rem; padding: .45rem .7rem; transform: translate(-50%, -100%);
-  font: italic 500 .85rem/1.3 "EB Garamond", serif; color: #1b120c; text-align: center;
+  position: fixed; z-index: 55; width: max-content; max-width: min(19rem, 86vw); padding: .65rem 1rem; transform: translate(-50%, -100%);
+  font: italic 600 1.15rem/1.32 "EB Garamond", serif; color: #1b120c; text-align: center;
   background: linear-gradient(180deg, #fff3dc, #e8d1a8); border-radius: .9rem; box-shadow: 0 0 0 1px #8a5a2b, 0 .4rem 1rem #000c;
   pointer-events: none; animation: speech-in .25s ease-out;
 }
@@ -1291,7 +1291,7 @@ body.in-match { background: var(--ink); }
 .speech.enemy::after { background: #e7b3b3; }
 .speech.leaving { opacity: 0; transition: opacity .4s; }
 @keyframes speech-in { from { opacity: 0; transform: translate(-50%, -80%) scale(.85); } }
-.cast-preview .cast-voice { max-width: 18rem; margin-top: .5rem; font: italic 500 1rem/1.35 "EB Garamond", serif; color: #f3e3c3; text-align: center; text-shadow: 0 2px 6px #000; quotes: "«" "»"; }
+.cast-preview .cast-voice { max-width: 20rem; margin-top: .6rem; font: italic 600 1.2rem/1.35 "EB Garamond", serif; color: #f3e3c3; text-align: center; text-shadow: 0 2px 6px #000; quotes: "«" "»"; }
 .cast-preview img.back { width: min(60vw, 15rem); border-radius: .8rem; }
 .scene-title { margin-top: 2.6rem; text-align: center; padding: 0 .5rem; }
 
@@ -1448,3 +1448,23 @@ body.energy-save .ambience i, body.energy-save .ambience .env-flash { display: n
 body.energy-save .topstrip, body.energy-save nav.dock, body.energy-save .sheet, body.energy-save .shop, body.energy-save #settings,
 body.energy-save .chapter, body.energy-save .quest-list li, body.energy-save .wallet-card { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
 body.energy-save #embers { display: none; }
+
+/* ---------- Mazzo, mano e avvisi al centro ---------- */
+.pile-counts { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .2rem; }
+.pile { display: inline-flex; align-items: center; gap: .25rem; padding: .1rem .45rem; border-radius: 1rem; font-size: .78rem; font-weight: 600;
+  color: #e9dcc6; background: #0008; box-shadow: inset 0 0 0 1px #ffffff22; }
+.pile svg { width: .9rem; height: .9rem; }
+.pile.low { color: #ffd27a; box-shadow: inset 0 0 0 1px #ffd27a77; }
+.pile.empty, .pile.full { color: #fff; background: #8e1520d0; box-shadow: inset 0 0 0 1px #ff6b6b, 0 0 .6rem #ff2a2a88; animation: pile-pulse 1.4s ease-in-out infinite; }
+@keyframes pile-pulse { 50% { box-shadow: inset 0 0 0 1px #ff6b6b, 0 0 1.1rem #ff2a2acc; } }
+.center-alert { position: fixed; z-index: 70; left: 50%; top: 42%; transform: translate(-50%, -50%); width: min(21rem, 88vw);
+  padding: 1rem 1.2rem 1.1rem; text-align: center; color: #fff1e0; border-radius: 1rem; pointer-events: none;
+  background: radial-gradient(circle at 50% 0%, #6d0f18f2, #1b0708f5 70%); box-shadow: 0 0 0 1px #ff5b5b99, 0 1rem 2.5rem #000d, 0 0 2rem #b3122366;
+  animation: alert-in .35s cubic-bezier(.2, 1.4, .4, 1); }
+.center-alert.foe { background: radial-gradient(circle at 50% 0%, #3d1a5cf2, #0d0716f5 70%); box-shadow: 0 0 0 1px #b48cff99, 0 1rem 2.5rem #000d; }
+.center-alert.hand { background: radial-gradient(circle at 50% 0%, #5c3d0ff2, #160e06f5 70%); box-shadow: 0 0 0 1px #ffc76b99, 0 1rem 2.5rem #000d; }
+.center-alert svg { width: 2.2rem; height: 2.2rem; color: #ff8a8a; }
+.center-alert strong { display: block; margin: .3rem 0 .35rem; font: 900 1.35rem/1.1 "Cinzel", serif; letter-spacing: .04em; }
+.center-alert p { margin: 0; font-size: 1rem; line-height: 1.35; }
+.center-alert.leaving { opacity: 0; transition: opacity .45s; }
+@keyframes alert-in { from { opacity: 0; transform: translate(-50%, -50%) scale(.7); } }
