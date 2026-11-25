@@ -71,7 +71,7 @@ export const lockedHeroes = {
     power: { name: "Richiamo dei Cunicoli", text: "Evoca un Frammento di Veil 1/1.", summon: 60 } },
 };
 
-// Eroi dell'Atto II della Storia. Ritratti provvisori (ritagli di illustrazioni) finché non arrivano quelli definitivi.
+// Eroi dell'Atto II della Storia (ritratti creati con ChatGPT, originali in assets/originali-chatgpt/).
 export const extraHeroes = [
   { faction: "Corte di Hollow", id: "vittoria-sale", name: "Notaia Vittoria Sale", portrait: "assets/eroi/ritratti/vittoria-sale.webp",
     power: { name: "Rogito Notturno", text: "Pesca 1 carta. Subisci 2 danni.", draw: 1, selfDamage: 2 } },

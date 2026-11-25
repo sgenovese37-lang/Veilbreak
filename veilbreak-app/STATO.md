@@ -70,6 +70,6 @@ Riepilogo per riprendere il lavoro in una nuova sessione.
 - Copertina di avvio in `index.html`: niente lampo del modulo grezzo all'apertura.
 
 ## Prossimi passi
-- Ritratti definitivi dei 3 eroi dell'Atto II (prompt nel PDF).
+- Ritratti definitivi dei 3 eroi dell'Atto II arrivati e inseriti.
 - Correzioni dalle partite dell'utente.
 - Vantaggio di chi gioca per primo ancora intorno al 60% contro il computer.
