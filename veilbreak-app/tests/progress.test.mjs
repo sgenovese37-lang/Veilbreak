@@ -21,7 +21,7 @@ test("la collezione parte con una copia di ogni carta e una busta", () => {
     const deck = defaultDeck(faction);
     for (const id of new Set(deck)) assert.ok(owned(id) >= deck.filter(x => x === id).length, `${faction}: copie mancanti per ${id}`);
   }
-  assert.equal(collectionProgress().max, 60 * 3 - 2 * cards.filter(c => c.rarity === "Legendary").length);
+  assert.equal(collectionProgress().max, cards.length * 3 - 2 * cards.filter(c => c.rarity === "Legendary").length);
 });
 
 test("le buste danno copie fino al massimo e poi Schegge", () => {

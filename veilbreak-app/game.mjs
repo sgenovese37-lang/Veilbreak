@@ -15,9 +15,18 @@ export const essenceShard = Object.freeze({
   cost: 0, text: "Ottieni 1 Essenza solo in questo turno.", art: "assets/originali-chatgpt/frammento-essenza.webp",
 });
 byId.set(essenceShardId, essenceShard);
-const rush = new Set([24, 46, 47, 48]);
-const taunt = new Set([4, 13, 32, 34, 37, 45, 49, 51]);
-const targeted = new Set([1, 9, 12, 17, 23, 55]);
+const rush = new Set([24, 46, 47, 48, 86, 89]);
+const taunt = new Set([4, 13, 32, 34, 37, 45, 49, 51, 62, 68, 80, 82]);
+// Secondo set: parole chiave nuove
+const fury = new Set([69, 75]);            // Furia: attacca due volte per turno
+const veiledCards = new Set([72, 85, 90]); // Velato: non bersagliabile dai nemici finché non attacca
+// Bersagli delle carte: enemy = solo nemici, own = solo alleati, any = tutte le creature, weak = nemici con 3 Attacco o meno
+const targetRule = { 1: "enemy", 9: "any", 12: "enemy", 17: "any", 23: "any", 55: "any", 63: "enemy", 66: "any", 67: "weak", 70: "any", 74: "own" };
+const targeted = new Set(Object.keys(targetRule).map(Number));
+export const isPact = card => Boolean(card?.pact);       // Patto: si paga con punti vita
+export const isVeiled = unit => Boolean(unit.veiled && !unit.silenced);
+export const maxAttacks = unit => (!unit.silenced && fury.has(unit.card) ? 2 : 1);
+export const keywords = { rush, taunt, fury, veiled: veiledCards };
 export const cardOf = unit => byId.get(unit.card) ?? fragment;
 export const boardFull = player => player.board.length >= rules.boardLimit;
 export const has = (player, id) => player.board.some(unit => unit.card === id && !unit.silenced);
@@ -116,13 +125,15 @@ export function stats(g, side, unit) {
   const boost = aura(p, 31, unit.uid);
   const loss = enemy.artifacts.filter(id => id === 53).length;
   const bonus = unit.bonus ?? 0;
+  const shepherd = !unit.silenced && rush.has(unit.card) ? aura(p, 89, unit.uid) : 0;
   const maxHealth = c.health + boost + bonus + (unit.healthBonus ?? 0) + unit.guard[0] + unit.guard[1] + p.artifacts.filter(id => id === 44).length;
-  return { attack: Math.max(0, c.attack + boost + bonus + unit.powerAttack - loss - unit.weakened), health: maxHealth - unit.damage, maxHealth };
+  return { attack: Math.max(0, c.attack + boost + bonus + (unit.atkBonus ?? 0) + shepherd + unit.powerAttack - loss - unit.weakened), health: maxHealth - unit.damage, maxHealth };
 }
 
 function summon(g, side, card) {
   if (boardFull(g.players[side])) return null;
-  const unit = { uid: g.next++, card, damage: 0, weakened: 0, powerAttack: 0, guard: [0, 0], entered: g.round, attacked: false, silenced: false, borrowed: null, haste: false };
+  const unit = { uid: g.next++, card, damage: 0, weakened: 0, powerAttack: 0, guard: [0, 0], entered: g.round, attacked: false, attacks: 0, silenced: false, borrowed: null, haste: false };
+  if (veiledCards.has(card)) unit.veiled = true;
   g.players[side].board.push(unit);
   return unit;
 }
@@ -143,6 +154,7 @@ function damageHero(g, side, value, credited = true) {
   if (value <= 0) return;
   if (credited) g.stats[rival(side)].heroDamage += Math.min(value, p.life);
   p.life = Math.max(0, p.life - value);
+  for (const unit of p.board) if (unit.card === 76 && !unit.silenced) unit.atkBonus = (unit.atkBonus ?? 0) + 1;
   if (takeSecret(p, 39)) {
     draw(p, 2, g);
     note(g, t("Testimone Finale si attiva."));
@@ -153,6 +165,12 @@ function settle(g) {
   const deadIds = new Set();
   let dead;
   do {
+    // Martire della Cattedrale: ogni volta che subisce danni cura 1 punto vita al suo eroe
+    for (const [side, p] of g.players.entries()) for (const unit of p.board) {
+      if (unit.card !== 80) continue;
+      if (!unit.silenced && unit.damage > (unit.seenDamage ?? 0)) heal(p, 1);
+      unit.seenDamage = unit.damage;
+    }
     dead = g.players.flatMap((p, side) => p.board
       .filter(unit => stats(g, side, unit).health <= 0).map(unit => ({ side, unit })));
     for (const { side, unit } of dead) {
@@ -162,6 +180,11 @@ function settle(g) {
       if (unit.card) g.stats[rival(side)].kills++;
       if (!unit.silenced && unit.card === 31) draw(p, 3, g);
       if (!unit.silenced && unit.card === 45) heal(p, p.maxLife);
+      // cimitero: le creature morte tornano al loro proprietario (anche se erano prese in controllo)
+      const owner = unit.borrowed ?? side;
+      if (unit.card) (g.players[owner].graveyard ??= []).push(unit.card);
+      for (const id of g.players[rival(side)].artifacts) if (id === 65) heal(g.players[rival(side)], 2);
+      if (!unit.silenced) lascito(g, side, unit.card);
     }
   } while (dead.length);
   const [a, b] = g.players;
@@ -172,9 +195,20 @@ function settle(g) {
   return deadIds;
 }
 
+// Lascito: effetto quando la creatura muore
+function lascito(g, side, id) {
+  const p = g.players[side];
+  if (id === 61) draw(p, 1, g);
+  if (id === 62) summon(g, side, 8);
+  if (id === 77) heal(p, 3);
+  if (id === 82) summon(g, side, 34);
+}
+
 export function price(g, side, card) {
   const p = g.players[side];
   const enemy = g.players[rival(side)];
+  if (isPact(card)) return card.cost;
+  if (card.id === 90) return Math.max(0, card.cost - p.board.length - enemy.board.length) + aura(enemy, 2);
   if (card.type === "Creatura") return card.cost + aura(enemy, 2);
   if (card.type === "Incantesimo") return Math.max(0, card.cost - p.discount);
   return card.cost;
@@ -184,10 +218,16 @@ export function playTargets(g, id) {
   if (!targeted.has(id)) return [];
   const side = g.active;
   const enemy = rival(side);
+  const rule = targetRule[id];
   const targets = [];
   for (const s of [side, enemy]) {
-    if (s === side && [1, 12].includes(id)) continue;
-    targets.push(...g.players[s].board.map(unit => ({ side: s, uid: unit.uid })));
+    if (s === side && (rule === "enemy" || rule === "weak")) continue;
+    if (s === enemy && rule === "own") continue;
+    for (const unit of g.players[s].board) {
+      if (s === enemy && isVeiled(unit)) continue;   // le creature Velate nemiche non si possono bersagliare
+      if (rule === "weak" && stats(g, s, unit).attack > 3) continue;
+      targets.push({ side: s, uid: unit.uid });
+    }
   }
   if (id === 23) targets.push({ side: enemy, uid: null });
   return targets;
@@ -206,7 +246,7 @@ export function powerTargets(g) {
   const power = heroFor(g.players[side])?.power;
   if (!power?.target) return [];
   const owner = power.target === "enemy" ? rival(side) : side;
-  return g.players[owner].board.map(unit => ({ side: owner, uid: unit.uid }));
+  return g.players[owner].board.filter(unit => owner === side || !isVeiled(unit)).map(unit => ({ side: owner, uid: unit.uid }));
 }
 
 export function canUseHeroPower(g) {
@@ -297,14 +337,55 @@ function resolve(g, side, id, target) {
     case 52: p.peek = p.deck[0] ?? null; break;
     case 58: discard(p, g); draw(p, 2, g); break;
     case essenceShardId: p.essence = Math.min(rules.maxEssence, p.essence + 1); break;
+    // ---------- Secondo set ----------
+    case 63: unit.stunned = true; break;
+    case 64: {
+      const relics = enemy.artifacts.map(a => byId.get(a)).sort((x, y) => y.cost - x.cost);
+      if (relics.length) { enemy.artifacts.splice(enemy.artifacts.indexOf(relics[0].id), 1); note(g, t("Artefatto distrutto: {card}.", { card: relics[0].name })); }
+      else { const self = p.board.at(-1); if (self?.card === 64) self.bonus = (self.bonus ?? 0) + 1; }
+      break;
+    }
+    case 66: bounce(g, target.side, unit); break;
+    case 67: if (transfer(g, opponent, side, unit, false)) { unit.borrowed = null; unit.entered = g.round; } break;
+    case 68: for (const other of enemy.board) { other.silenced = true; other.veiled = false; } break;
+    case 70: unit.damage += 2; damageHero(g, opponent, 1); break;
+    case 71: p.discount += 2; break;
+    case 74: summon(g, side, unit.card); break;
+    case 75: damageHero(g, opponent, Math.min(5, g.stats[side].spells)); break;
+    case 78: draw(p, 2, g); break;
+    case 81: { const last = deadCommon(p).at(-1); if (last) summon(g, side, last); break; }
+    case 83: {
+      const best = [...new Set(deadCommon(p))].sort((x, y) => (byId.get(y)?.cost ?? 0) - (byId.get(x)?.cost ?? 0)).slice(0, 2);
+      for (const id of best) summon(g, side, id);
+      break;
+    }
+    case 84: for (let i = 0; i < 3; i++) summon(g, side, 60); break;
   }
+}
+
+// Creature alleate morte che si possono riportare in campo (le Leggendarie no)
+function deadCommon(p) {
+  return (p.graveyard ?? []).filter(id => byId.get(id)?.rarity !== "Legendary");
+}
+
+// Rimanda una creatura nella mano del suo proprietario (le pedine scompaiono).
+function bounce(g, side, unit) {
+  if (!unit) return;
+  const owner = unit.borrowed ?? side;
+  g.players[side].board = g.players[side].board.filter(other => other.uid !== unit.uid);
+  if (!unit.card) return;
+  const p = g.players[owner];
+  if (p.hand.length < rules.handLimit) p.hand.push(unit.card); else p.discard.push(unit.card);
 }
 
 export function canPlay(g, index) {
   const p = g.players[g.active];
   const c = byId.get(p.hand[index]);
-  return g.phase === "play" && c && p.essence >= price(g, g.active, c)
-    && !(c.type === "Creatura" && boardFull(p))
+  const affordable = isPact(c) ? p.life > c.cost : p.essence >= price(g, g.active, c);
+  const needsRoom = c.type === "Creatura" || [74, 81, 84].includes(c.id);
+  return g.phase === "play" && c && affordable
+    && !(needsRoom && boardFull(p))
+    && !(c.id === 81 && !deadCommon(p).length)
     && (!targeted.has(c.id) || c.id === 1 || playTargets(g, c.id).length > 0);
 }
 
@@ -316,13 +397,16 @@ export function play(g, index, target) {
   const c = byId.get(p.hand[index]);
   const targets = playTargets(g, c.id);
   if (targets.length && !targets.some(choice => matchTarget(choice, target))) return false;
-  p.essence -= price(g, side, c);
+  if (isPact(c)) { damageHero(g, side, c.cost, false); note(g, t("{name} paga {n} punti vita per il Patto.", { name: p.name, n: c.cost })); }
+  else p.essence -= price(g, side, c);
   p.hand.splice(index, 1);
   const tally = g.stats[side];
   tally.cards++;
   if (c.id !== essenceShardId) {
     tally[{ Creatura: "creatures", Incantesimo: "spells", Artefatto: "artifacts", Segreto: "secrets" }[c.type]]++;
-    if (c.type === "Incantesimo") p.discount = 0;
+    if (c.type === "Incantesimo" && !isPact(c)) p.discount = 0;
+    // Spirito nel Cavo: +1 Attacco a ogni incantesimo
+    if (c.type === "Incantesimo") for (const u of p.board) if (u.card === 72 && !u.silenced) u.atkBonus = (u.atkBonus ?? 0) + 1;
   } else tally.cards--;
   note(g, c.type === "Segreto" ? t("{name} prepara un Segreto.", { name: p.name }) : t("{name} gioca {card}.", { name: p.name, card: c.name }));
   const unit = c.type === "Creatura" ? summon(g, side, c.id) : null;
@@ -343,12 +427,12 @@ export function attackTargets(g, uid) {
   const side = g.active;
   const p = g.players[side];
   const unit = p.board.find(u => u.uid === uid);
-  if (!unit || unit.attacked || stats(g, side, unit).attack <= 0) return [];
+  if (!unit || unit.attacked || (unit.attacks ?? 0) >= maxAttacks(unit) || stats(g, side, unit).attack <= 0) return [];
   if (unit.entered === g.round && !(unit.haste || (!unit.silenced && rush.has(unit.card)) || has(p, 59))) return [];
   const opponent = rival(side);
   const enemy = g.players[opponent];
-  const targets = enemy.board.map(other => ({ side: opponent, uid: other.uid }));
-  if (!enemy.board.some(other => !other.silenced && taunt.has(other.card)) || (!unit.silenced && unit.card === 20)) {
+  const targets = enemy.board.filter(other => !isVeiled(other)).map(other => ({ side: opponent, uid: other.uid }));
+  if (!enemy.board.some(other => !other.silenced && taunt.has(other.card) && !isVeiled(other)) || (!unit.silenced && unit.card === 20)) {
     targets.push({ side: opponent, uid: null });
   }
   return targets;
@@ -359,15 +443,33 @@ export function attack(g, uid, target) {
   const side = g.active;
   const p = g.players[side];
   const unit = p.board.find(other => other.uid === uid);
+  unit.attacks = (unit.attacks ?? 0) + 1;
+  unit.attacked = unit.attacks >= maxAttacks(unit);
+  unit.veiled = false;   // attaccando, una creatura Velata si rivela
+  const foe = g.players[target.side];
+  // Trappola a Ganascia: 2 danni all'attaccante prima del combattimento
+  if (takeSecret(foe, 87)) {
+    unit.damage += 2;
+    note(g, t("Trappola a Ganascia si attiva."));
+    if (settle(g).has(unit.uid)) return true;
+  }
+  // Firewall Infernale: distrugge chi attacca l'eroe
+  if (target.uid === null && takeSecret(foe, 73)) {
+    unit.damage = Infinity;
+    note(g, t("Firewall Infernale si attiva."));
+    settle(g);
+    return true;
+  }
   const power = stats(g, side, unit).attack;
-  unit.attacked = true;
   const defender = unitAt(g, target);
   if (defender) {
     const retaliation = stats(g, target.side, defender).attack;
     defender.damage += power;
     unit.damage += retaliation;
     note(g, t("{card} attacca {target}.", { card: cardOf(unit).name, target: cardOf(defender).name }));
-    if (settle(g).has(defender.uid) && unit.card === 56 && !unit.silenced) draw(p, 1, g);
+    const died = settle(g);
+    if (died.has(defender.uid) && unit.card === 56 && !unit.silenced) draw(p, 1, g);
+    if (died.has(defender.uid) && unit.card === 86 && !unit.silenced && !died.has(unit.uid)) unit.bonus = (unit.bonus ?? 0) + 1;
   } else {
     damageHero(g, target.side, power);
     if (!unit.silenced && unit.card === 18) discard(g.players[target.side], g);
@@ -391,7 +493,11 @@ function startTurn(g, side) {
   if (g.phase === "finished") return;
   p.essence = p.capacity;
   p.discount = p.artifacts.filter(id => id === 22).length;
-  for (const unit of p.board) unit.attacked = false;
+  for (const unit of p.board) {
+    unit.attacked = false;
+    unit.attacks = 0;
+    if (unit.stunned) { unit.attacked = true; unit.stunned = false; }   // Timbro del Vincolo
+  }
   (g.turnStarts ??= []).push(g.log.length);
   note(g, t("Turno di {name}.", { name: p.name }));
   if (p.deck.length) draw(p, 1, g);
@@ -414,10 +520,16 @@ export function endTurn(g) {
   const opponent = rival(side);
   const p = g.players[side];
   for (const id of p.artifacts) if (id === 6) hitAll(g.players[opponent], 1);
-  for (const unit of p.board) {
+  for (const unit of [...p.board]) {
     if (unit.silenced) continue;
     if (unit.card === 28) damageHero(g, opponent, 1);
     if (unit.card === 32) heal(p, 2);
+    if (unit.card === 88) summon(g, side, 60);   // Madre della Muffa
+  }
+  // Confessionale Infestato: cura 3 punti vita alla creatura alleata più ferita
+  for (const id of p.artifacts) if (id === 79) {
+    const hurt = p.board.filter(u => u.damage > 0).sort((x, y) => y.damage - x.damage)[0];
+    if (hurt) hurt.damage = Math.max(0, hurt.damage - 3);
   }
   for (const [owner, player] of g.players.entries()) {
     for (const id of player.artifacts) if (id === 25) damageHero(g, rival(owner), 1);
@@ -483,7 +595,8 @@ export function computerTurn(g, level, onStep = () => {}) {
       : attackTargets(g, t.uid).length);
     if (useHeroPower(g, best ?? options[0])) onStep({ kind: "power", side, target: best ?? options[0] ?? null });
   }
-  for (const unit of [...p.board]) {
+  for (const unit of [...p.board, ...p.board.filter(u => maxAttacks(u) > 1)]) {
+    if (!p.board.includes(unit)) continue;
     const options = attackTargets(g, unit.uid);
     const kill = high && options.find(t => t.uid !== null && stats(g, t.side, unitAt(g, t)).health <= stats(g, side, unit).attack);
     const hero = options.find(t => t.uid === null);

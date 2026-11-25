@@ -7,7 +7,7 @@ import { illustrations } from "../illustrations.mjs";
 import { heroes, heroPowerCost } from "../heroes.mjs";
 import {
   factions, createGame, mulligan, play, endTurn, computerTurn, stats, attackTargets,
-  canUseHeroPower, useHeroPower, defaultDeck, validDeck, canPlay, rules, deckSize, essenceShardId,
+  canUseHeroPower, useHeroPower, defaultDeck, validDeck, canPlay, rules, deckSize, essenceShardId, attack, playTargets, price,
 } from "../game.mjs";
 import { heroFor, lockedHeroes } from "../heroes.mjs";
 
@@ -24,18 +24,19 @@ test("le otto creature del LEGGIMI hanno tipo, Attacco e Difesa del catalogo", (
   }
 });
 
-test("il catalogo ha 60 carte con tipi validi e statistiche per tutte le creature", () => {
-  assert.equal(cards.length, 60);
-  assert.deepEqual(new Set(cards.map(c => c.id)).size, 60);
+test("il catalogo ha 90 carte (due set) con tipi validi e statistiche per tutte le creature", () => {
+  assert.equal(cards.length, 90);
+  assert.deepEqual(new Set(cards.map(c => c.id)).size, 90);
   for (const card of cards) {
     assert.ok(["Creatura", "Incantesimo", "Artefatto", "Segreto"].includes(card.type), `${card.id} ${card.type}`);
     if (card.type === "Creatura") assert.ok(Number.isInteger(card.attack) && Number.isInteger(card.health), card.name);
   }
-  for (const faction of factions) assert.equal(cards.filter(c => c.faction === faction).length, 15);
+  for (const faction of factions) assert.equal(cards.filter(c => c.faction === faction && !c.set).length, 15);
+  assert.deepEqual(factions.map(f => cards.filter(c => c.faction === f && c.set === 2).length), [8, 7, 8, 7]);
 });
 
-test("ogni carta ha la sua illustrazione collegata per ID e i file esistono", () => {
-  for (const card of cards) {
+test("ogni carta del primo set ha la sua illustrazione collegata per ID e i file esistono", () => {
+  for (const card of cards.filter(c => !c.set)) {
     const art = illustrations[card.id];
     assert.ok(art, `illustrazione mancante per ${card.id}`);
     assert.equal(art.card, card.name, `nome diverso per ${card.id}`);
@@ -195,4 +196,133 @@ test("gli eroi della Storia giocano con il loro potere", () => {
   assert.equal(d.players[1].life, 29);
   const wrong = createGame(["Patto Neon", "Corte di Hollow"], seeded(17), [], { heroes: ["orfeo-grimm", null] });
   assert.equal(heroFor(wrong.players[0]).name, heroes["Patto Neon"].name, "un eroe di un'altra fazione non vale");
+});
+
+// ---------- Secondo set: parole chiave e carte ----------
+const set2Game = (a = "Corte di Hollow", b = "Patto Neon", seed = 21) => {
+  const g = createGame([a, b], seeded(seed));
+  mulligan(g, []); mulligan(g, []);
+  g.players[0].essence = 10;
+  return g;
+};
+const put = (g, side, card, uid) => { const u = unitOf(uid, card); g.players[side].board.push(u); return u; };
+
+test("Velato: non si può attaccare né bersagliare finché non attacca", () => {
+  const g = set2Game("Corte di Hollow", "Sottocittà");
+  const mine = put(g, 0, 10, 501);
+  const shade = put(g, 1, 85, 502); shade.veiled = true;
+  assert.ok(!attackTargets(g, 501).some(t => t.uid === 502), "attacco su creatura Velata");
+  assert.ok(!playTargets(g, 9).some(t => t.uid === 502), "Luce Tremolante non può bersagliarla");
+  endTurn(g);
+  g.players[1].board.find(u => u.uid === 502).entered = 0;
+  assert.ok(attack(g, 502, { side: 0, uid: null }));
+  assert.equal(g.players[1].board.find(u => u.uid === 502).veiled, false, "dopo l'attacco si rivela");
+  assert.ok(mine);
+});
+
+test("Furia: attacca due volte nello stesso turno", () => {
+  const g = set2Game("Patto Neon", "Corte di Hollow");
+  put(g, 0, 69, 511);
+  assert.ok(attack(g, 511, { side: 1, uid: null }));
+  assert.ok(attack(g, 511, { side: 1, uid: null }));
+  assert.equal(attack(g, 511, { side: 1, uid: null }), false, "non una terza volta");
+  assert.equal(g.players[1].life, 28);
+});
+
+test("Lascito: effetti quando la creatura muore", () => {
+  const g = set2Game();
+  const notary = put(g, 0, 61, 521);
+  const before = g.players[0].hand.length;
+  notary.damage = 10; play(g, g.players[0].hand.push(41) - 1); // una carta qualsiasi per far partire il controllo delle morti
+  assert.ok(g.players[0].hand.length >= before, "Notaio dell'Oltretomba pesca");
+  const archivist = put(g, 0, 62, 522);
+  archivist.damage = 10;
+  g.players[0].hand = [29]; play(g, 0);
+  assert.ok(g.players[0].board.some(u => u.card === 8), "Archivista evoca un Passerotto");
+});
+
+test("Patto: si paga con la vita e non si gioca se lascerebbe a 0", () => {
+  const g = set2Game("Senza Santi", "Patto Neon");
+  const p = g.players[0];
+  p.hand = [78]; p.essence = 0; p.life = 20;
+  const deck = p.deck.length;
+  assert.ok(canPlay(g, 0), "con 0 Essenza si può pagare con la vita");
+  assert.ok(play(g, 0));
+  assert.equal(p.life, 17);
+  assert.equal(p.deck.length, deck - 2);
+  p.hand = [78]; p.life = 3;
+  assert.equal(canPlay(g, 0), false);
+});
+
+test("Penitente, Martire e Registro dei Debiti", () => {
+  const g = set2Game("Senza Santi", "Corte di Hollow");
+  const pen = put(g, 0, 76, 531);
+  g.players[0].hand = [78]; play(g, 0);
+  assert.equal(stats(g, 0, pen).attack, 2, "Penitente +1 Attacco quando l'eroe subisce danni");
+  const martyr = put(g, 0, 80, 532);
+  const life = g.players[0].life;
+  martyr.damage = 2; g.players[0].hand = [42]; play(g, 0);
+  assert.equal(g.players[0].life, life + 1, "Martire cura 1");
+  const g2 = set2Game();
+  g2.players[0].artifacts.push(65);
+  g2.players[0].life = 20;
+  const foe = put(g2, 1, 29, 533); foe.damage = 5;
+  g2.players[0].hand = [8]; play(g2, 0);
+  assert.equal(g2.players[0].life, 22, "Registro dei Debiti cura 2");
+});
+
+test("Commissione d'Inchiesta, Sfratto, Timbro e Gran Conservatore", () => {
+  const g = set2Game();
+  put(g, 1, 26, 541);                // 2/3
+  put(g, 1, 28, 542);                // 4/4: troppo forte per la Commissione
+  g.players[0].hand = [67];
+  assert.deepEqual(playTargets(g, 67).map(t => t.uid), [541]);
+  assert.ok(play(g, 0, { side: 1, uid: 541 }));
+  endTurn(g); endTurn(g);
+  assert.ok(g.players[0].board.some(u => u.uid === 541), "resta per sempre");
+  g.players[0].essence = 10; g.players[0].hand = [66];
+  assert.ok(play(g, 0, { side: 1, uid: 542 }));
+  assert.ok(g.players[1].hand.includes(28), "torna in mano al proprietario");
+  const enemy = put(g, 1, 24, 543); enemy.entered = 0;
+  g.players[0].hand = [63]; assert.ok(play(g, 0, { side: 1, uid: 543 }));
+  endTurn(g);
+  assert.equal(attackTargets(g, 543).length, 0, "Timbro del Vincolo: non attacca nel suo turno");
+  endTurn(g);
+  g.players[0].essence = 10; g.players[0].hand = [68];
+  assert.ok(play(g, 0));
+  assert.ok(g.players[1].board.every(u => u.silenced), "Gran Conservatore silenzia tutto");
+});
+
+test("Trappole: Firewall Infernale e Trappola a Ganascia", () => {
+  const g = set2Game("Sottocittà", "Patto Neon");
+  const brute = put(g, 0, 47, 551); brute.entered = 0;
+  const pup = put(g, 0, 48, 552); pup.entered = 0;
+  g.players[1].secrets.push(87, 73);
+  assert.ok(attack(g, 552, { side: 1, uid: null }));
+  assert.ok(!g.players[0].board.some(u => u.uid === 552), "la Ganascia uccide il Gatto 1/1");
+  assert.ok(attack(g, 551, { side: 1, uid: null }));
+  assert.ok(!g.players[0].board.some(u => u.uid === 551), "il Firewall distrugge chi attacca l'eroe");
+  assert.equal(g.players[1].life, 30);
+});
+
+test("Resurrezione, Santa Lucrezia, Riflesso, Leviatano e Madre della Muffa", () => {
+  const g = set2Game("Senza Santi", "Patto Neon");
+  const p = g.players[0];
+  const big = put(g, 0, 45, 561); big.damage = 99;
+  const small = put(g, 0, 42, 562); small.damage = 99;
+  p.hand = [41]; play(g, 0);
+  assert.deepEqual(p.graveyard, [45, 42]);
+  p.hand = [81]; p.essence = 0; assert.ok(play(g, 0));
+  assert.ok(p.board.some(u => u.card === 42), "Resurrezione riporta l'ultima");
+  p.board = []; p.essence = 10; p.hand = [83]; assert.ok(play(g, 0));
+  assert.ok(p.board.some(u => u.card === 42) && !p.board.some(u => u.card === 45), "Santa Lucrezia riporta solo creature non Leggendarie");
+  const n = createGame(["Patto Neon", "Sottocittà"], seeded(3)); mulligan(n, []); mulligan(n, []);
+  put(n, 0, 28, 571); n.players[0].hand = [74];
+  assert.ok(play(n, 0, { side: 0, uid: 571 }));
+  assert.equal(n.players[0].board.filter(u => u.card === 28).length, 2, "Riflesso Duplicato copia");
+  const s = createGame(["Sottocittà", "Patto Neon"], seeded(4)); mulligan(s, []); mulligan(s, []);
+  for (let i = 0; i < 5; i++) put(s, 1, 29, 580 + i);
+  assert.equal(price(s, 0, cards.find(c => c.id === 90)), 4, "Leviatano costa 9 meno 5 creature");
+  put(s, 0, 88, 590); endTurn(s);
+  assert.ok(s.players[0].board.some(u => u.card === 60), "Madre della Muffa evoca un Frammento di Veil");
 });

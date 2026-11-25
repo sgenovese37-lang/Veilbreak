@@ -3,7 +3,7 @@ import {
   factions, byId, createGame, mulligan, canPlay, playTargets, play,
   attackTargets, attack, endTurn, stats, cardOf, price,
   defaultDeck, copyLimit, deckSize, validDeck, rules, powerTargets, canUseHeroPower, useHeroPower,
-  essenceShard, essenceShardId,
+  essenceShard, essenceShardId, isPact, isVeiled, maxAttacks,
 } from "./game.mjs";
 
 import { renderTutorial } from "./tutorial.mjs";
@@ -251,6 +251,12 @@ function drawCard(c, options = {}) {
   if (options.action) e.disabled = options.disabled ?? false;
   if (options.pressed !== undefined) e.setAttribute("aria-pressed", options.pressed);
   const art = options.art !== false && illustrationFor(c.id);
+  if (!art && options.art !== false && c.set === 2) {
+    const ph = element("div", undefined, `art placeholder${options.art === "full" ? " full" : ""}`);
+    ph.style.setProperty("--ph", `url("${placeholderArt(c)}")`);
+    ph.append(crestOf(c), element("strong", c.name), element("small", "Illustrazione in arrivo"));
+    e.append(ph);
+  }
   if (art) {
     const img = element("img", undefined, options.art === "full" ? "art full" : "art");
     img.src = art.thumb;
@@ -304,6 +310,8 @@ function showCard(c) {
   if (c.type === "Creatura") rules.append(element("p", t("Attacco {a} · Difesa {d}", { a: c.attack, d: c.health })));
   rules.append(element("h3", "Regole in partita (catalogo)"));
   rules.append(element("p", c.text || "Nessun effetto."));
+  const notesCard = keywordNotes(c); if (notesCard) rules.append(notesCard);
+  if (!art && c.set === 2) rules.append(element("p", "Illustrazione in arrivo: per ora la carta usa una grafica provvisoria.", "muted"));
   if (art?.differences.length) {
     rules.append(element("h3", "Differenze dell’illustrazione"));
     const list = element("ul", undefined, "differences");
@@ -663,6 +671,7 @@ function showPeek(c, current) {
   rulesBox.append(element("strong", `${c.name} · ${t("{n} Essenza", { n: c.cost })}`));
   if (c.type === "Creatura") rulesBox.append(element("span", current ? t("Ora: Attacco {a} · Difesa {d}", { a: current.attack, d: current.health }) : t("Attacco {a} · Difesa {d}", { a: c.attack, d: c.health })));
   rulesBox.append(element("p", c.text || "Nessun effetto."));
+  const notesPeek = keywordNotes(c); if (notesPeek) rulesBox.append(notesPeek);
   box.append(rulesBox, element("small", "Tocca lo schermo per chiudere", "peek-hint"));
   peekLayer.replaceChildren(box);
   peekLayer.hidden = false;
@@ -702,7 +711,31 @@ function attachPeek(el, c, current) {
 const keywordOf = c => ({
   taunt: /Provocazione/.test(c.text ?? ""),
   rush: /Rapidità/.test(c.text ?? ""),
+  fury: /Furia/.test(c.text ?? ""),
 });
+
+// Spiegazione delle parole chiave che compaiono nel testo di una carta (anteprima e scheda).
+const glossary = {
+  Provocazione: "I nemici devono attaccare questa creatura prima del tuo eroe.",
+  Rapidità: "Può attaccare nel turno in cui entra in gioco.",
+  "Urlo di battaglia": "Effetto che si attiva quando la carta viene giocata.",
+  Lascito: "Effetto che si attiva quando la creatura muore.",
+  Velato: "Non può essere bersagliato da attacchi, incantesimi e poteri nemici finché non attacca.",
+  Furia: "Può attaccare due volte in ogni turno.",
+  Patto: "Si paga con punti vita invece che con Essenza.",
+};
+function keywordNotes(c) {
+  const box = element("dl", undefined, "keyword-notes");
+  for (const [word, text] of Object.entries(glossary)) {
+    if (!(c.text ?? "").includes(word)) continue;
+    box.append(element("dt", word), element("dd", text));
+  }
+  return box.childElementCount ? box : null;
+}
+// Grafica provvisoria delle carte senza illustrazione (secondo set): sfondo della fazione.
+// Grafica provvisoria: il dorso delle carte (si capisce subito che l'illustrazione deve ancora arrivare).
+const placeholderArt = () => "assets/originali-chatgpt/dorso-carte.webp";
+const crestOf = c => { const img = element("img", undefined, "ph-crest"); img.src = `assets/eroi/${heroFor(c.faction)?.theme ?? "hollow"}.webp`; img.alt = ""; return img; };
 
 // Numero di danno o cura che compare sopra un elemento appena aggiornato.
 function floatNumber(node, delta) {
@@ -843,9 +876,11 @@ function token(side, unit, own, allow) {
   const art = illustrationFor(c.id);
   const face = element("span", undefined, "face");
   if (art) { const img = element("img"); img.src = art.thumb; img.alt = ""; img.decoding = "async"; face.append(img); }
-  else face.append(element("span", c.name, "face-name"));
+  else { face.classList.add("placeholder"); face.style.setProperty("--ph", `url("${placeholderArt(c)}")`); face.append(crestOf(c), element("span", c.name, "face-name")); }
   tok.append(face);
   if (kw.rush) tok.append(element("span", "⚡", "badge-rush"));
+  if (isVeiled(unit)) tok.classList.add("veiled");
+  if (kw.fury) tok.append(element("span", maxAttacks(unit) - (unit.attacks ?? 0) > 1 ? "⚔⚔" : "⚔", "badge-fury"));
   tok.append(element("span", current.attack, "att"), element("span", current.health, `dif${current.health < current.maxHealth ? " wounded" : ""}`));
   tok.dataset.card = unit.card;
   if (track(unit.uid, current.health, tok, unit.card ? c : null)) tok.classList.add("summoned");
@@ -897,9 +932,11 @@ function handCard(side, id, i) {
     // l'illustrazione è già una carta completa: si aggiunge il costo solo se è cambiato
     const img = element("img", undefined, "mini-art"); img.src = art.thumb; img.alt = ""; card.append(img);
     // gemma grande con il costo attuale: verde se scontato, rossa se aumentato
-    card.append(element("span", cost, `gem big${cost < c.cost ? " cheaper" : cost > c.cost ? " pricier" : ""}`));
+    card.append(element("span", cost, `gem big${isPact(c) ? " pact" : cost < c.cost ? " cheaper" : cost > c.cost ? " pricier" : ""}`));
   } else {
-    card.append(element("span", cost, "gem"), element("span", c.name, "mini-name"));
+    card.classList.add("placeholder");
+    card.style.setProperty("--ph", `url("${placeholderArt(c)}")`);
+    card.append(crestOf(c), element("span", cost, `gem big${isPact(c) ? " pact" : cost < c.cost ? " cheaper" : cost > c.cost ? " pricier" : ""}`), element("span", c.name, "mini-name"));
     if (c.type === "Creatura") card.append(element("span", c.attack, "att"), element("span", c.health, "dif"));
     else card.append(element("span", t(c.type), "mini-type"));
   }

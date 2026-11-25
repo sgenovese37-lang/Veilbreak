@@ -1103,3 +1103,37 @@ body.in-match { background: var(--ink); }
 .deck-name small { font-size: .78rem; }
 .deck-count { font: 800 1.05rem var(--display); color: var(--gold-hi); text-align: center; }
 .deck-list li button { padding: .35rem 0; }
+
+/* ---------- Secondo set: Patto, Velato, Furia, grafica provvisoria ---------- */
+.gem.pact { position: relative; isolation: isolate; background: none !important; box-shadow: none !important; clip-path: none !important; border: 0 !important; color: #fff !important; text-shadow: 0 1px 2px #000; }
+.gem.pact::before {
+  content: ""; position: absolute; inset: 6%; z-index: -1;
+  background: radial-gradient(circle at 35% 35%, #ff7a6a, #a3111f 60%, #4a0509);
+  border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
+  box-shadow: 0 0 0 2px #2a0306, 0 0 .7rem #ff2a2aaa;
+}
+.placeholder { background: linear-gradient(180deg, #07060a22 30%, #07060ae6), var(--ph) center / cover; }
+.hand-card.placeholder { display: grid; align-content: end; padding: .35rem; text-align: center; }
+.hand-card.placeholder .mini-name { font: 700 .62rem/1.1 var(--display); color: #fff; text-shadow: 0 1px 3px #000; }
+.card .art.placeholder { position: relative; display: grid; align-content: end; justify-items: center; gap: .15rem; aspect-ratio: 2 / 3; height: auto; padding: .6rem; border-radius: .5rem; text-align: center; }
+.card .art.placeholder strong { font: 700 .95rem/1.15 var(--display); color: #fff; text-shadow: 0 2px 4px #000; }
+.card .art.placeholder small { font-size: .72rem; color: var(--gold); }
+.card .art.placeholder .gem { position: absolute; top: .5rem; right: .5rem; }
+.face.placeholder { display: grid; place-items: end center; }
+.face.placeholder .face-name { font: 700 .55rem/1.05 var(--display); color: #fff; text-shadow: 0 1px 3px #000; padding: 0 .15rem .25rem; text-align: center; }
+.token.veiled { opacity: .62; filter: saturate(.6) blur(.2px); }
+.token.veiled .face { animation: veil-shimmer 2.6s ease-in-out infinite; }
+@keyframes veil-shimmer { 0%, 100% { filter: brightness(.75); } 50% { filter: brightness(1.05) hue-rotate(-20deg); } }
+.token.veiled::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: repeating-linear-gradient(135deg, #b9a6ff22 0 4px, transparent 4px 9px); pointer-events: none; }
+.badge-fury { position: absolute; top: -.35rem; left: 50%; transform: translateX(-50%); font-size: .6rem; padding: 0 .3rem; border-radius: .4rem; background: #4a0d3d; color: #ffb3f0; box-shadow: 0 0 .4rem #ff4fd8aa; }
+.keyword-notes { display: grid; grid-template-columns: auto 1fr; gap: .2rem .6rem; margin: .4rem 0 0; padding: .5rem .6rem; border-radius: .6rem; background: #07060a99; box-shadow: inset 0 0 0 1px #f0c27b33; font-size: .82rem; }
+.keyword-notes dt { font: 700 .78rem var(--display); color: var(--gold-hi); }
+.keyword-notes dd { margin: 0; color: #d8ccbf; }
+.card .art.placeholder { background: linear-gradient(180deg, #07060a10 25%, #07060ae0), var(--ph) center / cover; box-shadow: inset 0 0 0 1px #f0c27b44; }
+.card .art.placeholder .gem { display: none; }
+.hand-card.placeholder { background: linear-gradient(180deg, #07060a10 30%, #07060ae6), var(--ph) center / cover; box-shadow: inset 0 0 0 1px #f0c27b55; }
+.hand-card.placeholder.playable { box-shadow: inset 0 0 0 1px #f0c27b55, 0 0 0 2px #5dff86, 0 0 .8rem #5dff8699; }
+.face.placeholder { background: linear-gradient(180deg, #07060a10 30%, #07060ae6), var(--ph) center / cover; }
+.ph-crest { position: absolute; top: 38%; left: 50%; width: 42%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; box-shadow: 0 0 0 1px #f0c27b88, 0 0 1rem #000; opacity: .95; }
+.card .art.placeholder .ph-crest { width: 34%; }
+.face.placeholder { position: relative; }

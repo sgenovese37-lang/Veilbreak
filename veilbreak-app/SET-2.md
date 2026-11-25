@@ -1,12 +1,13 @@
 # VEILBREAK · Secondo set: «Gli Archivi del Velo»
 
-Proposta del 25 novembre 2026: regole da confermare prima di inserirle nel gioco.
+Proposta del 25 novembre 2026, con la parola chiave Patto: regole inserite nel gioco con grafica provvisoria.
 
 ## Parole chiave nuove
 
 - **Lascito**: Effetto che si attiva quando la creatura muore.
 - **Velato**: Non può essere scelto come bersaglio da attacchi, incantesimi e poteri nemici finché non attacca.
 - **Furia**: Può attaccare due volte in ogni turno.
+- **Patto**: La carta si paga con punti vita invece che con Essenza: il numero del costo indica quanti punti vita perde il tuo eroe. Non si può giocare se ti lascerebbe a 0.
 
 ## Corte di Hollow (8 carte)
 
@@ -43,8 +44,8 @@ Proposta del 25 novembre 2026: regole da confermare prima di inserirle nel gioco
 70. **Cortocircuito** (Comune) · 2 Essenza · Incantesimo  
    Infliggi 2 danni a una creatura e 1 danno all’eroe nemico.  
    *«Una scintilla basta. Il resto lo fa la paura.»* · file `70-cortocircuito.png`
-71. **Hacker Posseduto** (Non comune) · 3 Essenza · Creatura · 3/2  
-   Urlo di battaglia: Il prossimo incantesimo che giochi in questo turno costa 2 Essenza in meno.  
+71. **Hacker Posseduto** (Non comune) · 4 Essenza · Creatura · 3/2  
+   Patto. Urlo di battaglia: Il prossimo incantesimo che giochi in questo turno costa 2 Essenza in meno.  
    *«Ha scritto il codice. Il codice ha scritto lui.»* · file `71-hacker-posseduto.png`
 72. **Spirito nel Cavo** (Non comune) · 4 Essenza · Creatura · 3/3  
    Velato. Ogni volta che lanci un incantesimo, ottiene +1 Attacco.  
@@ -53,7 +54,7 @@ Proposta del 25 novembre 2026: regole da confermare prima di inserirle nel gioco
    Quando una creatura nemica attacca il tuo eroe, distruggila.  
    *«Accesso negato. Anima eliminata.»* · file `73-firewall-infernale.png`
 74. **Riflesso Duplicato** (Epica) · 5 Essenza · Incantesimo  
-   Evoca una copia di una creatura alleata.  
+   Patto. Evoca una copia di una creatura alleata.  
    *«Il segnale si è sdoppiato. Anche tu.»* · file `74-riflesso-duplicato.png`
 75. **La Regina Statica** (Leggendaria) · 7 Essenza · Creatura · 5/5  
    Furia. Urlo di battaglia: Infliggi all’eroe nemico 1 danno per ogni incantesimo che hai lanciato in questa partita (massimo 5).  
@@ -67,23 +68,23 @@ Proposta del 25 novembre 2026: regole da confermare prima di inserirle nel gioco
 77. **Chierichetto Spettrale** (Comune) · 2 Essenza · Creatura · 2/2  
    Lascito: Cura 3 punti vita al tuo eroe.  
    *«Suona ancora la campanella. Nessuno risponde.»* · file `77-chierichetto-spettrale.png`
-78. **Ostia Nera** (Comune) · 2 Essenza · Incantesimo  
-   Il tuo eroe subisce 2 danni. Pesca 2 carte.  
+78. **Ostia Nera** (Comune) · 3 Essenza · Incantesimo  
+   Patto. Pesca 2 carte.  
    *«Un sacramento al contrario: dai sangue, ricevi visioni.»* · file `78-ostia-nera.png`
-79. **Confessionale Infestato** (Non comune) · 4 Essenza · Artefatto  
-   Alla fine del tuo turno, cura completamente una creatura alleata ferita.  
+79. **Confessionale Infestato** (Non comune) · 3 Essenza · Artefatto  
+   Alla fine del tuo turno, cura 3 punti vita alla creatura alleata più ferita.  
    *«Racconta i tuoi peccati. Lui li prende e ti restituisce la carne.»* · file `79-confessionale-infestato.png`
 80. **Martire della Cattedrale** (Non comune) · 4 Essenza · Creatura · 2/6  
    Provocazione. Ogni volta che subisce danni, cura 1 punto vita al tuo eroe.  
    *«Il suo corpo è un muro. Il suo sangue, un balsamo.»* · file `80-martire-della-cattedrale.png`
-81. **Resurrezione Profana** (Rara) · 5 Essenza · Incantesimo  
-   Riporta in campo l’ultima creatura alleata morta in questa partita.  
+81. **Resurrezione Profana** (Rara) · 6 Essenza · Incantesimo  
+   Patto. Riporta in campo l’ultima creatura alleata non Leggendaria morta in questa partita.  
    *«I Senza Santi non lasciano indietro nessuno. Nemmeno i morti.»* · file `81-resurrezione-profana.png`
 82. **Reliquiario Ambulante** (Epica) · 6 Essenza · Creatura · 4/5  
-   Provocazione. Lascito: Evoca due Infermiere Stanche.  
+   Provocazione. Lascito: Evoca un’Infermiera Stanca.  
    *«Dentro porta le ossa di cento santi. E qualcuna si muove.»* · file `82-reliquiario-ambulante.png`
-83. **Santa Lucrezia delle Candele** (Leggendaria) · 8 Essenza · Creatura · 6/6  
-   Urlo di battaglia: Riporta in campo le 2 creature alleate più costose morte in questa partita.  
+83. **Santa Lucrezia delle Candele** (Leggendaria) · 9 Essenza · Creatura · 6/6  
+   Urlo di battaglia: Riporta in campo le 2 creature alleate non Leggendarie più costose morte in questa partita.  
    *«Per ogni candela accesa, un’anima torna a combattere.»* · file `83-santa-lucrezia-delle-candele.png`
 
 ## Sottocittà (7 carte)
