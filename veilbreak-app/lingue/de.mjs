@@ -515,5 +515,17 @@ export default {
  "Una creatura alleata ottiene +1 Attacco in modo permanente.": "Eine verbündete Kreatur erhält dauerhaft +1 Angriff.",
  "Una creatura alleata ottiene +1 Difesa in modo permanente.": "Eine verbündete Kreatur erhält dauerhaft +1 Verteidigung.",
  "Una creatura con Rapidità può attaccare nel turno in cui entra in gioco. Finché c’è una creatura con Provocazione, gli avversari possono attaccare solo lei: né le altre creature né l’eroe. Lei invece può attaccare chiunque. Puoi avere al massimo 7 creature in campo.": "Eine Kreatur mit Eile kann in dem Zug angreifen, in dem sie ins Spiel kommt. Solange eine Kreatur mit Wache im Spiel ist, können die Gegner nur sie angreifen: weder die anderen Kreaturen noch den Helden. Sie selbst darf jeden angreifen. Du kannst höchstens 7 Kreaturen im Spiel haben.",
- "I nemici devono attaccare prima questa creatura: finché è in campo non possono colpire le altre né il tuo eroe. Lei può attaccare chiunque.": "Gegner müssen zuerst diese Kreatur angreifen: Solange sie im Spiel ist, können sie weder die anderen noch deinen Helden treffen. Sie selbst darf jeden angreifen."
+ "I nemici devono attaccare prima questa creatura: finché è in campo non possono colpire le altre né il tuo eroe. Lei può attaccare chiunque.": "Gegner müssen zuerst diese Kreatur angreifen: Solange sie im Spiel ist, können sie weder die anderen noch deinen Helden treffen. Sie selbst darf jeden angreifen.",
+ "I tuoi mazzi": "Deine Decks",
+ "Quando giochi con una fazione, il gioco usa il mazzo salvato di quella fazione. Se non ne hai salvato uno, usa il mazzo predefinito.": "Wenn du mit einer Fraktion spielst, nutzt das Spiel dein gespeichertes Deck dieser Fraktion. Hast du keins gespeichert, wird das Standarddeck verwendet.",
+ "2 fazioni": "2 Fraktionen",
+ "Il tuo mazzo · {n} carte": "Dein Deck · {n} Karten",
+ "Mazzo incompleto: si usa il predefinito": "Unvollständiges Deck: Das Standarddeck wird verwendet",
+ "Mazzo predefinito": "Standarddeck",
+ "Vedi": "Ansehen",
+ "Modifica": "Bearbeiten",
+ "Crea": "Erstellen",
+ "Gioca": "Spielen",
+ "{n} carte · {c} creature · costo medio {a}": "{n} Karten · {c} Kreaturen · Durchschnittskosten {a}",
+ "Mazzo salvato: lo trovi in «I tuoi mazzi» e lo userai ogni volta che giochi con {name}.": "Deck gespeichert: Du findest es unter „Deine Decks“, und es wird jedes Mal verwendet, wenn du mit {name} spielst."
 };

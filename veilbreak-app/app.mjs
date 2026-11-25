@@ -289,7 +289,9 @@ function drawCard(c, options = {}) {
     ph.append(crestOf(c), element("strong", c.name), element("small", "Illustrazione in arrivo"));
     e.append(ph);
   }
-  if (art) {
+  if (art && options.art === "full" && art.circles) {
+    e.append(cardFace(c, art, { cost: options.cost, attack: options.attack, health: options.health }, { thumb: true, className: "art full" }));
+  } else if (art) {
     const img = element("img", undefined, options.art === "full" ? "art full" : "art");
     img.src = art.thumb;
     img.alt = "";
@@ -331,10 +333,10 @@ function showCard(c) {
   const art = illustrationFor(c.id);
   const body = element("div", undefined, "viewer-body");
   if (art) {
-    const img = element("img", undefined, "viewer-art");
-    img.src = art.src;
-    img.alt = t("Illustrazione di {card}", { card: c.name });
-    body.append(img);
+    const face = cardFace(c, art, {}, { className: "viewer-art" });
+    face.setAttribute("role", "img");
+    face.setAttribute("aria-label", t("Illustrazione di {card}", { card: c.name }));
+    body.append(face);
   }
   const rules = element("div", undefined, "viewer-rules");
   rules.append(element("h2", c.name));
@@ -356,11 +358,13 @@ function showCard(c) {
   if (art?.correction) {
     rules.append(element("h3", "Illustrazione corretta"));
     rules.append(element("p", art.correction, "muted"));
-    const img = body.querySelector(".viewer-art");
+    const face = body.querySelector(".viewer-art");
+    const img = face.querySelector("img");
     let showingOriginal = false;
     const toggle = button("Vedi originale", () => {
       showingOriginal = !showingOriginal;
       img.src = showingOriginal ? art.original : art.src;
+      face.classList.toggle("original", showingOriginal);   // l'originale ha già i numeri stampati
       toggle.textContent = t(showingOriginal ? "Vedi versione corretta" : "Vedi originale");
     });
     rules.append(toggle);
@@ -385,6 +389,73 @@ function loadDraft() {
   draft = [...(deckCards(saved) ?? defaultDeck(editing))];
   draftAlly = deckAlly(saved);
   choosingAlly = false;
+}
+
+// «I tuoi mazzi»: una scheda per fazione con il mazzo che il gioco usa quando giochi con quella fazione.
+function myDecks() {
+  const box = element("section", undefined, "my-decks");
+  box.setAttribute("aria-label", t("I tuoi mazzi"));
+  box.append(element("h2", "I tuoi mazzi"));
+  box.append(element("p", "Quando giochi con una fazione, il gioco usa il mazzo salvato di quella fazione. Se non ne hai salvato uno, usa il mazzo predefinito.", "muted"));
+  const grid = element("div", undefined, "my-decks-grid");
+  for (const faction of factions) {
+    const saved = savedDecks.get(faction);
+    const ready = playableDeck(faction);
+    const list = ready ? ready.cards : defaultDeck(faction);
+    const ally = ready?.ally ?? null;
+    const cardBox = element("article", undefined, `my-deck${faction === editing ? " editing" : ""}${ready ? " custom" : ""}`);
+    cardBox.dataset.faction = faction;
+    const face = element("div", undefined, "my-deck-face");
+    const img = element("img"); img.src = heroFor(faction)?.portrait ?? ""; img.alt = ""; img.loading = "lazy";
+    face.append(img);
+    if (ally) face.append(element("span", "2 fazioni", "my-deck-ally"));
+    const info = element("div", undefined, "my-deck-info");
+    info.append(element("strong", ally ? `${faction} + ${ally}` : faction));
+    const kind = ready ? t("Il tuo mazzo · {n} carte", { n: list.length }) : saved ? t("Mazzo incompleto: si usa il predefinito") : t("Mazzo predefinito");
+    info.append(element("span", kind, `my-deck-kind${ready ? " ok" : saved ? " warn" : ""}`));
+    const actions = element("div", undefined, "my-deck-actions");
+    const see = button("Vedi", () => showDeck(faction, list, ally), "small");
+    const edit = button(ready ? "Modifica" : "Crea", () => {
+      editing = faction; loadDraft(); renderDeckEditor("", "faction");
+      get("deck-editor").querySelector(".section-head")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, "small");
+    const play = button("Gioca", () => {
+      mode = "cpu"; level = form.elements.level.value;
+      const rivals = factions.filter(f => f !== faction);
+      const rival = rivals[Math.floor(Math.random() * rivals.length)];
+      startMatch([faction, rival], [ready, null]);
+    }, "small primary");
+    see.dataset.deck = faction; edit.dataset.deck = faction; play.dataset.deck = faction;
+    actions.append(see, edit, play);
+    info.append(actions);
+    cardBox.append(face, info);
+    grid.append(cardBox);
+  }
+  box.append(grid);
+  return box;
+}
+
+// Elenco delle carte di un mazzo, con le copie, nella finestra delle carte.
+function showDeck(faction, list, ally) {
+  const body = element("div", undefined, "deck-view");
+  body.append(element("h2", ally ? `${faction} + ${ally}` : faction));
+  const report = analyzeDeck(list);
+  body.append(element("p", t("{n} carte · {c} creature · costo medio {a}", { n: list.length, c: report.creatures, a: report.average.toFixed(1) }), "muted"));
+  const grid = element("div", undefined, "deck-view-grid");
+  const counts = new Map();
+  for (const id of list) counts.set(id, (counts.get(id) ?? 0) + 1);
+  for (const [id, n] of [...counts].sort((a, b) => byId.get(a[0]).cost - byId.get(b[0]).cost || a[0] - b[0])) {
+    const c = byId.get(id);
+    const art = illustrationFor(id);
+    const cell = button(undefined, () => showCard(c), "deck-view-card");
+    cell.setAttribute("aria-label", `${c.name} ×${n}`);
+    if (art) cell.append(cardFace(c, art, {}, { thumb: true })); else cell.append(drawCard(c));
+    cell.append(element("span", `×${n}`, "deck-view-count"));
+    grid.append(cell);
+  }
+  body.append(grid, button("Chiudi", () => viewer.close(), "primary"));
+  viewer.replaceChildren(body);
+  viewer.showModal();
 }
 
 function renderDeckEditor(message = "", focus) {
@@ -444,7 +515,7 @@ function renderDeckEditor(message = "", focus) {
     savedDecks.set(editing, draftAlly ? { cards: [...draft], ally: draftAlly } : [...draft]);
     try {
       localStorage.setItem(decksKey, JSON.stringify(Object.fromEntries(savedDecks)));
-      renderDeckEditor("Mazzo salvato.", "save");
+      renderDeckEditor(t("Mazzo salvato: lo trovi in «I tuoi mazzi» e lo userai ogni volta che giochi con {name}.", { name: editing }), "save");
     } catch {
       renderDeckEditor("Mazzo disponibile per questa sessione.", "save");
     }
@@ -508,7 +579,7 @@ function renderDeckEditor(message = "", focus) {
   const tips = element("ul", undefined, "advisor-tips");
   for (const tip of report.tips) tips.append(element("li", tip));
   advisor.append(advHead, element("small", "Curva di Essenza del mazzo", "advisor-label"), bars, facts, tips, make);
-  panel.replaceChildren(header, factionBox, advisor, controls, status, list);
+  panel.replaceChildren(myDecks(), header, factionBox, advisor, controls, status, list);
   if (focus === "faction") select.focus();
   else if (focus === "save") save.focus();
   else if (focus) (get(focus)?.disabled ? get(focus)?.parentElement?.querySelector("button:not(:disabled)") : get(focus))?.focus();
@@ -748,7 +819,7 @@ function castPreview(c, label, ms, hidden = false) {
   layer.append(element("small", label));  // label già tradotta da element()
   const art = illustrationFor(c.id);
   if (hidden) { const img = element("img", undefined, "back"); img.src = cardBackSrc(); img.alt = ""; layer.append(img); }
-  else if (art) { const img = element("img"); img.src = art.src; img.alt = ""; layer.append(img); }
+  else if (art) layer.append(cardFace(c, art, {}, { className: "cast-face" }));
   else layer.append(drawCard(c));
   if (!hidden && c.type !== "Creatura" && voiceOf(c.id)) layer.append(element("q", voiceOf(c.id), "cast-voice"));
   document.body.append(layer);
@@ -786,7 +857,7 @@ document.body.append(peekLayer);
 function showPeek(c, current) {
   const art = illustrationFor(c.id);
   const box = element("div", undefined, "peek-card");
-  if (art) { const img = element("img"); img.src = art.src; img.alt = ""; box.append(img); }
+  if (art) box.append(cardFace(c, art, current ? { attack: current.attack, health: current.health, cost: current.cost } : {}, { className: "peek-face" }));
   else box.append(drawCard(c));
   const rulesBox = element("div", undefined, "peek-rules");
   rulesBox.append(element("strong", `${c.name} · ${t("{n} Essenza", { n: c.cost })}`));
@@ -826,6 +897,77 @@ function attachPeek(el, c, current) {
   for (const ev of ["pointerup", "pointercancel", "pointerleave"]) el.addEventListener(ev, release);
   el.addEventListener("click", e => { if (shown) { e.stopImmediatePropagation(); e.preventDefault(); shown = false; } }, true);
   el.addEventListener("contextmenu", e => e.preventDefault());
+}
+
+// Trascinare una carta dalla mano al tavolo. Verso l'alto parte il trascinamento (in orizzontale la mano
+// continua a scorrere). Rilasciata sul tavolo la carta si gioca; quelle con un bersaglio si rilasciano
+// sul bersaglio (creatura o eroe), altrimenti si apre la scelta del bersaglio. Rilasciata sulla mano, si annulla.
+function attachDrag(el, index, c) {
+  let start = null, ghost = null, dragged = false, targets = [], lastHover = null;
+  const handTop = () => (document.querySelector(".hand")?.getBoundingClientRect().top ?? window.innerHeight) - 8;
+  const targetAt = (x, y) => {
+    const hit = document.elementFromPoint(x, y)?.closest(".token[data-side], .hero-portrait[data-side]");
+    if (!hit) return null;
+    const choice = { side: Number(hit.dataset.side), uid: hit.dataset.uid !== undefined ? Number(hit.dataset.uid) : null };
+    return targets.some(t => t.side === choice.side && t.uid === choice.uid) ? { choice, hit } : null;
+  };
+  const cleanup = () => {
+    ghost?.remove(); ghost = null; start = null;
+    document.body.classList.remove("dragging-card");
+    document.querySelectorAll(".drop-target, .drop-hover, .drop-zone").forEach(n => n.classList.remove("drop-target", "drop-hover", "drop-zone"));
+    el.classList.remove("drag-source");
+  };
+  el.style.touchAction = "pan-x";
+  el.addEventListener("dragstart", e => e.preventDefault());   // niente trascinamento nativo dell'immagine
+  el.querySelectorAll("img").forEach(img => { img.draggable = false; });
+  el.addEventListener("pointerdown", e => {
+    if (busy || e.button > 0) return;
+    start = { x: e.clientX, y: e.clientY, id: e.pointerId };
+    dragged = false;
+  });
+  el.addEventListener("pointermove", e => {
+    if (!start || e.pointerId !== start.id) return;
+    const dx = e.clientX - start.x, dy = e.clientY - start.y;
+    if (!ghost) {
+      if (dy > -16 || Math.abs(dy) < Math.abs(dx)) return;   // solo verso l'alto
+      dragged = true;
+      try { el.setPointerCapture(e.pointerId); } catch { /* non disponibile */ }
+      const rect = el.getBoundingClientRect();
+      ghost = el.cloneNode(true);
+      ghost.classList.add("drag-ghost");
+      Object.assign(ghost.style, { width: `${rect.width}px`, height: `${rect.height}px` });
+      document.body.append(ghost);
+      el.classList.add("drag-source");
+      document.body.classList.add("dragging-card");
+      targets = playTargets(game, game.players[game.active].hand[index]);
+      if (targets.length) {
+        for (const t of targets) {
+          const sel = t.uid === null ? `.hero-portrait[data-side="${t.side}"]` : `.token[data-side="${t.side}"][data-uid="${t.uid}"]`;
+          document.querySelector(sel)?.classList.add("drop-target");
+        }
+      } else document.querySelector(".board.mine")?.classList.add("drop-zone");
+      sound("select");
+    }
+    ghost.style.transform = `translate(${e.clientX - ghost.offsetWidth / 2}px, ${e.clientY - ghost.offsetHeight * .6}px) rotate(${Math.max(-8, Math.min(8, dx / 20))}deg) scale(1.15)`;
+    const over = targets.length ? targetAt(e.clientX, e.clientY)?.hit ?? null : null;
+    if (over !== lastHover) { lastHover?.classList.remove("drop-hover"); over?.classList.add("drop-hover"); lastHover = over; }
+    ghost.classList.toggle("will-play", e.clientY < handTop());
+  });
+  const finish = e => {
+    if (!start) return;
+    if (!ghost) { start = null; return; }
+    const x = e.clientX, y = e.clientY;
+    const hit = targets.length ? targetAt(x, y) : null;
+    const above = y < handTop();
+    cleanup();
+    if (e.type === "pointercancel" || busy) return;
+    if (hit) { selected = { kind: "play", index }; target(hit.choice.side, hit.choice.uid); }
+    else if (above) chooseCard(index);
+  };
+  el.addEventListener("pointerup", finish);
+  el.addEventListener("pointercancel", finish);
+  // dopo un trascinamento il «clic» del dito alzato non deve rigiocare la carta
+  el.addEventListener("click", e => { if (dragged) { e.stopImmediatePropagation(); e.preventDefault(); dragged = false; } }, true);
 }
 
 // ---------- Tavolo di gioco ----------
@@ -1132,6 +1274,34 @@ function boardRow(side, own, allow) {
 }
 
 // Gemma del costo: verde se scontata, rossa se rincarata; goccia di sangue con «PV» per i Patti.
+// Carta illustrata con i cerchi di costo, Attacco e Difesa. Le scritte stampate sono state tolte dalle
+// immagini (tools/pulisci_carte.py): i cerchi mostrano i valori attuali, verdi se migliorati, rossi se peggiorati.
+function cardFace(c, art, values = {}, { thumb = false, className = "" } = {}) {
+  const face = element("div", undefined, `card-face ${className}`.trim());
+  const img = element("img"); img.src = thumb ? art.thumb : art.src; img.alt = ""; img.decoding = "async";
+  face.append(img);
+  const at = art.circles;
+  if (!at) return face;
+  const ring = (kind, value, better) => {
+    const r = element("span", undefined, `stat-ring ring-${kind}${better === true ? " up" : better === false ? " down" : ""}`);
+    r.append(element("b", String(value)));
+    r.style.left = `${at[kind][0]}%`; r.style.top = `${at[kind][1]}%`;
+    face.append(r);
+    return r;
+  };
+  const cmp = (now, base, lowerIsBetter = false) => now === base ? undefined : (lowerIsBetter ? now < base : now > base);
+  if (at.cost && c.cost !== undefined) {
+    const cost = values.cost ?? c.cost;
+    const r = ring("cost", cost, cmp(cost, c.cost, true));
+    if (isPact(c)) { r.classList.add("pact"); r.append(element("small", "PV")); }
+  }
+  if (c.type === "Creatura" && at.att) {
+    ring("att", values.attack ?? c.attack, cmp(values.attack ?? c.attack, c.attack));
+    ring("dif", values.health ?? c.health, cmp(values.health ?? c.health, c.health));
+  }
+  return face;
+}
+
 function costGem(c, cost) {
   const gem = element("span", undefined, `gem big${isPact(c) ? " pact" : cost < c.cost ? " cheaper" : cost > c.cost ? " pricier" : ""}`);
   gem.append(element("b", cost));
@@ -1157,9 +1327,11 @@ function handCard(side, id, i) {
   const cost = mull ? c.cost : price(game, side, c);
   if (art) {
     // l'illustrazione è già una carta completa: si aggiunge il costo solo se è cambiato
-    const img = element("img", undefined, "mini-art"); img.src = art.thumb; img.alt = ""; card.append(img);
-    // gemma grande con il costo attuale: verde se scontato, rossa se aumentato
-    card.append(costGem(c, cost));
+    if (art.circles) card.append(cardFace(c, art, { cost }, { thumb: true, className: "mini-art" }));
+    else {
+      const img = element("img", undefined, "mini-art"); img.src = art.thumb; img.alt = ""; card.append(img);
+      card.append(costGem(c, cost));
+    }
   } else {
     card.classList.add("placeholder");
     card.style.setProperty("--ph", `url("${placeholderArt(c)}")`);
@@ -1169,6 +1341,7 @@ function handCard(side, id, i) {
   }
   if (mull && replacements.has(i)) card.append(element("span", "Da cambiare", "swap-mark"));
   attachPeek(card, c);
+  if (playable) attachDrag(card, i, c);
   const info = button("i", () => showCard(c), "info");
   info.setAttribute("aria-label", t("Dettagli di {card}", { card: c.name }));
   wrap.append(card, info);
@@ -1240,7 +1413,7 @@ let alertState = null;
 function centerAlert(title, text, kind = "") {
   const box = element("div", undefined, `center-alert ${kind}`);
   box.setAttribute("role", "alert");
-  box.append(icon(kind === "hand" ? "cards" : "skull"), element("strong", title), element("p", text));
+  box.append(icon(kind === "alert-hand" ? "cards" : "skull"), element("strong", title), element("p", text));
   document.querySelectorAll(".center-alert").forEach(old => old.remove());
   document.body.append(box);
   setTimeout(() => box.classList.add("leaving"), 3200);
@@ -1261,7 +1434,7 @@ function matchAlerts() {
       centerAlert(t("Ultima carta pescata"), t("Il tuo mazzo è finito: da ora, a ogni turno senza carte da pescare subirai danni crescenti (1, poi 2, poi 3…)."), "");
     }
     else if ((p.burned ?? 0) > alertState.burned[side] && mine) {
-      centerAlert(t("Mano piena"), t("Puoi tenere al massimo {max} carte in mano: la carta pescata è andata persa.", { max: rules.handLimit }), "hand");
+      centerAlert(t("Mano piena"), t("Puoi tenere al massimo {max} carte in mano: la carta pescata è andata persa.", { max: rules.handLimit }), "alert-hand");
     }
     alertState.fatigue[side] = p.fatigue ?? 0;
     alertState.burned[side] = p.burned ?? 0;

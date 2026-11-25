@@ -54,6 +54,12 @@ Riepilogo per riprendere il lavoro in una nuova sessione.
 - Provocazione corretta, IA che non vede più i segreti nemici, vita 25, poteri e mazzi riequilibrati (vedi `BILANCIAMENTO.md`).
 - In partita: contatori di mazzo e mano sempre visibili, avvisi al centro per mazzo finito, danni da mazzo vuoto e carta persa per mano piena; battute delle carte più grandi.
 
+## Aggiunte del 25 novembre (notte)
+- Cerchi per costo, Attacco e Difesa: le scritte stampate sono tolte dalle immagini (`tools/pulisci_carte.py`, serve OpenCV) e le immagini pulite sono in `assets/carte-pulite/`; i cerchi mostrano i valori attuali.
+- Carte trascinabili dalla mano al tavolo (o sul bersaglio).
+- Sezione «I tuoi mazzi» in cima a Mazzi: un mazzo per fazione, con Vedi, Modifica/Crea e Gioca.
+- Test: il computer attacca solo la Provocazione finché è in campo (Normale e Difficile).
+
 ## Prossimi passi
 - Correzioni dalle partite dell'utente.
 - Vantaggio di chi gioca per primo ancora intorno al 60% contro il computer.

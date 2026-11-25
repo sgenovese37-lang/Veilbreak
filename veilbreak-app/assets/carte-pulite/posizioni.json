@@ -1,0 +1,1048 @@
+{
+ "1": {
+  "file": "01-il-sindaco-di-hollow-street.webp",
+  "att": [
+   20.4,
+   91.5
+  ],
+  "dif": [
+   79.6,
+   91.5
+  ],
+  "cost": [
+   88.5,
+   9.0
+  ]
+ },
+ "2": {
+  "file": "02-il-locatore.webp",
+  "att": [
+   20.4,
+   91.5
+  ],
+  "dif": [
+   79.6,
+   91.5
+  ],
+  "cost": [
+   88.5,
+   9.0
+  ]
+ },
+ "3": {
+  "file": "03-chirurgo-del-vicolo.webp",
+  "att": [
+   20.4,
+   91.5
+  ],
+  "dif": [
+   79.6,
+   91.5
+  ],
+  "cost": [
+   88.5,
+   9.0
+  ]
+ },
+ "4": {
+  "file": "04-guardia-del-turno-di-notte.webp",
+  "att": [
+   20.4,
+   91.5
+  ],
+  "dif": [
+   79.6,
+   91.5
+  ],
+  "cost": [
+   88.5,
+   9.0
+  ]
+ },
+ "5": {
+  "file": "05-impiegato-del-contratto.webp",
+  "att": [
+   20.4,
+   91.5
+  ],
+  "dif": [
+   79.6,
+   91.5
+  ],
+  "cost": [
+   88.5,
+   9.0
+  ]
+ },
+ "6": {
+  "file": "06-specchio-incrinato.webp",
+  "cost": [
+   88.5,
+   9.0
+  ]
+ },
+ "7": {
+  "file": "07-telecamera-di-sicurezza.webp",
+  "cost": [
+   88.5,
+   9.0
+  ]
+ },
+ "8": {
+  "file": "08-passerotto.webp",
+  "att": [
+   20.4,
+   91.5
+  ],
+  "dif": [
+   79.6,
+   91.5
+  ],
+  "cost": [
+   88.5,
+   9.0
+  ]
+ },
+ "9": {
+  "file": "09-luce-tremolante.webp",
+  "cost": [
+   88.5,
+   9.0
+  ]
+ },
+ "10": {
+  "file": "10-contratto-minore.webp",
+  "att": [
+   20.4,
+   91.5
+  ],
+  "dif": [
+   79.6,
+   91.5
+  ],
+  "cost": [
+   88.5,
+   9.0
+  ]
+ },
+ "11": {
+  "file": "11-assessore-corrotto.webp",
+  "att": [
+   20.4,
+   91.5
+  ],
+  "dif": [
+   79.6,
+   91.5
+  ],
+  "cost": [
+   88.5,
+   9.0
+  ]
+ },
+ "12": {
+  "file": "12-ordine-del-sindaco.webp",
+  "cost": [
+   88.5,
+   9.0
+  ]
+ },
+ "13": {
+  "file": "13-segretaria-notturna.webp",
+  "att": [
+   20.4,
+   91.5
+  ],
+  "dif": [
+   79.6,
+   91.5
+  ],
+  "cost": [
+   88.5,
+   9.0
+  ]
+ },
+ "14": {
+  "file": "14-archivio-segreto.webp",
+  "cost": [
+   88.5,
+   9.0
+  ]
+ },
+ "15": {
+  "file": "15-ultima-legge.webp",
+  "cost": [
+   88.5,
+   9.0
+  ]
+ },
+ "16": {
+  "file": "16-lultimo-treno-per-nessundove.webp",
+  "cost": [
+   88.5,
+   9.0
+  ]
+ },
+ "17": {
+  "file": "17-patto-di-sangue-neon.webp",
+  "cost": [
+   88.5,
+   9.0
+  ]
+ },
+ "18": {
+  "file": "18-demone-dei-dati.webp",
+  "att": [
+   20.4,
+   91.5
+  ],
+  "dif": [
+   79.6,
+   91.5
+  ],
+  "cost": [
+   88.5,
+   9.0
+  ]
+ },
+ "19": {
+  "file": "19-protocollo-blackout.webp",
+  "cost": [
+   88.5,
+   9.0
+  ]
+ },
+ "20": {
+  "file": "20-cecchino-sul-tetto.webp",
+  "att": [
+   20.4,
+   91.5
+  ],
+  "dif": [
+   79.6,
+   91.5
+  ],
+  "cost": [
+   88.5,
+   9.0
+  ]
+ },
+ "21": {
+  "file": "21-glitch-di-evocazione.webp",
+  "cost": [
+   88.5,
+   9.0
+  ]
+ },
+ "22": {
+  "file": "22-telefono-vincolante.webp",
+  "cost": [
+   88.5,
+   9.0
+  ]
+ },
+ "23": {
+  "file": "23-luce-rossa.webp",
+  "cost": [
+   88.5,
+   9.0
+  ]
+ },
+ "24": {
+  "file": "24-spettro-dellufficio.webp",
+  "att": [
+   20.4,
+   91.5
+  ],
+  "dif": [
+   79.6,
+   91.5
+  ],
+  "cost": [
+   88.5,
+   9.0
+  ]
+ },
+ "25": {
+  "file": "25-atm-di-sangue.webp",
+  "cost": [
+   88.5,
+   9.0
+  ]
+ },
+ "26": {
+  "file": "26-commutatore-dombra.webp",
+  "att": [
+   20.4,
+   91.5
+  ],
+  "dif": [
+   79.6,
+   91.5
+  ],
+  "cost": [
+   88.5,
+   9.0
+  ]
+ },
+ "27": {
+  "file": "27-chiamata-disperata.webp",
+  "cost": [
+   88.5,
+   9.0
+  ]
+ },
+ "28": {
+  "file": "28-neon-succube.webp",
+  "att": [
+   20.4,
+   91.5
+  ],
+  "dif": [
+   79.6,
+   91.5
+  ],
+  "cost": [
+   88.5,
+   9.0
+  ]
+ },
+ "29": {
+  "file": "29-schermo-rotto.webp",
+  "att": [
+   20.4,
+   91.5
+  ],
+  "dif": [
+   79.6,
+   91.5
+  ],
+  "cost": [
+   88.5,
+   9.0
+  ]
+ },
+ "30": {
+  "file": "30-impulso-elettrico.webp",
+  "cost": [
+   88.5,
+   9.0
+  ]
+ },
+ "31": {
+  "file": "31-elena-voss-il-contratto.webp",
+  "att": [
+   23.0,
+   93.5
+  ],
+  "dif": [
+   77.0,
+   93.5
+  ],
+  "cost": [
+   88.5,
+   8.0
+  ]
+ },
+ "32": {
+  "file": "32-santo-della-metropolitana.webp",
+  "att": [
+   23.0,
+   93.5
+  ],
+  "dif": [
+   77.0,
+   93.5
+  ],
+  "cost": [
+   88.5,
+   8.0
+  ]
+ },
+ "33": {
+  "file": "33-rito-demergenza.webp",
+  "cost": [
+   88.5,
+   8.0
+  ]
+ },
+ "34": {
+  "file": "34-infermiera-stanca.webp",
+  "att": [
+   23.0,
+   93.5
+  ],
+  "dif": [
+   77.0,
+   93.5
+  ],
+  "cost": [
+   88.5,
+   8.0
+  ]
+ },
+ "35": {
+  "file": "35-pulsante-di-panico.webp",
+  "cost": [
+   88.5,
+   8.0
+  ]
+ },
+ "36": {
+  "file": "36-clinica-abbandonata.webp",
+  "cost": [
+   88.5,
+   8.0
+  ]
+ },
+ "37": {
+  "file": "37-prete-spezzato.webp",
+  "att": [
+   23.0,
+   93.5
+  ],
+  "dif": [
+   77.0,
+   93.5
+  ],
+  "cost": [
+   88.5,
+   8.0
+  ]
+ },
+ "38": {
+  "file": "38-maledizione-della-citta.webp",
+  "cost": [
+   88.5,
+   8.0
+  ]
+ },
+ "39": {
+  "file": "39-testimone-finale.webp",
+  "cost": [
+   88.5,
+   8.0
+  ]
+ },
+ "40": {
+  "file": "40-offerta-di-sangue.webp",
+  "cost": [
+   88.5,
+   8.0
+  ]
+ },
+ "41": {
+  "file": "41-guaritrice-del-vicolo.webp",
+  "att": [
+   23.0,
+   93.5
+  ],
+  "dif": [
+   77.0,
+   93.5
+  ],
+  "cost": [
+   88.5,
+   8.0
+  ]
+ },
+ "42": {
+  "file": "42-candela-spenta.webp",
+  "att": [
+   23.0,
+   93.5
+  ],
+  "dif": [
+   77.0,
+   93.5
+  ],
+  "cost": [
+   88.5,
+   8.0
+  ]
+ },
+ "43": {
+  "file": "43-preghiera-distorta.webp",
+  "cost": [
+   88.5,
+   8.0
+  ]
+ },
+ "44": {
+  "file": "44-reliquia-insanguinata.webp",
+  "cost": [
+   88.5,
+   8.0
+  ]
+ },
+ "45": {
+  "file": "45-lultimo-santo.webp",
+  "att": [
+   23.0,
+   93.5
+  ],
+  "dif": [
+   77.0,
+   93.5
+  ],
+  "cost": [
+   88.5,
+   8.0
+  ]
+ },
+ "46": {
+  "file": "46-creatura-della-sottocitta.webp",
+  "att": [
+   23.0,
+   93.5
+  ],
+  "dif": [
+   77.0,
+   93.5
+  ],
+  "cost": [
+   88.5,
+   8.0
+  ]
+ },
+ "47": {
+  "file": "47-predatore-del-vicolo.webp",
+  "att": [
+   23.0,
+   93.5
+  ],
+  "dif": [
+   77.0,
+   93.5
+  ],
+  "cost": [
+   88.5,
+   8.0
+  ]
+ },
+ "48": {
+  "file": "48-gatto-spirituale-del-vicolo.webp",
+  "att": [
+   23.0,
+   93.5
+  ],
+  "dif": [
+   77.0,
+   93.5
+  ],
+  "cost": [
+   88.5,
+   8.0
+  ]
+ },
+ "49": {
+  "file": "49-golem-di-cemento.webp",
+  "att": [
+   23.0,
+   93.5
+  ],
+  "dif": [
+   77.0,
+   93.5
+  ],
+  "cost": [
+   88.5,
+   8.0
+  ]
+ },
+ "50": {
+  "file": "50-imboscata.webp",
+  "cost": [
+   88.5,
+   8.0
+  ]
+ },
+ "51": {
+  "file": "51-lurker-della-metro.webp",
+  "att": [
+   23.0,
+   93.5
+  ],
+  "dif": [
+   77.0,
+   93.5
+  ],
+  "cost": [
+   88.5,
+   8.0
+  ]
+ },
+ "52": {
+  "file": "52-profeta-di-strada.webp",
+  "att": [
+   23.0,
+   93.5
+  ],
+  "dif": [
+   77.0,
+   93.5
+  ],
+  "cost": [
+   88.5,
+   8.0
+  ]
+ },
+ "53": {
+  "file": "53-ascensore-rotto.webp",
+  "cost": [
+   88.5,
+   8.0
+  ]
+ },
+ "54": {
+  "file": "54-bus-notturno.webp",
+  "att": [
+   23.0,
+   93.5
+  ],
+  "dif": [
+   77.0,
+   93.5
+  ],
+  "cost": [
+   88.5,
+   8.0
+  ]
+ },
+ "55": {
+  "file": "55-maledizione-statica.webp",
+  "cost": [
+   88.5,
+   8.0
+  ]
+ },
+ "56": {
+  "file": "56-sanguisuga-dei-dati.webp",
+  "att": [
+   23.0,
+   93.5
+  ],
+  "dif": [
+   77.0,
+   93.5
+  ],
+  "cost": [
+   88.5,
+   8.0
+  ]
+ },
+ "57": {
+  "file": "57-ombra-del-parcheggio.webp",
+  "att": [
+   23.0,
+   93.5
+  ],
+  "dif": [
+   77.0,
+   93.5
+  ],
+  "cost": [
+   88.5,
+   8.0
+  ]
+ },
+ "58": {
+  "file": "58-contratto-della-sottocitta.webp",
+  "att": [
+   23.0,
+   93.5
+  ],
+  "dif": [
+   77.0,
+   93.5
+  ],
+  "cost": [
+   88.5,
+   8.0
+  ]
+ },
+ "59": {
+  "file": "59-re-della-fogna.webp",
+  "att": [
+   23.0,
+   93.5
+  ],
+  "dif": [
+   77.0,
+   93.5
+  ],
+  "cost": [
+   88.5,
+   8.0
+  ]
+ },
+ "60": {
+  "file": "60-frammento-di-veil.webp",
+  "att": [
+   23.0,
+   93.5
+  ],
+  "dif": [
+   77.0,
+   93.5
+  ],
+  "cost": [
+   88.5,
+   8.0
+  ]
+ },
+ "61": {
+  "file": "61-notaio-delloltretomba.webp",
+  "att": [
+   23.6,
+   90.1
+  ],
+  "dif": [
+   76.4,
+   90.1
+  ],
+  "cost": [
+   87.5,
+   8.0
+  ]
+ },
+ "62": {
+  "file": "62-archivista-senza-volto.webp",
+  "att": [
+   23.6,
+   90.1
+  ],
+  "dif": [
+   76.4,
+   90.1
+  ],
+  "cost": [
+   87.5,
+   8.0
+  ]
+ },
+ "63": {
+  "file": "63-timbro-del-vincolo.webp",
+  "cost": [
+   87.5,
+   8.0
+  ]
+ },
+ "64": {
+  "file": "64-ufficiale-giudiziario.webp",
+  "att": [
+   23.6,
+   90.1
+  ],
+  "dif": [
+   76.4,
+   90.1
+  ],
+  "cost": [
+   87.5,
+   8.0
+  ]
+ },
+ "65": {
+  "file": "65-registro-dei-debiti.webp",
+  "cost": [
+   87.5,
+   8.0
+  ]
+ },
+ "66": {
+  "file": "66-sfratto-esecutivo.webp",
+  "cost": [
+   87.5,
+   8.0
+  ]
+ },
+ "67": {
+  "file": "67-commissione-dinchiesta.webp",
+  "cost": [
+   87.5,
+   8.0
+  ]
+ },
+ "68": {
+  "file": "68-il-gran-conservatore.webp",
+  "att": [
+   23.6,
+   90.1
+  ],
+  "dif": [
+   76.4,
+   90.1
+  ],
+  "cost": [
+   87.5,
+   8.0
+  ]
+ },
+ "69": {
+  "file": "69-corriere-della-rete.webp",
+  "att": [
+   23.6,
+   90.1
+  ],
+  "dif": [
+   76.4,
+   90.1
+  ],
+  "cost": [
+   87.5,
+   8.0
+  ]
+ },
+ "70": {
+  "file": "70-cortocircuito.webp",
+  "cost": [
+   87.5,
+   8.0
+  ]
+ },
+ "71": {
+  "file": "71-hacker-posseduto.webp",
+  "att": [
+   23.6,
+   90.1
+  ],
+  "dif": [
+   76.4,
+   90.1
+  ],
+  "cost": [
+   87.5,
+   8.0
+  ]
+ },
+ "72": {
+  "file": "72-spirito-nel-cavo.webp",
+  "att": [
+   23.6,
+   90.1
+  ],
+  "dif": [
+   76.4,
+   90.1
+  ],
+  "cost": [
+   87.5,
+   8.0
+  ]
+ },
+ "73": {
+  "file": "73-firewall-infernale.webp",
+  "cost": [
+   87.5,
+   8.0
+  ]
+ },
+ "74": {
+  "file": "74-riflesso-duplicato.webp",
+  "cost": [
+   87.5,
+   8.0
+  ]
+ },
+ "75": {
+  "file": "75-la-regina-statica.webp",
+  "att": [
+   23.6,
+   90.1
+  ],
+  "dif": [
+   76.4,
+   90.1
+  ],
+  "cost": [
+   87.5,
+   8.0
+  ]
+ },
+ "76": {
+  "file": "76-penitente-flagellante.webp",
+  "att": [
+   23.6,
+   90.1
+  ],
+  "dif": [
+   76.4,
+   90.1
+  ],
+  "cost": [
+   87.5,
+   8.0
+  ]
+ },
+ "77": {
+  "file": "77-chierichetto-spettrale.webp",
+  "att": [
+   23.6,
+   90.1
+  ],
+  "dif": [
+   76.4,
+   90.1
+  ],
+  "cost": [
+   87.5,
+   8.0
+  ]
+ },
+ "78": {
+  "file": "78-ostia-nera.webp",
+  "cost": [
+   87.5,
+   8.0
+  ]
+ },
+ "79": {
+  "file": "79-confessionale-infestato.webp",
+  "cost": [
+   87.5,
+   8.0
+  ]
+ },
+ "80": {
+  "file": "80-martire-della-cattedrale.webp",
+  "att": [
+   23.6,
+   90.1
+  ],
+  "dif": [
+   76.4,
+   90.1
+  ],
+  "cost": [
+   87.5,
+   8.0
+  ]
+ },
+ "81": {
+  "file": "81-resurrezione-profana.webp",
+  "cost": [
+   87.5,
+   8.0
+  ]
+ },
+ "82": {
+  "file": "82-reliquiario-ambulante.webp",
+  "att": [
+   23.6,
+   90.1
+  ],
+  "dif": [
+   76.4,
+   90.1
+  ],
+  "cost": [
+   87.5,
+   8.0
+  ]
+ },
+ "83": {
+  "file": "83-santa-lucrezia-delle-candele.webp",
+  "att": [
+   23.6,
+   90.1
+  ],
+  "dif": [
+   76.4,
+   90.1
+  ],
+  "cost": [
+   87.5,
+   8.0
+  ]
+ },
+ "84": {
+  "file": "84-crepa-nel-tombino.webp",
+  "cost": [
+   87.5,
+   8.0
+  ]
+ },
+ "85": {
+  "file": "85-mangiatore-di-ombre.webp",
+  "att": [
+   23.6,
+   90.1
+  ],
+  "dif": [
+   76.4,
+   90.1
+  ],
+  "cost": [
+   87.5,
+   8.0
+  ]
+ },
+ "86": {
+  "file": "86-guardiano-dei-binari-morti.webp",
+  "att": [
+   23.6,
+   90.1
+  ],
+  "dif": [
+   76.4,
+   90.1
+  ],
+  "cost": [
+   87.5,
+   8.0
+  ]
+ },
+ "87": {
+  "file": "87-trappola-a-ganascia.webp",
+  "cost": [
+   87.5,
+   8.0
+  ]
+ },
+ "88": {
+  "file": "88-madre-della-muffa.webp",
+  "att": [
+   23.6,
+   90.1
+  ],
+  "dif": [
+   76.4,
+   90.1
+  ],
+  "cost": [
+   87.5,
+   8.0
+  ]
+ },
+ "89": {
+  "file": "89-il-pastore-dei-cunicoli.webp",
+  "att": [
+   23.6,
+   90.1
+  ],
+  "dif": [
+   76.4,
+   90.1
+  ],
+  "cost": [
+   87.5,
+   8.0
+  ]
+ },
+ "90": {
+  "file": "90-il-leviatano-delle-cisterne.webp",
+  "att": [
+   23.6,
+   90.1
+  ],
+  "dif": [
+   76.4,
+   90.1
+  ],
+  "cost": [
+   87.5,
+   8.0
+  ]
+ }
+}

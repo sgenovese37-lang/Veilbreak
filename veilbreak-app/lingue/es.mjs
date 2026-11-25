@@ -515,5 +515,17 @@ export default {
  "Una creatura alleata ottiene +1 Attacco in modo permanente.": "Una criatura aliada obtiene +1 de Ataque de forma permanente.",
  "Una creatura alleata ottiene +1 Difesa in modo permanente.": "Una criatura aliada obtiene +1 de Defensa de forma permanente.",
  "Una creatura con Rapidità può attaccare nel turno in cui entra in gioco. Finché c’è una creatura con Provocazione, gli avversari possono attaccare solo lei: né le altre creature né l’eroe. Lei invece può attaccare chiunque. Puoi avere al massimo 7 creature in campo.": "Una criatura con Celeridad puede atacar en el turno en que entra en juego. Mientras haya una criatura con Guardia, los rivales solo pueden atacarla a ella: ni a las demás criaturas ni al héroe. Ella, en cambio, puede atacar a quien quiera. Puedes tener como máximo 7 criaturas en el campo.",
- "I nemici devono attaccare prima questa creatura: finché è in campo non possono colpire le altre né il tuo eroe. Lei può attaccare chiunque.": "Los enemigos deben atacar primero a esta criatura: mientras esté en el campo no pueden golpear a las demás ni a tu héroe. Ella puede atacar a quien quiera."
+ "I nemici devono attaccare prima questa creatura: finché è in campo non possono colpire le altre né il tuo eroe. Lei può attaccare chiunque.": "Los enemigos deben atacar primero a esta criatura: mientras esté en el campo no pueden golpear a las demás ni a tu héroe. Ella puede atacar a quien quiera.",
+ "I tuoi mazzi": "Tus mazos",
+ "Quando giochi con una fazione, il gioco usa il mazzo salvato di quella fazione. Se non ne hai salvato uno, usa il mazzo predefinito.": "Cuando juegas con una facción, el juego usa el mazo que guardaste para ella. Si no has guardado ninguno, usa el mazo predeterminado.",
+ "2 fazioni": "2 facciones",
+ "Il tuo mazzo · {n} carte": "Tu mazo · {n} cartas",
+ "Mazzo incompleto: si usa il predefinito": "Mazo incompleto: se usa el predeterminado",
+ "Mazzo predefinito": "Mazo predeterminado",
+ "Vedi": "Ver",
+ "Modifica": "Editar",
+ "Crea": "Crear",
+ "Gioca": "Jugar",
+ "{n} carte · {c} creature · costo medio {a}": "{n} cartas · {c} criaturas · coste medio {a}",
+ "Mazzo salvato: lo trovi in «I tuoi mazzi» e lo userai ogni volta che giochi con {name}.": "Mazo guardado: lo encontrarás en «Tus mazos» y se usará cada vez que juegues con {name}."
 };

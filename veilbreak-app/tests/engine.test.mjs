@@ -51,7 +51,13 @@ test("le 13 illustrazioni corrette coincidono con il catalogo", () => {
   assert.deepEqual(fixed.sort((a, b) => a - b), [1, 3, 6, 7, 8, 9, 10, 15, 16, 20, 24, 25, 27]);
   for (const id of fixed) {
     assert.deepEqual(illustrations[id].differences, [], `carta ${id}`);
-    assert.match(illustrations[id].src, /illustrazioni-corrette/);
+    // l'immagine in gioco è la versione corretta, ripulita dalle scritte di costo, Attacco e Difesa
+    assert.match(illustrations[id].src, /carte-pulite/);
+  }
+  for (const c of cards) {
+    const circles = illustrations[c.id].circles;
+    assert.ok(circles?.cost, `cerchio del costo per ${c.name}`);
+    if (c.type === "Creatura") assert.ok(circles.att && circles.dif, `cerchi di Attacco e Difesa per ${c.name}`);
   }
   const left = Object.values(illustrations).flatMap(art => art.differences);
   assert.ok(left.every(text => text.startsWith("Differenza solo grafica")), "restano solo differenze grafiche");
@@ -375,4 +381,30 @@ test("la mano ha un limite: la carta pescata in più va persa", () => {
   assert.equal(p.hand.length, rules.handLimit);
   assert.equal(p.deck.length, deckBefore - 1);
   assert.equal(p.burned, 1);
+});
+
+test("il computer (Normale e Difficile) attacca solo la Provocazione finché c'è", async () => {
+  const { smartTurn } = await import("../ai.mjs");
+  for (const level of ["Normale", "Difficile"]) {
+    for (let seed = 1; seed <= 6; seed++) {
+      const g = createGame(["Corte di Hollow", "Sottocittà"], seeded(100 + seed));
+      mulligan(g, []); mulligan(g, []);
+      endTurn(g);                        // tocca al computer (giocatore 1)
+      const cpu = g.players[1], me = g.players[0];
+      cpu.hand = []; cpu.board = [];
+      for (let i = 0; i < 4; i++) cpu.board.push(unitOf(300 + i, 47));     // 4 Predatori 4/3 pronti
+      me.board = [unitOf(10, 29), unitOf(11, 37), unitOf(12, 54)];          // 37 = Prete Spezzato, Provocazione 2/4
+      const lifeBefore = me.life;
+      const hits = [];
+      const original = g.log.length;
+      if (level === "Difficile") smartTurn(g); else computerTurn(g, level);
+      const log = g.log.slice(original).filter(line => / attacca /.test(line));
+      for (const line of log) hits.push(line);
+      // finché il Prete Spezzato è vivo nessun attacco va altrove: controlliamo l'ordine nel registro
+      const firstOther = log.findIndex(line => !/Prete Spezzato/.test(line));
+      const tauntDiedAt = log.findIndex(line => /Prete Spezzato/.test(line)) + 1;
+      if (firstOther >= 0) assert.ok(firstOther >= tauntDiedAt && !me.board.some(u => u.uid === 11), `${level}: attacco prima della morte della Provocazione: ${hits.join(" | ")}`);
+      if (me.board.some(u => u.uid === 11)) assert.equal(me.life, lifeBefore, `${level}: eroe colpito con la Provocazione in campo`);
+    }
+  }
 });

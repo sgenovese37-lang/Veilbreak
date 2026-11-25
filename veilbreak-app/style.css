@@ -1462,9 +1462,88 @@ body.energy-save #embers { display: none; }
   background: radial-gradient(circle at 50% 0%, #6d0f18f2, #1b0708f5 70%); box-shadow: 0 0 0 1px #ff5b5b99, 0 1rem 2.5rem #000d, 0 0 2rem #b3122366;
   animation: alert-in .35s cubic-bezier(.2, 1.4, .4, 1); }
 .center-alert.foe { background: radial-gradient(circle at 50% 0%, #3d1a5cf2, #0d0716f5 70%); box-shadow: 0 0 0 1px #b48cff99, 0 1rem 2.5rem #000d; }
-.center-alert.hand { background: radial-gradient(circle at 50% 0%, #5c3d0ff2, #160e06f5 70%); box-shadow: 0 0 0 1px #ffc76b99, 0 1rem 2.5rem #000d; }
+.center-alert.alert-hand { background: radial-gradient(circle at 50% 0%, #5c3d0ff2, #160e06f5 70%); box-shadow: 0 0 0 1px #ffc76b99, 0 1rem 2.5rem #000d; }
 .center-alert svg { width: 2.2rem; height: 2.2rem; color: #ff8a8a; }
 .center-alert strong { display: block; margin: .3rem 0 .35rem; font: 900 1.35rem/1.1 "Cinzel", serif; letter-spacing: .04em; }
 .center-alert p { margin: 0; font-size: 1rem; line-height: 1.35; }
 .center-alert.leaving { opacity: 0; transition: opacity .45s; }
 @keyframes alert-in { from { opacity: 0; transform: translate(-50%, -50%) scale(.7); } }
+
+/* ---------- Cerchi di costo, Attacco e Difesa sulle illustrazioni ---------- */
+.card-face { position: relative; container-type: inline-size; line-height: 0; --ring: 13.5cqw; }
+.card-face > img { display: block; width: 100%; height: auto; border-radius: inherit; }
+.stat-ring {
+  position: absolute; z-index: 1; width: var(--ring); aspect-ratio: 1; transform: translate(-50%, -50%);
+  display: grid; place-items: center; border-radius: 50%; line-height: 1; pointer-events: none;
+  color: #fff8ec; font: 900 calc(var(--ring) * .56) / 1 "Cinzel", serif; text-shadow: 0 .25cqw .5cqw #000;
+  background: radial-gradient(circle at 38% 30%, #3b3442, #110d14 72%);
+  border: calc(var(--ring) * .085) solid var(--ring-edge, #c9a06a);
+  box-shadow: 0 0 0 calc(var(--ring) * .03) #000c, 0 calc(var(--ring) * .06) calc(var(--ring) * .18) #000d, inset 0 0 calc(var(--ring) * .15) #0009;
+}
+.stat-ring b { font-weight: 900; }
+.stat-ring.ring-cost { --ring-edge: #6fa8ff; background: radial-gradient(circle at 38% 30%, #3d5f9e, #0e1730 72%); }
+.stat-ring.ring-cost.pact { --ring-edge: #ff6b6b; background: radial-gradient(circle at 38% 30%, #9e3d3d, #2a0b0b 72%); }
+.stat-ring.ring-cost.pact b { transform: translateY(-12%); }
+.stat-ring small { position: absolute; bottom: 13%; font: 800 calc(var(--ring) * .2) / 1 system-ui, sans-serif; letter-spacing: .02em; }
+.stat-ring.ring-att { --ring-edge: #5fd16a; }
+.stat-ring.ring-dif { --ring-edge: #e2525b; }
+.stat-ring.up b { color: #9dff8f; }
+.stat-ring.down b { color: #ff8686; }
+.stat-ring.ring-cost.up b { color: #9dff8f; }
+.stat-ring.ring-cost.down b { color: #ff9a9a; }
+.card-face.original .stat-ring { display: none; }
+/* in mano le carte sono piccole: cerchi più grandi in proporzione */
+.hand-card .card-face.mini-art { position: absolute; inset: 0; --ring: 25cqw; }
+.hand-card .card-face.mini-art > img { width: 100%; height: 100%; object-fit: contain; border-radius: .35rem; }
+.hand.mulligan .hand-card .card-face.mini-art { --ring: 22cqw; }
+.hand.mulligan .hand-card[aria-pressed="true"] .card-face.mini-art > img { filter: brightness(.55); }
+.viewer-art.card-face { width: 100%; height: auto; border-radius: .4rem; }
+.cast-preview .cast-face { width: min(62vw, 17rem); border-radius: .8rem; box-shadow: 0 0 2.5rem #b98cffaa, 0 1rem 2rem #000; animation: card-in .35s cubic-bezier(.2,.9,.3,1.2); }
+.peek-card .peek-face { width: 100%; border-radius: .9rem; box-shadow: 0 0 2rem #000; animation: card-in .2s ease-out; }
+.card .card-face.art.full { height: auto; border-radius: .2rem; --ring: 17cqw; }
+.card .card-face.art.full > img { aspect-ratio: 2 / 3; object-fit: contain; }
+/* il visualizzatore limita l'altezza: la larghezza segue, così i cerchi restano allineati */
+.viewer-art.card-face, .viewer-art.card-face > img { max-height: none; }
+.viewer-art.card-face { width: min(100%, calc(62dvh * 2 / 3)); margin-inline: auto; }
+.viewer-art.card-face > img { width: 100%; height: auto; }
+/* il pulsante «i» delle carte in mano va a sinistra, per non coprire il cerchio del costo */
+.hand-slot .info { right: auto; left: -.25rem; }
+
+/* ---------- Trascinare le carte ---------- */
+.drag-ghost { position: fixed; left: 0; top: 0; z-index: 80; margin: 0; pointer-events: none; transition: filter .15s;
+  filter: drop-shadow(0 1rem 1.2rem #000c); will-change: transform; }
+.drag-ghost.will-play { filter: drop-shadow(0 0 .9rem #5dff86) drop-shadow(0 1rem 1.2rem #000c); }
+.hand-card.drag-source { opacity: .35; }
+.dragging-card .board.mine.drop-zone { outline: 2px dashed #5dff86aa; outline-offset: .2rem; border-radius: .8rem; background: #5dff8612; }
+.dragging-card .drop-target { box-shadow: 0 0 0 3px #ffcf6b, 0 0 1rem #ffcf6b99 !important; }
+.dragging-card .drop-hover { box-shadow: 0 0 0 4px #5dff86, 0 0 1.4rem #5dff86 !important; transform: scale(1.06); }
+.hand-card img { -webkit-user-drag: none; user-select: none; -webkit-touch-callout: none; }
+
+/* ---------- I tuoi mazzi ---------- */
+.my-decks { display: grid; gap: .5rem; margin-bottom: 1.2rem; padding-bottom: 1rem; border-bottom: 1px solid #f0c27b33; }
+.my-decks h2 { margin: 0; }
+.my-decks > p { margin: 0; font-size: .95rem; }
+.my-decks-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr)); gap: .6rem; }
+.my-deck { display: grid; grid-template-columns: 4.2rem 1fr; gap: .7rem; align-items: center; padding: .6rem .7rem;
+  border-radius: .9rem; background: linear-gradient(135deg, #221a26e6, #120e15f0); box-shadow: inset 0 0 0 1px #f0c27b2e, 0 .3rem .8rem #0008; }
+.my-deck.custom { box-shadow: inset 0 0 0 1px #5dff8655, 0 .3rem .8rem #0008; }
+.my-deck.editing { box-shadow: inset 0 0 0 2px #f0c27b, 0 0 1rem #f0c27b44; }
+.my-deck-face { position: relative; }
+.my-deck-face img { display: block; width: 4.2rem; height: 4.2rem; object-fit: cover; border-radius: 50%; box-shadow: 0 0 0 2px #c9a06a, 0 .2rem .6rem #000; }
+.my-deck-ally { position: absolute; bottom: -.3rem; left: 50%; transform: translateX(-50%); white-space: nowrap; padding: .05rem .4rem;
+  font-size: .62rem; font-weight: 700; color: #1b120c; background: #f0c27b; border-radius: 1rem; }
+.my-deck-info { display: grid; gap: .25rem; min-width: 0; }
+.my-deck-info strong { font: 700 1.05rem/1.15 var(--display); }
+.my-deck-kind { font-size: .85rem; color: var(--muted); }
+.my-deck-kind.ok { color: #8dffa8; }
+.my-deck-kind.warn { color: #ffcf6b; }
+.my-deck-actions { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .15rem; }
+.my-deck-actions button { min-height: 2.2rem; padding: .3rem .8rem; font-size: .9rem; }
+.deck-view { display: grid; gap: .6rem; padding: .9rem; max-height: 86dvh; overflow: auto; }
+.deck-view h2 { margin: 0; }
+.deck-view-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(5.4rem, 1fr)); gap: .5rem; }
+.deck-view-card { position: relative; padding: 0; border: 0; background: none; border-radius: .4rem; }
+.deck-view-card .card-face { --ring: 22cqw; border-radius: .4rem; }
+.deck-view-count { position: absolute; right: -.2rem; bottom: -.3rem; z-index: 2; padding: .05rem .4rem; font-weight: 800; font-size: .9rem;
+  color: #1b120c; background: #f0c27b; border-radius: 1rem; box-shadow: 0 .15rem .4rem #000a; }
+.deck-view-count { right: auto; bottom: auto; left: -.25rem; top: -.3rem; }

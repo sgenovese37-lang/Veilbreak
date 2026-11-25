@@ -26,6 +26,13 @@ if (fixed_dir / "mappa-correzioni.csv").is_file():
         for row in csv.DictReader(f):
             corrections[int(row["id_prototipo"])] = (fixed_dir / row["file"], row["correzione"])
 
+# Versioni senza le scritte ATT/DIF e senza il numero del costo (tools/pulisci_carte.py):
+# il gioco disegna sopra i cerchi con i valori, nei punti indicati da posizioni.json.
+clean_dir = assets / "carte-pulite"
+clean = {}
+if (clean_dir / "posizioni.json").is_file():
+    clean = {int(k): v for k, v in json.loads((clean_dir / "posizioni.json").read_text(encoding="utf-8")).items()}
+
 entries = {}
 for pack in sorted(p for p in assets.glob("illustrazioni-*") if p.name != "illustrazioni-corrette"):
     with open(pack / "mappa-carte.csv", encoding="utf-8-sig") as f:
@@ -36,6 +43,8 @@ for pack in sorted(p for p in assets.glob("illustrazioni-*") if p.name != "illus
                 raise SystemExit(f"Immagine mancante per la carta {cid}: {original}")
             fixed = corrections.get(cid)
             source = fixed[0] if fixed else original
+            if cid in clean:
+                source = clean_dir / clean[cid]["file"]
             thumb = thumbs / source.name
             if not thumb.exists() or thumb.stat().st_mtime < source.stat().st_mtime:
                 with Image.open(source) as im:
@@ -61,6 +70,7 @@ for pack in sorted(p for p in assets.glob("illustrazioni-*") if p.name != "illus
                 "differences": differences,
                 "original": original.relative_to(root).as_posix() if fixed else None,
                 "correction": fixed[1] if fixed else None,
+                "circles": {k: v for k, v in clean.get(cid, {}).items() if k != "file"} or None,
             }
 
 ordered = {k: entries[k] for k in sorted(entries)}

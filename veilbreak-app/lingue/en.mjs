@@ -515,5 +515,17 @@ export default {
  "Una creatura alleata ottiene +1 Attacco in modo permanente.": "An allied creature gets +1 Attack permanently.",
  "Una creatura alleata ottiene +1 Difesa in modo permanente.": "An allied creature gets +1 Defense permanently.",
  "Una creatura con Rapidità può attaccare nel turno in cui entra in gioco. Finché c’è una creatura con Provocazione, gli avversari possono attaccare solo lei: né le altre creature né l’eroe. Lei invece può attaccare chiunque. Puoi avere al massimo 7 creature in campo.": "A creature with Haste can attack the turn it enters play. While there is a creature with Guard, opponents can attack only it: neither the other creatures nor the hero. It, however, can attack anyone. You can have at most 7 creatures on the board.",
- "I nemici devono attaccare prima questa creatura: finché è in campo non possono colpire le altre né il tuo eroe. Lei può attaccare chiunque.": "Enemies must attack this creature first: while it is on the board they cannot hit the others or your hero. It can attack anyone."
+ "I nemici devono attaccare prima questa creatura: finché è in campo non possono colpire le altre né il tuo eroe. Lei può attaccare chiunque.": "Enemies must attack this creature first: while it is on the board they cannot hit the others or your hero. It can attack anyone.",
+ "I tuoi mazzi": "Your decks",
+ "Quando giochi con una fazione, il gioco usa il mazzo salvato di quella fazione. Se non ne hai salvato uno, usa il mazzo predefinito.": "When you play a faction, the game uses the deck you saved for it. If you haven't saved one, it uses the default deck.",
+ "2 fazioni": "2 factions",
+ "Il tuo mazzo · {n} carte": "Your deck · {n} cards",
+ "Mazzo incompleto: si usa il predefinito": "Incomplete deck: the default one is used",
+ "Mazzo predefinito": "Default deck",
+ "Vedi": "View",
+ "Modifica": "Edit",
+ "Crea": "Create",
+ "Gioca": "Play",
+ "{n} carte · {c} creature · costo medio {a}": "{n} cards · {c} creatures · average cost {a}",
+ "Mazzo salvato: lo trovi in «I tuoi mazzi» e lo userai ogni volta che giochi con {name}.": "Deck saved: you'll find it in “Your decks” and it will be used every time you play {name}."
 };
