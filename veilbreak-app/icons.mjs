@@ -22,6 +22,8 @@ const paths = {
   drop: '<path d="M12 2.5C9 7 6 10.2 6 14a6 6 0 0 0 12 0c0-3.8-3-7-6-11.5z" fill="currentColor" fill-opacity=".3"/>',
   chain: '<rect x="2.5" y="8.5" width="10" height="7" rx="3.5" transform="rotate(-35 7.5 12)"/><rect x="11.5" y="8.5" width="10" height="7" rx="3.5" transform="rotate(-35 16.5 12)"/>',
   mute: '<path d="M3 10v4h3l6 4.5v-13L6 10z"/><path d="m16 9 5 6M21 9l-5 6"/>',
+  heart: '<path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2z" fill="currentColor" fill-opacity=".25"/>',
+  crown: '<path d="M3 18h18l-1.5-10-4.5 4-3-6-3 6-4.5-4z" fill="currentColor" fill-opacity=".2"/><path d="M4 21h16"/>',
   play: '<path d="M7 4.5v15l12-7.5z" fill="currentColor" fill-opacity=".2"/>',
 };
 

@@ -445,5 +445,18 @@ export default {
  "Al massimo {n} fazioni. L’eroe è quello della fazione principale.": "Höchstens {n} Fraktionen. Der Held gehört zur Hauptfraktion.",
  "fazione principale": "Hauptfraktion",
  "fazione alleata": "verbündete Fraktion",
- "Corte di Hollow, Patto Neon, Senza Santi e Sottocittà hanno ciascuna le proprie carte. Un mazzo contiene 30 carte della fazione del tuo eroe e, se vuoi, di una seconda fazione alleata (al massimo 2 fazioni): fino a 3 copie di ogni carta, 1 sola per le Leggendarie.": "Corte di Hollow, Patto Neon, Senza Santi und Sottocittà haben jeweils eigene Karten. Ein Deck enthält 30 Karten aus der Fraktion deines Helden und, wenn du willst, aus einer zweiten verbündeten Fraktion (höchstens 2 Fraktionen): bis zu 3 Exemplare jeder Karte, nur 1 bei Legendären."
+ "Corte di Hollow, Patto Neon, Senza Santi e Sottocittà hanno ciascuna le proprie carte. Un mazzo contiene 30 carte della fazione del tuo eroe e, se vuoi, di una seconda fazione alleata (al massimo 2 fazioni): fino a 3 copie di ogni carta, 1 sola per le Leggendarie.": "Corte di Hollow, Patto Neon, Senza Santi und Sottocittà haben jeweils eigene Karten. Ein Deck enthält 30 Karten aus der Fraktion deines Helden und, wenn du willst, aus einer zweiten verbündeten Fraktion (höchstens 2 Fraktionen): bis zu 3 Exemplare jeder Karte, nur 1 bei Legendären.",
+ "Turni": "Züge",
+ "Carte giocate": "Gespielte Karten",
+ "Danni all’eroe": "Heldenschaden",
+ "Creature distrutte": "Vernichtete Kreaturen",
+ "Prossimo capitolo": "Nächstes Kapitel",
+ "Riprova il capitolo": "Kapitel wiederholen",
+ "Rivincita": "Revanche",
+ "Cambia eroe": "Held wechseln",
+ "Salta ›": "Überspringen ›",
+ "Tocca per continuare": "Tippe zum Fortfahren",
+ "Rivedi i dialoghi": "Dialoge erneut ansehen",
+ "L’avversario prepara un Segreto": "Der Gegner legt ein Geheimnis",
+ "Tu": "Du"
 };

@@ -71,6 +71,20 @@ function whisper(ctx, d, at, dur, vol = 0.06) {
   for (const [f, q] of [[1200, 8], [2600, 10]]) noise(ctx, d, at, dur, { type: "bandpass", from: f, to: f * (0.8 + Math.random() * 0.4), q, vol, attack: dur * 0.3, release: dur * 0.5 });
 }
 
+// Impatto da battaglia: colpo grave, lama che stride per un attimo, detriti che ricadono.
+function impact(ctx, d, at, { weight = 1, metal = true } = {}) {
+  thump(ctx, d, at, { vol: 0.55 * weight, from: 95, to: 32, length: 0.6 });
+  noise(ctx, d, at, 0.09, { type: "bandpass", from: 2400, to: 900, q: 1.2, vol: 0.28 * weight, attack: 0.002, release: 0.08 });
+  noise(ctx, d, at + 0.03, 0.45, { type: "lowpass", from: 1600, to: 200, vol: 0.1 * weight, attack: 0.01, release: 0.4 });
+  if (metal) for (const [f, v] of [[523, 0.05], [1187, 0.035], [1932, 0.02]]) {
+    const o = ctx.createOscillator(); o.type = "triangle"; o.frequency.value = f * (0.97 + Math.random() * 0.06);
+    const g = envelope(ctx, at, 0.002, 0, 0.35, v * weight);
+    o.connect(g).connect(d); o.start(at); o.stop(at + 0.45);
+  }
+}
+// Fendente: aria tagliata da un colpo veloce, grave e corto (niente fischi acuti).
+const slash = (ctx, d, at, vol = 0.22) => noise(ctx, d, at, 0.2, { type: "bandpass", from: 350, to: 1500, q: 1.4, vol, attack: 0.13, release: 0.06 });
+
 // Campanella di cristallo.
 function chime(ctx, d, at, n, vol = 0.06) { bell(ctx, d, n, at, { vol, length: 1.6 }); }
 
@@ -100,13 +114,13 @@ export const effects = {
   },
   // attacco: colpo d'aria rapido
   attack: (ctx, d, at) => {
-    whoosh(ctx, d, at, 0.18, { from: 600, to: 3500, vol: 0.3, q: 1.5 });
-    thump(ctx, d, at + 0.12, { vol: 0.3, from: 150, to: 60, length: 0.25 });
+    slash(ctx, d, at);
+    impact(ctx, d, at + 0.2, { weight: 0.8 });
   },
   // colpo all'eroe: impatto pesante e scricchiolio
   hit: (ctx, d, at) => {
-    thump(ctx, d, at, { vol: 0.6, from: 90, to: 35, length: 0.55 });
-    noise(ctx, d, at, 0.18, { type: "lowpass", from: 2500, to: 300, vol: 0.3, attack: 0.003, release: 0.15 });
+    impact(ctx, d, at, { weight: 1.1, metal: false });
+    thump(ctx, d, at + 0.06, { vol: 0.3, from: 60, to: 28, length: 0.9 });
   },
   // morte: lamento che si spegne nel riverbero
   death: (ctx, d, at) => {
@@ -180,16 +194,14 @@ export function cardVoice(ctx, d, card, event, at) {
     else if (faction === "Sottocittà") { growl(ctx, d, at, base - 12, 0.6, { vol: 0.16 }); drip(ctx, d, at + 0.35, 86 + seed % 6); }
     else effects.summon(ctx, d, at);
   } else if (event === "attack") {
-    effects.attack(ctx, d, at);
-    if (faction === "Corte di Hollow") whisper(ctx, d, at, 0.25, 0.06);
-    else if (faction === "Patto Neon") zap(ctx, d, at, base + 12, 0.18, { glide: 0.4, vol: 0.07 });
-    else if (faction === "Senza Santi") wail(ctx, d, at, base + 19, 0.35, { vol: 0.06, drop: 0.8 });
-    else if (faction === "Sottocittà") growl(ctx, d, at, base - 7, 0.35, { vol: 0.2, drop: 1.3 });
+    // il fendente: l'impatto arriva con il colpo ("hurt" della creatura colpita o "hit" sull'eroe)
+    slash(ctx, d, at, big ? 0.28 : 0.22);
+    if (faction === "Corte di Hollow") bell(ctx, d, base + 24, at + 0.05, { vol: 0.018, length: 1.2 });
+    else if (faction === "Patto Neon") crackle(ctx, d, at, 0.12, 0.04);
+    else if (faction === "Senza Santi") chime(ctx, d, at + 0.05, base + 31, 0.02);
+    else if (faction === "Sottocittà") thump(ctx, d, at, { vol: 0.15, from: 70, to: 45, length: 0.3 });
   } else if (event === "hurt") {
-    thump(ctx, d, at, { vol: 0.3, from: 130, to: 55, length: 0.25 });
-    if (faction === "Patto Neon") crackle(ctx, d, at, 0.12, 0.09);
-    else if (faction === "Sottocittà") growl(ctx, d, at, base - 5, 0.22, { vol: 0.12, drop: 0.7 });
-    else wail(ctx, d, at, base + 14, 0.22, { vol: 0.05, drop: 0.7, vowel: 600 });
+    impact(ctx, d, at, { weight: big ? 0.9 : 0.7 });
   } else if (event === "death") {
     wail(ctx, d, at, base + 17, big ? 1.6 : 1, { vol: 0.09, drop: 0.4, vowel: faction === "Senza Santi" ? 700 : 900 });
     noise(ctx, d, at, 0.9, { type: "lowpass", from: 900, to: 100, vol: 0.12, attack: 0.02, release: 0.8 });

@@ -26,6 +26,15 @@ const shots = (process.env.SHOTS ?? require('os').tmpdir()) + '/';
   console.log('capitolo 2 bloccato:', await page.locator('.chapter-list button').nth(1).isDisabled());
   await page.click('.chapter [data-faction="Patto Neon"]');
   await page.click('text=Gioca il capitolo');
+  // scena di dialogo prima del capitolo: due battute, poi «Salta»
+  await page.waitForSelector('.scene .scene-text');
+  await page.waitForTimeout(900);
+  await page.screenshot({ path: shots + '21b-scena-storia.png' });
+  console.log('scena:', await page.locator('.scene-name').innerText(), '·', (await page.locator('.scene-text').innerText()).slice(0, 40));
+  await page.click('.scene'); await page.click('.scene'); await page.waitForTimeout(400);
+  console.log('dopo due tocchi:', await page.locator('.scene-name').innerText());
+  await page.click('.scene-skip');
+  await page.waitForSelector('.scene', { state: 'detached' });
   console.log('introduzione visibile:', await page.locator('.recap').first().innerText().then(t => t.startsWith('Capitolo 1')));
   await page.click('text=Conferma mano');
   for (let turn = 0; turn < 40; turn++) {

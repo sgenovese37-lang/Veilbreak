@@ -1206,3 +1206,91 @@ body.in-match { background: var(--ink); }
 .deck-list li.deck-group { display: flex; align-items: baseline; gap: .5rem; margin-top: .5rem; padding: .35rem .2rem; background: none; box-shadow: none; border-bottom: 1px solid #f0c27b44; border-radius: 0; }
 .deck-list li.deck-group strong { font: 700 .95rem var(--display); color: var(--gold-hi); }
 .deck-list li.deck-group small { color: var(--muted); }
+
+/* ---------- Tavolo: eroe, potere ed Essenza più grandi, carte permanenti visibili ---------- */
+.hero-strip.mine, .hero-strip.enemy { grid-template-columns: auto auto minmax(0, 1fr); grid-template-areas: "portrait power info" "crystals crystals crystals"; gap: .35rem .6rem; }
+.hero-portrait { width: 4.9rem; height: 4.9rem; }
+.hero-strip.enemy .hero-portrait { width: 4.4rem; height: 4.4rem; }
+.hero-portrait .life { min-width: 2.1rem; height: 2.1rem; font-size: 1.15rem; right: -.45rem; bottom: -.35rem; }
+.hero-power { width: 3.5rem; height: 3.5rem; background: radial-gradient(circle at 40% 35%, #6a4f34, #241a12); }
+.hero-power .ico.glyph { width: 1.9rem; height: 1.9rem; color: #ffe3b0; filter: drop-shadow(0 0 .35rem #f0a84b99); }
+.hero-power.ready .ico.glyph { color: #d9ffe3; filter: drop-shadow(0 0 .5rem #5dff86); }
+.hero-power .gem { width: 1.6rem; height: 1.6rem; font-size: .95rem; top: -.55rem; }
+.hero-info strong { font-size: 1rem; }
+.hero-info small { font-size: .8rem; }
+.crystals .count b { font-size: 1.9rem; }
+.crystals .count span { font-size: 1.05rem; }
+.crystals i { width: 1.4rem; height: 1.4rem; }
+.crystals.small i { width: .95rem; height: .95rem; }
+.crystals.small .count b { font-size: 1.3rem; }
+.permanents { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .3rem; }
+.perm {
+  position: relative; width: 2.5rem; height: 3.75rem; padding: 0; border: 0; border-radius: .35rem; overflow: visible;
+  background: #0b0a0d; box-shadow: 0 0 0 1px #f0c27b88, 0 .2rem .5rem #000c;
+}
+.perm img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; border-radius: inherit; display: block; }
+.perm-name { display: grid; place-items: center; height: 100%; font-size: .5rem; padding: .1rem; text-align: center; }
+.perm-tag { position: absolute; bottom: -.3rem; right: -.3rem; width: 1.05rem; height: 1.05rem; border-radius: 50%; display: grid; place-items: center; font: 800 .65rem var(--display); box-shadow: 0 0 0 1px #000; }
+.perm-tag.artifact { background: radial-gradient(circle at 40% 35%, #ffd98a, #a0661f); }
+.perm-tag.artifact::after { content: ""; width: .45rem; height: .45rem; background: #2a1a08; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+.perm-tag.secret-mark { color: #fff; background: radial-gradient(circle at 40% 35%, #b98cff, #4a1f8a); }
+.perm.secret:not(.mine) { animation: secret-pulse 2.4s ease-in-out infinite; }
+@keyframes secret-pulse { 50% { box-shadow: 0 0 0 1px #b98cff, 0 0 .7rem #b98cffaa; } }
+.hand-card .gem.big.pact { display: grid; place-content: center; line-height: .85; }
+.hand-card .gem.big b { font-weight: 800; }
+.gem.pact small { font: 800 .42rem var(--display); letter-spacing: .04em; }
+
+/* ---------- Fine partita ---------- */
+.result-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .4rem; width: 100%; margin: .4rem 0; }
+.result-stats div { display: grid; justify-items: center; gap: .1rem; padding: .5rem .2rem; border-radius: .8rem; background: #07060a99; box-shadow: inset 0 0 0 1px #f0c27b33; }
+.result-stats b { font: 800 1.4rem var(--display); color: var(--gold-hi); }
+.result-stats small { font-size: .7rem; text-align: center; color: var(--muted); }
+.result-actions { display: grid; gap: .5rem; width: 100%; }
+.result-actions button { min-height: 3rem; font: 700 1rem var(--display); letter-spacing: .06em; }
+.result.won .result-title { color: var(--gold-hi); text-shadow: 0 0 1.5rem #f0c27b88; }
+.result.lost .result-title { color: #ff8a7a; text-shadow: 0 0 1.5rem #b3162c99; }
+
+/* ---------- Scene della Storia ---------- */
+.scene {
+  position: fixed; inset: 0; z-index: 80; display: grid; grid-template-rows: auto 1fr auto; padding: calc(1rem + env(safe-area-inset-top)) 1rem calc(1.2rem + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, #07060acc, #07060a33 30%, #07060aee 75%), var(--bg) center / cover;
+  animation: scene-in .5s ease-out;
+}
+.scene.leaving { animation: scene-out .3s ease-in forwards; }
+@keyframes scene-in { from { opacity: 0; } }
+@keyframes scene-out { to { opacity: 0; } }
+.scene-title { justify-self: center; font: 700 .9rem var(--display); letter-spacing: .14em; text-transform: uppercase; color: var(--gold); text-shadow: 0 2px 6px #000; }
+.scene-skip { position: absolute; top: calc(.8rem + env(safe-area-inset-top)); right: .9rem; padding: .35rem .8rem; font-size: .85rem; border-radius: 99rem; }
+.scene-box {
+  grid-row: 3; position: relative; display: grid; grid-template-columns: 5.2rem 1fr; grid-template-rows: auto 1fr auto; gap: .2rem .8rem; min-height: 9.5rem;
+  padding: 1rem 1rem .8rem; border-radius: 1.2rem; background: linear-gradient(180deg, #14101ae8, #07060af2);
+  box-shadow: inset 0 0 0 1px #f0c27b55, 0 1rem 2.5rem #000;
+}
+.scene-box.enter { animation: line-in .35s ease-out; }
+@keyframes line-in { from { opacity: .3; transform: translateY(6px); } }
+.scene-face { grid-row: 1 / span 3; align-self: start; width: 5.2rem; height: 5.2rem; margin-top: -2.4rem; border-radius: 50%; background: #0b0a0d center / cover no-repeat; box-shadow: 0 0 0 2px #f0c27b, 0 0 0 4px #2a140a, 0 .6rem 1.2rem #000; }
+.scene-face.from-card { background-size: 230%; background-position: 50% 24%; }
+.scene-box.player .scene-face { box-shadow: 0 0 0 2px #7fd4ff, 0 0 0 4px #0a1a2a, 0 .6rem 1.2rem #000; }
+.scene-name { font: 700 1rem var(--display); color: var(--gold-hi); letter-spacing: .04em; }
+.scene-text { font-size: 1.12rem; line-height: 1.45; color: #f3ebdf; min-height: 4.2em; }
+.scene-hint { justify-self: end; font-size: .72rem; color: var(--muted); animation: hint-blink 1.6s ease-in-out infinite; }
+@keyframes hint-blink { 50% { opacity: .35; } }
+.scene-box.narrator { grid-template-columns: 1fr; text-align: center; }
+.scene-box.narrator .scene-face, .scene-box.narrator .scene-name { display: none; }
+.scene-box.narrator .scene-text { font-style: italic; color: #e2d3bf; }
+
+/* ---------- Battute delle carte ---------- */
+.speech {
+  position: fixed; z-index: 55; max-width: 13rem; padding: .45rem .7rem; transform: translate(-50%, -100%);
+  font: italic 500 .85rem/1.3 "EB Garamond", serif; color: #1b120c; text-align: center;
+  background: linear-gradient(180deg, #fff3dc, #e8d1a8); border-radius: .9rem; box-shadow: 0 0 0 1px #8a5a2b, 0 .4rem 1rem #000c;
+  pointer-events: none; animation: speech-in .25s ease-out;
+}
+.speech::after { content: ""; position: absolute; left: 50%; bottom: -.45rem; width: .9rem; height: .9rem; transform: translateX(-50%) rotate(45deg); background: #e8d1a8; box-shadow: 1px 1px 0 #8a5a2b; }
+.speech.enemy { background: linear-gradient(180deg, #ffe2e2, #e7b3b3); }
+.speech.enemy::after { background: #e7b3b3; }
+.speech.leaving { opacity: 0; transition: opacity .4s; }
+@keyframes speech-in { from { opacity: 0; transform: translate(-50%, -80%) scale(.85); } }
+.cast-preview .cast-voice { max-width: 18rem; margin-top: .5rem; font: italic 500 1rem/1.35 "EB Garamond", serif; color: #f3e3c3; text-align: center; text-shadow: 0 2px 6px #000; quotes: "«" "»"; }
+.cast-preview img.back { width: min(60vw, 15rem); border-radius: .8rem; }
+.scene-title { margin-top: 2.6rem; text-align: center; padding: 0 .5rem; }

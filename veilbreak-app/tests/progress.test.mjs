@@ -156,3 +156,14 @@ test("i quattro eroi della Storia si sbloccano vincendo i loro capitoli", () => 
   assert.deepEqual(unlockedHeroes().sort(), found);
   assert.equal(completeChapter(1).hero, null, "rigiocare un capitolo non ridà l'eroe");
 });
+
+test("la Storia ha una scena per capitolo e ogni carta ha la sua battuta", async () => {
+  const { scenes, cast } = await import("../scene.mjs");
+  const { voices } = await import("../voci.mjs");
+  assert.equal(scenes.length, chapters.length);
+  for (const scene of scenes) for (const [who, text] of [...scene.before, ...scene.after]) {
+    assert.ok(cast[who], `personaggio sconosciuto: ${who}`);
+    assert.ok(text.length > 5);
+  }
+  for (const c of cards) assert.ok(voices[c.id], `manca la battuta di ${c.name}`);
+});

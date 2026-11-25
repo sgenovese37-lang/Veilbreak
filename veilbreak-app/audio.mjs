@@ -96,9 +96,11 @@ export function cardSound(card, event) {
 }
 
 // Registra tutti gli effetti uno dopo l'altro (per ascoltarli fuori dal gioco: tools/registra_musica.cjs).
-export async function renderEffects(cards = [], sampleRate = 44100) {
-  const items = [...showcase];
-  for (const card of cards) for (const event of ["enter", "attack", "hurt", "death"]) items.push({ length: event === "death" || event === "enter" ? 1.9 : 1.1, play: (c, d, at) => cardVoice(c, d, card, event, at) });
+export async function renderEffects(cards = [], sampleRate = 44100, onlyAttacks = false) {
+  const items = onlyAttacks ? [] : [...showcase];
+  // solo attacchi: fendente della carta e colpo sul bersaglio, come in partita
+  if (onlyAttacks) for (const card of cards) items.push({ length: 1.4, play: (c, d, at) => { cardVoice(c, d, card, "attack", at); cardVoice(c, d, card, "hurt", at + 0.22); } }, { length: 1.6, play: (c, d, at) => { cardVoice(c, d, card, "attack", at); effects.hit(c, d, at + 0.22); } });
+  else for (const card of cards) for (const event of ["enter", "attack", "hurt", "death"]) items.push({ length: event === "death" || event === "enter" ? 1.9 : 1.1, play: (c, d, at) => cardVoice(c, d, card, event, at) });
   const seconds = items.reduce((sum, item) => sum + item.length, 1);
   const ctx = new OfflineAudioContext(2, Math.ceil(seconds * sampleRate), sampleRate);
   const previous = master;

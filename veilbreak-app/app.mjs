@@ -20,6 +20,8 @@ import { environments, environmentFor } from "./environments.mjs";
 import { playMusic, musicEnabled, setMusic } from "./music.mjs";
 import { t, languages, currentLang, setLang, translatePage } from "./i18n.mjs";
 import { icon, mountIcons } from "./icons.mjs";
+import { voiceOf } from "./voci.mjs";
+import { scenes, cast } from "./scene.mjs";
 import { startEmbers } from "./embers.mjs";
 
 const get = id => document.getElementById(id);
@@ -499,7 +501,9 @@ form.onsubmit = event => {
   startMatch(names, names.map((name, side) => side === 1 && mode === "cpu" ? null : playableDeck(name)), { heroes, ...(env === "auto" ? {} : { env }) });
 };
 
+let lastMatch = null;   // per la rivincita
 function startMatch(names, decks, options = {}) {
+  lastMatch = { names: [...names], decks, options: { ...options }, mode, level, chapter: storyChapter };
   replayRun++;
   replaying = false;
   lastTurnKey = null;
@@ -514,6 +518,14 @@ function startMatch(names, decks, options = {}) {
   replacements.clear();
   showSection("match");
   render();
+}
+
+// Rivincita: stessi eroi, mazzi e regole (in Storia, lo stesso capitolo).
+function rematch() {
+  if (!lastMatch) return reset();
+  if (lastMatch.chapter !== null) return playChapter(lastMatch.chapter);
+  mode = lastMatch.mode; level = lastMatch.level;
+  startMatch(lastMatch.names, lastMatch.decks, lastMatch.options);
 }
 
 function reset() {
@@ -600,7 +612,9 @@ async function showAction(action) {
   if (action.kind === "play") {
     cardSound(byId.get(action.card), "enter");
     if (isPact(byId.get(action.card))) popSymbols(document.querySelector(`.hero-portrait[data-side="${action.side}"]`), ["pact"]);
-    await castPreview(byId.get(action.card), "L’avversario gioca", 1100);
+    const played = byId.get(action.card);
+    if (played?.type === "Segreto") await castPreview(played, "L’avversario prepara un Segreto", 1000, true);
+    else await castPreview(played, "L’avversario gioca", 1100);
   } else if (action.kind === "attack") {
     await lunge(action.side, action.uid, action.target);
   } else if (action.kind === "power") {
@@ -677,13 +691,15 @@ function playedFx(c) {
 
 // ---------- Effetti ----------
 // Carta grande al centro dello schermo (incantesimi, artefatti, mosse dell'avversario).
-function castPreview(c, label, ms) {
+function castPreview(c, label, ms, hidden = false) {
   const layer = element("div", undefined, "cast-preview");
   layer.setAttribute("aria-hidden", "true");
   layer.append(element("small", label));  // label già tradotta da element()
   const art = illustrationFor(c.id);
-  if (art) { const img = element("img"); img.src = art.src; img.alt = ""; layer.append(img); }
+  if (hidden) { const img = element("img", undefined, "back"); img.src = cardBackSrc(); img.alt = ""; layer.append(img); }
+  else if (art) { const img = element("img"); img.src = art.src; img.alt = ""; layer.append(img); }
   else layer.append(drawCard(c));
+  if (!hidden && c.type !== "Creatura" && voiceOf(c.id)) layer.append(element("q", voiceOf(c.id), "cast-voice"));
   document.body.append(layer);
   return wait(ms).then(() => { layer.classList.add("leaving"); return wait(250); }).then(() => layer.remove());
 }
@@ -785,6 +801,25 @@ function symbolBadge(kind, extra) {
   if (extra !== undefined) b.append(element("b", extra));
   return b;
 }
+// Fumetto con la battuta della carta appena entrata in gioco.
+let lastSpeech = 0;
+function speak(anchor, line, side) {
+  if (!line || !anchor || Date.now() - lastSpeech < 700) return;
+  lastSpeech = Date.now();
+  const show = () => {
+    const rect = anchor.getBoundingClientRect();
+    if (!rect.width) return;
+    const bubble = element("div", line, `speech ${side === 0 || side === undefined ? "mine" : "enemy"}`);
+    bubble.setAttribute("aria-live", "polite");
+    const x = Math.min(window.innerWidth - 110, Math.max(110, rect.left + rect.width / 2));
+    Object.assign(bubble.style, { left: `${x}px`, top: `${rect.top - 8}px` });
+    document.body.append(bubble);
+    setTimeout(() => bubble.classList.add("leaving"), 2300);
+    setTimeout(() => bubble.remove(), 2700);
+  };
+  requestAnimationFrame(() => requestAnimationFrame(show));
+}
+
 // Simboli che compaiono in grande sopra un elemento quando una meccanica si attiva.
 function popSymbols(anchor, kinds) {
   if (!anchor || !kinds.length) return;
@@ -822,6 +857,7 @@ function keywordNotes(c) {
 // Grafica provvisoria delle carte senza illustrazione (secondo set): sfondo della fazione.
 // Grafica provvisoria: il dorso delle carte (si capisce subito che l'illustrazione deve ancora arrivare).
 const placeholderArt = () => "assets/originali-chatgpt/dorso-carte.webp";
+const cardBackSrc = () => "assets/ornamenti/dorso.webp";
 const crestOf = c => { const img = element("img", undefined, "ph-crest"); img.src = `assets/eroi/${heroFor(c.faction)?.theme ?? "hollow"}.webp`; img.alt = ""; return img; };
 
 // Numero di danno o cura che compare sopra un elemento appena aggiornato.
@@ -865,6 +901,17 @@ function heroPortrait(side, allow) {
   return portrait;
 }
 
+// Simbolo dentro il cerchio del potere, secondo cosa fa il potere.
+function powerIcon(power) {
+  if (power.damage || power.heroDamage) return "bolt";
+  if (power.heal) return "heart";
+  if (power.health || power.defense) return "shield";
+  if (power.attack) return "swords";
+  if (power.buff) return "crown";
+  if (power.summon) return "users";
+  return "gem";
+}
+
 function powerButton(side, own, allow) {
   const hero = heroFor(game.players[side]);
   if (!hero) return element("span");
@@ -878,7 +925,7 @@ function powerButton(side, own, allow) {
   b.disabled = !usable;
   b.title = `${t(hero.power.name)}: ${t(hero.power.text)}`;
   b.setAttribute("aria-label", `${t(hero.power.name)}, ${t("{n} Essenza", { n: heroPowerCost })}: ${t(hero.power.text)}`);
-  b.append(element("span", heroPowerCost, "gem"), element("span", "✦", "glyph"));
+  b.append(element("span", heroPowerCost, "gem"), icon(powerIcon(hero.power), "ico glyph"));
   return b;
 }
 
@@ -905,23 +952,29 @@ function crystals(p, side, small = false) {
   return row;
 }
 
-function extras(p, own) {
-  const row = element("div", undefined, "extras");
+// Carte che restano in gioco (artefatti e segreti): miniature visibili accanto all'eroe.
+function permanents(p, own) {
+  const row = element("div", undefined, "permanents");
   for (const id of p.artifacts) {
     const c = byId.get(id);
-    const icon = button(undefined, () => showCard(c), "relic");
-    attachPeek(icon, c);
-    icon.setAttribute("aria-label", t("Artefatto: {card}", { card: c.name }));
-    icon.title = c.name;
+    const card = button(undefined, () => showCard(c), "perm relic");
+    attachPeek(card, c);
+    card.setAttribute("aria-label", t("Artefatto: {card}", { card: c.name }));
     const art = illustrationFor(id);
-    if (art) { const img = element("img"); img.src = art.thumb; img.alt = ""; icon.append(img); }
-    row.append(icon);
+    if (art) { const img = element("img"); img.src = art.thumb; img.alt = ""; img.decoding = "async"; card.append(img); }
+    else card.append(element("span", c.name, "perm-name"));
+    card.append(element("span", undefined, "perm-tag artifact"));
+    row.append(card);
   }
   p.secrets.forEach(id => {
     const c = byId.get(id);
-    const icon = own ? button("?", () => showCard(c), "secret") : element("span", "?", "secret");
-    icon.setAttribute("aria-label", own ? t("Segreto: {card}", { card: c.name }) : t("Segreto nascosto"));
-    row.append(icon);
+    const card = own ? button(undefined, () => showCard(c), "perm secret mine") : element("span", undefined, "perm secret");
+    if (own) attachPeek(card, c);
+    card.setAttribute("aria-label", own ? t("Segreto: {card}", { card: c.name }) : t("Segreto nascosto"));
+    const img = element("img"); img.alt = "";
+    img.src = own ? (illustrationFor(id)?.thumb ?? cardBackSrc()) : cardBackSrc();
+    card.append(img, element("span", "?", "perm-tag secret-mark"));
+    row.append(card);
   });
   return row;
 }
@@ -938,7 +991,8 @@ function heroStrip(side, own, allow) {
     for (let i = 0; i < p.hand.length; i++) backs.append(element("i"));
     info.append(backs);
   }
-  strip.append(extras(p, own), heroPortrait(side, allow), powerButton(side, own, allow), info);
+  if (p.artifacts.length || p.secrets.length) info.append(permanents(p, own));
+  strip.append(heroPortrait(side, allow), powerButton(side, own, allow), info);
   strip.append(crystals(p, side, !own));
   return strip;
 }
@@ -983,6 +1037,7 @@ function token(side, unit, own, allow) {
     // appena entrata in gioco: i simboli delle sue meccaniche compaiono in grande
     const kinds = ["battlecry", "taunt", "rush", "veiled", "fury", "legacy"].filter(k => kw[k]);
     popSymbols(tok, kinds);
+    if (unit.card) speak(tok, voiceOf(unit.card), side);
   }
   return tok;
 }
@@ -1012,6 +1067,14 @@ function boardRow(side, own, allow) {
   return row;
 }
 
+// Gemma del costo: verde se scontata, rossa se rincarata; goccia di sangue con «PV» per i Patti.
+function costGem(c, cost) {
+  const gem = element("span", undefined, `gem big${isPact(c) ? " pact" : cost < c.cost ? " cheaper" : cost > c.cost ? " pricier" : ""}`);
+  gem.append(element("b", cost));
+  if (isPact(c)) gem.append(element("small", "PV"));
+  return gem;
+}
+
 function handCard(side, id, i) {
   const c = byId.get(id);
   const mull = game.phase === "mulligan";
@@ -1032,11 +1095,11 @@ function handCard(side, id, i) {
     // l'illustrazione è già una carta completa: si aggiunge il costo solo se è cambiato
     const img = element("img", undefined, "mini-art"); img.src = art.thumb; img.alt = ""; card.append(img);
     // gemma grande con il costo attuale: verde se scontato, rossa se aumentato
-    card.append(element("span", cost, `gem big${isPact(c) ? " pact" : cost < c.cost ? " cheaper" : cost > c.cost ? " pricier" : ""}`));
+    card.append(costGem(c, cost));
   } else {
     card.classList.add("placeholder");
     card.style.setProperty("--ph", `url("${placeholderArt(c)}")`);
-    card.append(crestOf(c), element("span", cost, `gem big${isPact(c) ? " pact" : cost < c.cost ? " cheaper" : cost > c.cost ? " pricier" : ""}`), element("span", c.name, "mini-name"));
+    card.append(crestOf(c), costGem(c, cost), element("span", c.name, "mini-name"));
     if (c.type === "Creatura") card.append(element("span", c.attack, "att"), element("span", c.health, "dif"));
     else card.append(element("span", t(c.type), "mini-type"));
   }
@@ -1186,12 +1249,35 @@ function renderTable() {
     const end = element("div", undefined, "result");
     end.append(element("strong", message, "result-title"));
     if (outcome?.lines.length) end.append(element("span", outcome.lines.join(" · "), "reward-line"));
+    if (storyChapter !== null && game.winner === 0 && outcome && !outcome.scenePlayed && scenes[storyChapter]?.after?.length) {
+      outcome.scenePlayed = true;
+      const chapter = chapters[storyChapter];
+      setTimeout(() => playScene(scenes[chapters.indexOf(chapter)].after, chapter), 900);
+    }
     if (outcome?.story) {
       const box = element("div", undefined, "recap story-outro");
       box.append(element("strong", chapters[storyChapter]?.title ?? "Storia"), element("p", outcome.story));
       end.append(box);
     }
-    end.append(button(storyChapter !== null ? "Torna alla Storia" : "Nuova partita", reset, "primary"));
+    // riepilogo della partita
+    const tally = game.stats[view];
+    const sum = element("div", undefined, "result-stats");
+    for (const [label, value] of [["Turni", tally.turns], ["Carte giocate", tally.cards], ["Danni all’eroe", tally.heroDamage], ["Creature distrutte", tally.kills]]) {
+      const cell = element("div"); cell.append(element("b", value), element("small", label)); sum.append(cell);
+    }
+    end.append(sum);
+    const actions = element("div", undefined, "result-actions");
+    const won = game.winner === view || (mode !== "cpu" && game.winner !== "draw");
+    if (storyChapter !== null) {
+      const next = storyChapter + 1;
+      if (game.winner === 0 && next < chapters.length) actions.append(button("Prossimo capitolo", () => playChapter(next), "primary"));
+      else if (game.winner !== 0) actions.append(button("Riprova il capitolo", rematch, "primary"));
+      actions.append(button("Torna alla Storia", reset));
+    } else {
+      actions.append(button("Rivincita", rematch, "primary"), button("Cambia eroe", reset));
+    }
+    end.append(actions);
+    end.classList.add(won ? "won" : "lost");
     arena.append(end);
   } else if (!cpu && selected) {
     if (selected.kind === "attack") {
@@ -1244,6 +1330,78 @@ function previousTurn() {
 }
 
 // ---------- Storia ----------
+async function playChapter(index, { skipScene = false } = {}) {
+  const chapter = chapters[index];
+  if (!chapter) return;
+  const scene = scenes[index];
+  if (!skipScene && scene?.before?.length) await playScene(scene.before, chapter);
+  storyChapter = index;
+  storyPick = index;
+  mode = "cpu";
+  level = chapter.level;
+  startMatch([storyFaction, chapter.opponent], [playableDeck(storyFaction), null], { lives: chapter.lives, env: heroFor(chapter.opponent)?.theme, heroes: [heroOption(storyHero), scene?.enemyHero ?? null] });
+}
+
+// ---------- Scene di dialogo della Storia ----------
+// Mostra le battute una alla volta: un tocco completa la frase, un altro passa alla successiva.
+function playScene(lines, chapter) {
+  return new Promise(resolve => {
+    const theme = heroFor(chapter?.opponent)?.theme ?? "hollow";
+    const layer = element("div", undefined, "scene");
+    layer.style.setProperty("--bg", `url("assets/sfondi/home-${theme}.webp")`);
+    layer.setAttribute("role", "dialog");
+    layer.setAttribute("aria-label", t(chapter?.title ?? "Storia"));
+    const skip = button("Salta ›", () => finish(), "scene-skip");
+    const title = element("div", chapter ? `${t("Capitolo {n}", { n: chapters.indexOf(chapter) + 1 })} · ${t(chapter.title)}` : "", "scene-title");
+    const box = element("div", undefined, "scene-box");
+    const face = element("div", undefined, "scene-face");
+    const name = element("strong", undefined, "scene-name");
+    const text = element("p", undefined, "scene-text");
+    const hint = element("small", "Tocca per continuare", "scene-hint");
+    box.append(face, name, text, hint);
+    layer.append(title, skip, box);
+    document.body.append(layer);
+    let index = -1, typing = null, full = "";
+    const me = heroWithId(storyHero) ?? heroFor(storyFaction);
+    function show(i) {
+      const [who, line] = lines[i];
+      const person = cast[who] ?? { name: who };
+      const narrator = who === "narratore";
+      box.classList.toggle("narrator", narrator);
+      box.classList.toggle("player", who === "tu");
+      name.textContent = who === "tu" ? (me?.name ?? t("Tu")) : person.name;
+      face.replaceChildren();
+      face.style.backgroundImage = "";
+      if (!narrator) {
+        const src = who === "tu" ? me?.portrait : person.portrait;
+        if (src) face.style.backgroundImage = `url("${src}")`;
+        else if (person.card) { face.style.backgroundImage = `url("${illustrationFor(person.card)?.src}")`; face.classList.add("from-card"); }
+      }
+      face.classList.toggle("from-card", Boolean(person.card) && !narrator);
+      full = line;
+      text.textContent = "";
+      let n = 0;
+      clearInterval(typing);
+      typing = setInterval(() => { n += 2; text.textContent = full.slice(0, n); if (n >= full.length) { clearInterval(typing); typing = null; } }, 24);
+      box.classList.remove("enter"); void box.offsetWidth; box.classList.add("enter");
+    }
+    function next() {
+      if (typing) { clearInterval(typing); typing = null; text.textContent = full; return; }
+      index++;
+      if (index >= lines.length) return finish();
+      sound("select");
+      show(index);
+    }
+    function finish() {
+      clearInterval(typing);
+      layer.classList.add("leaving");
+      setTimeout(() => { layer.remove(); resolve(); }, 300);
+    }
+    layer.addEventListener("click", e => { if (e.target !== skip) next(); });
+    next();
+  });
+}
+
 function renderStory() {
   const panel = get("story");
   const cleared = storyProgress();
@@ -1275,12 +1433,11 @@ function renderStory() {
   detail.append(element("p", firstTime ? t("Premio alla prima vittoria: {reward}", { reward: rewardText(chapter.reward) }) + (heroPrize ? t(" e il nuovo eroe {hero}", { hero: heroPrize.name }) : "") : "Capitolo già superato: puoi rigiocarlo per le Schegge della vittoria.", "reward-line"));
   const pickFaction = element("div", undefined, "picker-box");
   pickFaction.append(element("h3", "Il tuo eroe"), heroChoices(storyHero, hero => { storyFaction = hero.faction; storyHero = hero.id; sound("select"); renderStory(); }));
-  const start = button("Gioca il capitolo", () => {
-    storyChapter = storyPick;
-    mode = "cpu";
-    level = chapter.level;
-    startMatch([storyFaction, chapter.opponent], [playableDeck(storyFaction), null], { lives: chapter.lives, env: heroFor(chapter.opponent)?.theme, heroes: [heroOption(storyHero), null] });
-  }, "primary");
+  const start = button("Gioca il capitolo", () => playChapter(storyPick), "primary");
+  if (storyPick < cleared && scenes[storyPick]) {
+    const again = button("Rivedi i dialoghi", async () => { await playScene(scenes[storyPick].before, chapter); await playScene(scenes[storyPick].after, chapter); });
+    detail.append(again);
+  }
   detail.append(pickFaction, start);
   const final = element("p", cleared === chapters.length
     ? t("Storia completata · Titolo {title}", { title: t(titles[finalReward.title].name) })

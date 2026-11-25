@@ -445,5 +445,18 @@ export default {
  "Al massimo {n} fazioni. L’eroe è quello della fazione principale.": "Up to {n} factions. The hero is the one of the main faction.",
  "fazione principale": "main faction",
  "fazione alleata": "allied faction",
- "Corte di Hollow, Patto Neon, Senza Santi e Sottocittà hanno ciascuna le proprie carte. Un mazzo contiene 30 carte della fazione del tuo eroe e, se vuoi, di una seconda fazione alleata (al massimo 2 fazioni): fino a 3 copie di ogni carta, 1 sola per le Leggendarie.": "Corte di Hollow, Patto Neon, Senza Santi and Sottocittà each have their own cards. A deck contains 30 cards from your hero's faction and, if you like, from a second allied faction (up to 2 factions): up to 3 copies of each card, only 1 for Legendaries."
+ "Corte di Hollow, Patto Neon, Senza Santi e Sottocittà hanno ciascuna le proprie carte. Un mazzo contiene 30 carte della fazione del tuo eroe e, se vuoi, di una seconda fazione alleata (al massimo 2 fazioni): fino a 3 copie di ogni carta, 1 sola per le Leggendarie.": "Corte di Hollow, Patto Neon, Senza Santi and Sottocittà each have their own cards. A deck contains 30 cards from your hero's faction and, if you like, from a second allied faction (up to 2 factions): up to 3 copies of each card, only 1 for Legendaries.",
+ "Turni": "Turns",
+ "Carte giocate": "Cards played",
+ "Danni all’eroe": "Hero damage",
+ "Creature distrutte": "Creatures destroyed",
+ "Prossimo capitolo": "Next chapter",
+ "Riprova il capitolo": "Retry the chapter",
+ "Rivincita": "Rematch",
+ "Cambia eroe": "Change hero",
+ "Salta ›": "Skip ›",
+ "Tocca per continuare": "Tap to continue",
+ "Rivedi i dialoghi": "Replay the dialogues",
+ "L’avversario prepara un Segreto": "The opponent sets a Secret",
+ "Tu": "You"
 };

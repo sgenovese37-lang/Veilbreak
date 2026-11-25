@@ -12,11 +12,11 @@ const [outDir = '.', secondsArg = '40', list = 'menu,hollow,neon,saints,undercit
   for (const name of list.split(',')) {
     const b64 = await page.evaluate(async ([name, seconds]) => {
       let buf;
-      if (name === 'effetti') {
+      if (name === 'effetti' || name === 'attacchi') {
         // tutti gli effetti e poi le voci di una creatura per fazione
         const { renderEffects } = await import('/veilbreak-app/audio.mjs');
         const { cards } = await import('/veilbreak-app/cards.mjs');
-        buf = await renderEffects([4, 18, 37, 47].map(id => cards.find(c => c.id === id)));
+        buf = await renderEffects([4, 18, 37, 47].map(id => cards.find(c => c.id === id)), 44100, name === 'attacchi');
       } else {
         const { renderTheme } = await import('/veilbreak-app/music.mjs');
         buf = await renderTheme(name, seconds);

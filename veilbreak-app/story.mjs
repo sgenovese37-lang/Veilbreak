@@ -25,7 +25,7 @@ export const chapters = [
     opponent: "Senza Santi", level: "Normale", lives: [30, 30],
     intro: "Nella cappella dell’Aureola Spezzata le campane non suonano da anni. I Senza Santi custodiscono i registri dei morti e non vogliono che tu li legga.",
     outro: "Nei registri trovi lo stesso nome ripetuto su ogni pagina: Elena Voss. Accanto, una firma che non è sua.",
-    reward: { shards: 100, packs: 0 },
+    reward: { shards: 100, packs: 0, hero: "ottavia" },
   },
   {
     title: "Il Consiglio di mezzanotte",
@@ -53,7 +53,7 @@ export const chapters = [
     opponent: "Senza Santi", level: "Difficile", lives: [30, 34],
     intro: "Elena Voss ti aspetta sull’altare. Ha firmato un patto per riportare indietro i suoi fedeli e ora non riesce a romperlo. Per liberarla devi spezzare la sua difesa.",
     outro: "Il contratto brucia. Elena ti consegna l’ultima pagina, con il sigillo della Corte: «Il Sindaco tiene la penna.»",
-    reward: { shards: 150, packs: 0, hero: "ottavia" },
+    reward: { shards: 150, packs: 0 },
   },
   {
     title: "Il Sindaco di Hollow Street",
