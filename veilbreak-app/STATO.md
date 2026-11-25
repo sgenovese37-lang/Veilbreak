@@ -76,6 +76,14 @@ Riepilogo per riprendere il lavoro in una nuova sessione.
 - Chi inizia si tira a sorte; computer Difficile più forte; nuovi poteri di Ada ed Elena (vedi `BILANCIAMENTO.md`).
 - Tutorial aggiornato (13 lezioni) e presentazione alla prima apertura di Discesa nel Velo e Rissa.
 
+## Fase 5 (da fare, concordata il 25 novembre)
+1. **Tipi di creatura**: Umano, Non Morto, Spettro, Bestia, Costrutto, Demone, Aberrazione (Annegato per la futura fazione). Riga «CREATURA NON MORTA · Rara» scritta dal gioco (tolta dalle illustrazioni come per i cerchi, e tradotta), tipo nell'anteprima, filtro per tipo nella Collezione. Prima: elenco dei tipi per le 52 creature da far approvare all'utente.
+2. **Regole per rarità**: Comune 1-3 mana statistiche oneste; Non comune 2-4 piccolo effetto; Rara 3-5; Epica 4-6 effetti forti; Leggendaria 6-9 mana con effetti «wow» che ribaltano la partita, spesso con una condizione o un rischio. Poche Leggendarie per fazione.
+3. **Rubavita**: i danni inflitti dalla carta curano il proprio eroe (danno scritto, fino al massimo). Poche carte, soprattutto Senza Santi e qualcuna Sottocittà, statistiche un po' più basse; controllare che la durata delle partite e l'equilibrio non cambino. Simbolo: cuore rosso.
+4. **Poteri che si evolvono** per i nuovi eroi (niente potere doppio, scartato dall'utente): più forti dei poteri attuali, migliorano dopo alcuni usi.
+5. Poi: terzo set (91-120) con tipi, sinergie di tipo e Rubavita; Atto III; nuovi eroi; PDF dei prompt per le illustrazioni.
+- Idea approvata per il futuro: quinta fazione «Il Carnevale degli Annegati» (Venezia sommersa, maschere, inganno, parola chiave Maschera, eroe Dottore della Peste).
+
 ## Prossimi passi
 - Ritratti definitivi dei 3 eroi dell'Atto II arrivati e inseriti.
 - Correzioni dalle partite dell'utente.
