@@ -48,7 +48,7 @@ Costi, rarità, Attacco e Difesa coincidevano già con il catalogo su tutte le 6
 
 ## Secondo set (61-90), arrivato il 25 novembre 2026
 
-Le 30 illustrazioni create con ChatGPT sono arrivate in un PDF di anteprima (immagini da 480×720 pixel) e sono in `assets/illustrazioni-61-90/`. Controllate una per una: titolo, costo, nastro, regole, frase, Attacco e Difesa coincidono con il catalogo.
+Le 30 illustrazioni create con ChatGPT sono arrivate prima in un PDF di anteprima (480×720) e poi, lo stesso giorno, in uno ZIP con gli originali da 1024×1536: nel gioco sono in WebP a 900×1350 (come il set 31-60) in `assets/illustrazioni-61-90/`. Gli originali coincidono con l'anteprima. Controllate una per una: titolo, costo, nastro, regole, frase, Attacco e Difesa coincidono con il catalogo.
 
 - **71 Hacker Posseduto, 74 Riflesso Duplicato, 78 Ostia Nera, 81 Resurrezione Profana**: differenza solo grafica, il costo in punti vita del Patto è in una gemma invece che in una goccia di sangue. In mano il gioco mostra comunque la goccia.
-- Se arrivano gli originali a risoluzione piena, basta sostituire i file con lo stesso nome e rilanciare `python3 -I tools/build_illustrations.py .`.
+- Per sostituire un'immagine basta un file con lo stesso nome e rilanciare `python3 -I tools/build_illustrations.py .`.
