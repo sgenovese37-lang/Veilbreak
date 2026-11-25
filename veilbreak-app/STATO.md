@@ -28,7 +28,7 @@ Riepilogo per riprendere il lavoro in una nuova sessione.
 - Mazzi da 30 carte: 3 copie per le non leggendarie, 1 per le Leggendarie (finché non arrivano nuove carte).
 - Eroi: 4 subito + 4 sbloccabili nella Storia (dati in `lockedHeroes` dentro `heroes.mjs`).
 - Musica generata dal gioco, a tema. Lingue: italiano, inglese, tedesco, spagnolo (illustrazioni in italiano, testi tradotti).
-- Play Store: a gioco finito. Gioco online: in valutazione dei costi.
+- Play Store: a gioco finito, per ultimo. L'utente lavora da solo e ha poco tempo (3-5 ore a settimana): prima perfezionare il gioco, poi pubblicarlo offline e gratis (costo: 25 $ una tantum per l'account sviluppatore). Per guadagnare: versione «Sostenitore» una tantum o pubblicità facoltative, senza server. Gioco online solo se il gioco ha successo (Firebase per iniziare, 0-10 €/mese con pochi giocatori).
 
 ## Fase 1 (fatta il 25 novembre)
 1. Limite di 7 creature in campo (le carte che evocano o prendono il controllo non hanno effetto oltre il limite).
@@ -78,6 +78,7 @@ Riepilogo per riprendere il lavoro in una nuova sessione.
 - Tutorial aggiornato (13 lezioni) e presentazione alla prima apertura di Discesa nel Velo e Rissa.
 
 ## Fase 5 (da fare, concordata il 25 novembre)
+0. **Per primo (promesso all'utente)**: contatore in cima alla Collezione: «Collezione: N/250 copie» con barra, contatore della fazione filtrata («Corte di Hollow: 40/62») e filtro «Solo carte incomplete». Il calcolo esiste già (`collectionProgress` in `profile.mjs`). Stesso APK dei tipi di creatura. Aggiungere anche qui le decisioni sulla pubblicazione (vedi sotto, se mancano).
 1. **Tipi di creatura**: Umano, Non Morto, Spettro, Bestia, Costrutto, Demone, Aberrazione (Annegato per la futura fazione). Riga «CREATURA NON MORTA · Rara» scritta dal gioco (tolta dalle illustrazioni come per i cerchi, e tradotta), tipo nell'anteprima, filtro per tipo nella Collezione. Prima: elenco dei tipi per le 52 creature da far approvare all'utente.
 2. **Regole per rarità**: Comune 1-3 mana statistiche oneste; Non comune 2-4 piccolo effetto; Rara 3-5; Epica 4-6 effetti forti; Leggendaria 6-9 mana con effetti «wow» che ribaltano la partita, spesso con una condizione o un rischio. Poche Leggendarie per fazione.
 3. **Rubavita**: i danni inflitti dalla carta curano il proprio eroe (danno scritto, fino al massimo). Poche carte, soprattutto Senza Santi e qualcuna Sottocittà, statistiche un po' più basse; controllare che la durata delle partite e l'equilibrio non cambino. Simbolo: cuore rosso.
