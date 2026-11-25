@@ -1640,3 +1640,50 @@ body.energy-save #embers { display: none; }
 /* in mano le carte si sovrappongono a destra: il costo va in alto a sinistra, sempre visibile */
 .hand-card .stat-ring.ring-cost { left: 15% !important; top: 9% !important; }
 .hand-card .placeholder .gem, .hand-card > .gem.big { left: -.5rem; right: auto; }
+
+/* ---------- Fase 4: impostazioni, profilo, testo grande ---------- */
+#settings-panel { max-height: calc(100dvh - 2rem); overflow-y: auto; overscroll-behavior: contain; }
+.settings-body h3 { margin: .3rem 0 -.4rem; font: 700 1rem var(--display); letter-spacing: .06em; color: var(--brass); }
+.settings-note { margin: 0; font-size: .85rem; line-height: 1.35; color: var(--muted); }
+.settings-note:empty { display: none; }
+#backup-status { color: #b9d3ff; }
+
+.stat-block h3 { margin-bottom: .6rem; }
+.stat-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(6.2rem, 1fr)); gap: .5rem; }
+.stat-tile { display: grid; gap: .15rem; padding: .55rem .4rem; text-align: center; border: 1px solid var(--edge); border-radius: .6rem; background: #0d0b10cc; }
+.stat-tile b { font: 900 1.35rem/1 var(--display); color: var(--gold); }
+.stat-tile small { font-size: .72rem; color: var(--muted); line-height: 1.2; }
+.stat-bars { list-style: none; margin: 0; padding: 0; display: grid; gap: .55rem; }
+.stat-bars li { display: flex; gap: .6rem; align-items: center; }
+.stat-bars img { width: 2.6rem; height: 2.6rem; border-radius: 50%; object-fit: cover; border: 1px solid var(--brass); flex: none; }
+.stat-bars div { flex: 1; display: grid; gap: .15rem; min-width: 0; }
+.stat-bars small { color: var(--muted); font-size: .78rem; }
+.stat-bar { display: block; height: .45rem; border-radius: 1rem; background: linear-gradient(90deg, var(--gold) var(--p), #ffffff1a var(--p)); }
+.stat-cards { display: flex; gap: .5rem; overflow-x: auto; padding-bottom: .3rem; }
+.stat-card { flex: 0 0 5.4rem; display: grid; gap: .25rem; padding: .25rem; background: none; border: 0; min-height: 0; }
+.stat-card .card-face, .stat-card > *:first-child { width: 100%; }
+.stat-card small { font-size: .72rem; color: var(--muted); }
+.stat-titles { color: var(--gold); }
+
+/* Testo grande: tutto il testo un po' più grande; le carte restano della stessa misura */
+html.big-text { font-size: 114%; }
+html.big-text .peek-rules { font-size: 1.05rem; }
+html.big-text .peek-rules span { font-size: .95rem; }
+/* in partita il tavolo resta della sua misura: si ingrandiscono solo i testi da leggere */
+html.big-text:has(body.in-match) { font-size: 100%; }
+html.big-text .in-match .speech, html.big-text .in-match .center-alert p, html.big-text .in-match .log li { font-size: 1.15em; }
+html.big-text .in-match .cast-voice, html.big-text .in-match .legend-voice { font-size: 1.5rem; }
+html.big-text .peek-rules { font-size: 1.15rem; }
+html.big-text .peek-rules span { font-size: 1rem; }
+/* lancio della moneta a inizio partita */
+.turn-splash.coin { place-content: center; gap: .8rem; animation-duration: 1.9s; }
+.turn-splash.coin strong { animation-duration: 1.9s; }
+.turn-splash.coin small { max-width: 20rem; padding: .4rem .9rem; text-align: center; font-size: 1rem; color: #f3e3c3; background: #0b080dd9; border-radius: .6rem; animation: splash-text 1.9s ease forwards; }
+/* presentazione delle modalità alla prima apertura */
+.mode-intro { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 1rem; background: #000b; animation: fade-in .3s ease; }
+.mode-intro-box { width: min(24rem, 100%); display: grid; gap: .7rem; justify-items: center; padding: 1.3rem 1.2rem; border-radius: 1.1rem; text-align: left;
+  background: radial-gradient(circle at 50% 0%, #3a1622f2, #0d080ef7 70%); box-shadow: 0 0 0 1px #f0c27b88, 0 1.2rem 3rem #000; }
+.mode-intro-box svg { width: 2.6rem; height: 2.6rem; color: #f0c27b; }
+.mode-intro-box h3 { margin: 0; font: 900 1.35rem var(--display); letter-spacing: .06em; color: var(--gold); }
+.mode-intro-box ul { margin: 0; padding-left: 1.1rem; display: grid; gap: .45rem; line-height: 1.35; }
+.mode-intro-box button { min-width: 10rem; }

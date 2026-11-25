@@ -1,4 +1,5 @@
 // Suoni sintetizzati con Web Audio: nessun file da scaricare. Si possono disattivare.
+import { vibrate } from "./options.mjs";
 // Sul telefono l'audio parte "sospeso": va sbloccato al primo tocco dello schermo.
 const key = "veilbreak-sound";
 let context = null;
@@ -74,10 +75,8 @@ export function sound(name) {
   } catch { /* audio non disponibile */ }
 }
 
-// Breve vibrazione sui telefoni che la supportano.
-export function buzz(ms = 30) {
-  try { if (enabled) navigator.vibrate?.(ms); } catch { /* nessuna vibrazione */ }
-}
+// Breve vibrazione sui telefoni che la supportano (si accende e spegne dalle impostazioni, a parte i suoni).
+export const buzz = (ms = 30, strength) => vibrate(ms, strength);
 
 // ---------- Suoni delle carte ----------
 // Ogni carta ha la sua voce (sfx.mjs): il timbro dipende dalla fazione, l'altezza dall'ID della carta.

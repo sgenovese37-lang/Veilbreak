@@ -16,8 +16,10 @@ import {
   craftCost, canCraft, craftCard, addShards, addPacks,
 } from "./profile.mjs";
 import { currentMissions, recordEvent, claimMission } from "./missions.mjs";
-import { currentAchievements, recordAchievements, claimAchievement } from "./achievements.mjs";
+import { currentAchievements, recordAchievements, claimAchievement, lifetimeStats } from "./achievements.mjs";
 import { chapters, storyTitle, storyProgress, isUnlocked, completeChapter, finalReward, unlockedHeroes, actTwoReward, actOneLength } from "./story.mjs";
+import { option, setOption, speed } from "./options.mjs";
+import { createBackup, readBackup, restoreBackup, saveBackupFile } from "./backup.mjs";
 import { sound, soundEnabled, setSound, buzz, cardSound, startAmbience, stopAmbience } from "./audio.mjs";
 import { environments, environmentFor } from "./environments.mjs";
 import { playMusic, musicEnabled, setMusic } from "./music.mjs";
@@ -74,7 +76,7 @@ let matchEnv = null;       // ambientazione della partita in corso
 let replayRun = 0;         // cambia quando si esce dalla partita: ferma l'animazione in corso
 let lastTurnKey = null;    // per annunciare il cambio di turno
 let logSeenKey = null;     // turno in cui il registro è stato aperto l'ultima volta
-const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+const wait = ms => new Promise(resolve => setTimeout(resolve, ms * speed()));
 const decksKey = "veilbreak-custom-decks";
 try { savedDecks = new Map(Object.entries(JSON.parse(localStorage.getItem(decksKey) ?? "{}"))); }
 catch { savedDecks = new Map(); }
@@ -110,6 +112,15 @@ function updateWallet() {
   const introButton = get("intro-toggle");
   introButton.textContent = t(introEnabled() ? "Introduzione: sì" : "Introduzione: no");
   introButton.setAttribute("aria-pressed", introEnabled());
+  for (const [id, name, on, off] of [
+    ["fast-toggle", "fast", "Animazioni veloci: sì", "Animazioni veloci: no"],
+    ["vibration-toggle", "vibration", "Vibrazione: sì", "Vibrazione: no"],
+    ["text-toggle", "bigText", "Testo grande: sì", "Testo grande: no"],
+  ]) {
+    const b = get(id);
+    b.textContent = t(option(name) ? on : off);
+    b.setAttribute("aria-pressed", option(name));
+  }
   const music = get("music-toggle");
   music.textContent = t(musicEnabled() ? "Musica: sì" : "Musica: no");
   music.setAttribute("aria-pressed", musicEnabled());
@@ -141,6 +152,35 @@ const settingsPanel = get("settings-panel");
 get("settings-open").onclick = () => { updateWallet(); settingsPanel.showModal(); };
 get("settings-close").onclick = () => settingsPanel.close();
 settingsPanel.addEventListener("click", event => { if (event.target === settingsPanel) settingsPanel.close(); });
+get("fast-toggle").onclick = () => { setOption("fast", !option("fast")); updateWallet(); };
+get("vibration-toggle").onclick = () => { setOption("vibration", !option("vibration")); updateWallet(); buzz(40); };
+get("text-toggle").onclick = () => { setOption("bigText", !option("bigText")); updateWallet(); };
+get("profile-open").onclick = () => { settingsPanel.close(); showSection("profile-view"); };
+// Backup: salva tutto in un file e lo ripristina (poi il gioco si riavvia con i dati del file).
+const backupStatus = text => { get("backup-status").textContent = text ? t(text) : ""; };
+get("backup-save").onclick = async () => {
+  backupStatus("");
+  try {
+    const how = await saveBackupFile(createBackup());
+    backupStatus(how === "shared" ? "Backup pronto: scegli dove salvarlo (Drive, email, messaggi…)." : "Backup scaricato.");
+  } catch (error) {
+    backupStatus(/cancel/i.test(String(error?.message ?? error)) ? "Salvataggio annullato." : "Non è stato possibile salvare il backup.");
+  }
+};
+get("backup-load").onclick = () => { backupStatus(""); get("backup-file").value = ""; get("backup-file").click(); };
+get("backup-file").onchange = async event => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  let summary;
+  try { summary = readBackup(await file.text()); }
+  catch (error) { backupStatus(error.message); return; }
+  const when = summary.created ? new Date(summary.created).toLocaleDateString() : "?";
+  const question = t("Ripristinare il backup del {date}? ({shards} Schegge, {chapters} capitoli della Storia, {won} vittorie). I progressi attuali verranno sostituiti.", { date: when, shards: summary.shards, chapters: summary.chapters, won: summary.won });
+  if (!confirm(question)) { backupStatus("Ripristino annullato."); return; }
+  restoreBackup(summary);
+  backupStatus("Backup ripristinato: il gioco si riavvia…");
+  setTimeout(() => location.reload(), 600);
+};
 get("sound-toggle").onclick = () => {
   setSound(!soundEnabled());
   updateWallet();
@@ -606,6 +646,8 @@ function showSection(name) {
   playMusic(musicTheme());
   get("story").hidden = name !== "story-nav";
   get("modes-view").hidden = name !== "modes-view";
+  get("profile-view").hidden = name !== "profile-view";
+  if (name === "profile-view") renderProfile();
   get("quests").hidden = name !== "quests-nav";
   catalogue.hidden = name !== "library";
   get("negozio").hidden = name !== "shop-nav";
@@ -647,7 +689,9 @@ function startMatch(names, decks, options = {}) {
   replayRun++;
   replaying = false;
   lastTurnKey = null;
-  game = createGame(names, Math.random, decks, options);
+  // chi inizia si tira a sorte (chi gioca per secondo ha una carta in più e il Frammento di Essenza)
+  const first = options.first ?? (navigator.webdriver ? (window.__vbFirst ?? 0) : Math.random() < .5 ? 0 : 1);   // nelle prove automatiche si sceglie
+  game = createGame(names, Math.random, decks, { ...options, first });
   // ambientazione: scelta nella partita, altrimenti quella della fazione avversaria
   matchEnv = environmentFor(options.env) ?? environmentFor(heroFor(names[1])?.theme) ?? environmentFor(heroFor(names[0])?.theme);
   startAmbience(matchEnv);
@@ -658,6 +702,22 @@ function startMatch(names, decks, options = {}) {
   replacements.clear();
   showSection("match");
   render();
+  announceFirst(first);
+  if (mode === "cpu" && game.active === 1) timer = setTimeout(playComputer, 1500 * speed());
+}
+
+// Lancio della moneta a inizio partita: chi comincia e cosa riceve l'altro.
+function announceFirst(first) {
+  const splash = element("div", undefined, `turn-splash coin ${first === 0 || mode !== "cpu" ? "mine" : "enemy"}`);
+  splash.setAttribute("aria-hidden", "true");
+  const text = mode === "cpu" ? (first === 0 ? "Inizi tu" : "Inizia l’avversario") : t("Inizia {name}", { name: game.players[first].name });
+  const note = mode === "cpu"
+    ? (first === 0 ? "L’avversario avrà una carta in più e il Frammento di Essenza." : "Avrai una carta in più e il Frammento di Essenza.")
+    : t("{name} avrà una carta in più e il Frammento di Essenza.", { name: game.players[1 - first].name });
+  splash.append(element("strong", text), element("small", note));
+  document.body.append(splash);
+  sound("turn");
+  setTimeout(() => splash.remove(), 1900 * speed());
 }
 
 // Rivincita: stessi eroi, mazzi e regole (in Storia, lo stesso capitolo).
@@ -699,7 +759,7 @@ function settleOutcome() {
   sound(won ? "win" : "lose");
   const shards = rewardMatch(won, level);
   outcome.lines.push(`+${t("{n} Schegge", { n: shards })}`);
-  const event = { won, level, faction: game.players[0].name, stats: game.stats[0] };
+  const event = { won, level, faction: game.players[0].name, hero: heroFor(game.players[0])?.id ?? null, kind: storyChapter !== null ? "story" : matchKind ?? "normal", turns: game.stats[0].turns, stats: game.stats[0] };
   if (storyChapter !== null && won) {
     const chapter = chapters[storyChapter];
     const granted = completeChapter(storyChapter);
@@ -727,7 +787,7 @@ function afterTurn() {
   handover = mode === "local" && game.phase !== "finished";
   render();
   if (mode === "cpu" && game.active === 1 && game.phase !== "finished") {
-    timer = setTimeout(playComputer, game.phase === "mulligan" ? 300 : 900);
+    timer = setTimeout(playComputer, (game.phase === "mulligan" ? 300 : 900) * speed());
   }
 }
 
@@ -870,7 +930,7 @@ function impactFx(target, faction) {
   else if (theme === "hollow") fx.innerHTML = `<b></b><span>✠</span>`;
   else fx.innerHTML = `<b></b>`;
   document.body.append(fx);
-  setTimeout(() => fx.remove(), 700);
+  setTimeout(() => fx.remove(), 700 * speed());
 }
 
 // Entrata delle carte Leggendarie: lo schermo si scurisce, esplode la luce della fazione e la carta entra in grande con la sua battuta.
@@ -884,7 +944,7 @@ function legendaryEntrance(c, side) {
   if (art) layer.append(cardFace(c, art, {}, { className: "legend-card" })); else layer.append(drawCard(c));
   if (voiceOf(c.id)) layer.append(element("q", voiceOf(c.id), "legend-voice"));
   document.body.append(layer);
-  sound("reward"); buzz(60);
+  sound("reward"); buzz(120, "heavy");
   const quick = document.body.classList.contains("energy-save");
   const close = () => { if (!layer.isConnected) return; layer.classList.add("leaving"); setTimeout(() => layer.remove(), 300); };
   layer.addEventListener("click", close);
@@ -905,13 +965,13 @@ async function lunge(side, uid, targetChoice) {
   const dx = (b.left + b.width / 2 - (a.left + a.width / 2)) * 0.82;
   const dy = (b.top + b.height / 2 - (a.top + a.height / 2)) * 0.82;
   from.style.zIndex = 20;
-  const go = from.animate([{ transform: "none" }, { transform: `translate(${dx}px, ${dy}px) scale(1.12)` }], { duration: 230, easing: "cubic-bezier(.5,0,.9,.5)", fill: "forwards" });
+  const go = from.animate([{ transform: "none" }, { transform: `translate(${dx}px, ${dy}px) scale(1.12)` }], { duration: 230 * speed(), easing: "cubic-bezier(.5,0,.9,.5)", fill: "forwards" });
   await go.finished;
   if (targetChoice?.uid == null) sound("hit"); // le creature colpite hanno il loro suono (vedi track)
   impactFx(to, attacker?.card ? byId.get(attacker.card)?.faction : null);
-  buzz(25);
-  to.animate([{ transform: "none" }, { transform: "translateX(-5px)" }, { transform: "translateX(5px)" }, { transform: "none" }], { duration: 240 });
-  await from.animate([{ transform: `translate(${dx}px, ${dy}px) scale(1.12)` }, { transform: "none" }], { duration: 200, easing: "ease-out", fill: "forwards" }).finished;
+  buzz(25, targetChoice?.uid == null && targetChoice?.side === 0 && mode === "cpu" ? "heavy" : "medium");
+  to.animate([{ transform: "none" }, { transform: "translateX(-5px)" }, { transform: "translateX(5px)" }, { transform: "none" }], { duration: 240 * speed() });
+  await from.animate([{ transform: `translate(${dx}px, ${dy}px) scale(1.12)` }, { transform: "none" }], { duration: 200 * speed(), easing: "ease-out", fill: "forwards" }).finished;
 }
 
 // Tenere premuto: anteprima ingrandita della carta con le regole del catalogo.
@@ -969,7 +1029,7 @@ function attachPeek(el, c, current) {
       shown = true;
       showPeek(c, current);
       peekLayer.dataset.open = "holding";
-      buzz(15);
+      buzz(15, "light");
     }, 420);
   });
   el.addEventListener("pointermove", e => { if (!shown && Math.hypot(e.clientX - x, e.clientY - y) > 14) clearTimeout(timerId); });
@@ -1108,7 +1168,7 @@ function popSymbols(anchor, kinds) {
     Object.assign(layer.style, { left: `${rect.left + rect.width / 2}px`, top: `${rect.top + rect.height / 2}px` });
     for (const kind of kinds) layer.append(symbolBadge(kind));
     document.body.append(layer);
-    setTimeout(() => layer.remove(), 1300);
+    setTimeout(() => layer.remove(), 1300 * speed());
   };
   if (anchor.isConnected) show(); else requestAnimationFrame(() => requestAnimationFrame(show));
 }
@@ -1473,7 +1533,7 @@ function fadeDestroyed(before) {
     if (card && /Lascito/.test(card.text ?? "") && !node.classList.contains("silenced")) setTimeout(() => popSymbols(node, ["legacy"]), 60);
     Object.assign(node.style, { position: "fixed", left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px`, margin: 0 });
     document.body.append(node);
-    setTimeout(() => node.remove(), 750);
+    setTimeout(() => node.remove(), 750 * speed());
   }
   if (died && !voiced) sound("death");
 }
@@ -1486,7 +1546,7 @@ function announceTurn(text, mine) {
   document.body.append(splash);
   sound(mine ? "turn" : "enemy");
   if (mine) buzz(40);
-  setTimeout(() => splash.remove(), 1500);
+  setTimeout(() => splash.remove(), 1500 * speed());
 }
 
 function render() {
@@ -1554,6 +1614,7 @@ function renderTable() {
   }
   let message = mull ? t("Scegli fino a {n} carte da cambiare", { n: rules.mulliganLimit }) : cpu ? "Turno avversario" : t("Turno di {name}", { name: game.players[active].name });
   if (mode === "cpu" && !cpu && !mull) message = "Il tuo turno";
+  if (mode === "cpu" && cpu && mull) message = "L’avversario sceglie le carte da cambiare";
   if (selected) message = selected.kind === "attack"
     ? (game.players[1 - game.active].board.some(u => !u.silenced && keywordOf(cardOf(u)).taunt && !isVeiled(u))
       ? t("Provocazione: scegli come bersaglio una creatura con lo scudo")
@@ -1896,9 +1957,111 @@ function renderExtraModes() {
   );
 }
 
+// Profilo e statistiche: partite, vittorie per fazione, eroe e modalità, carte più giocate e record.
+function renderProfile() {
+  const panel = get("profile-view");
+  const profile = loadProfile();
+  const lt = lifetimeStats(profile);
+  const pct = (won, played) => played ? Math.round(won / played * 100) : 0;
+  const head = element("div", undefined, "section-head");
+  head.append(element("h2", "Profilo e statistiche"), button("Indietro", () => showSection("match")));
+  const box = (title, ...children) => { const b = element("section", undefined, "quest-block stat-block"); b.append(element("h3", title), ...children); return b; };
+  const tile = (value, label) => { const d = element("div", undefined, "stat-tile"); d.append(element("b", String(value)), element("small", label)); return d; };
+  const tiles = element("div", undefined, "stat-tiles");
+  const played = profile.stats.played, won = profile.stats.won;
+  tiles.append(
+    tile(played, "Partite"), tile(won, "Vittorie"), tile(`${pct(won, played)}%`, "Vittorie su partite"),
+    tile(lt.streak, "Serie attuale"), tile(lt.bestStreak, "Serie migliore"),
+    tile(lt.fastestWin ? t("{n} turni", { n: lt.fastestWin }) : "—", "Vittoria più rapida"));
+  // barre per fazione / eroe / modalità
+  const bars = rows => {
+    const ul = element("ul", undefined, "stat-bars");
+    if (!rows.length) ul.append(element("li", "Nessuna partita ancora.", "muted"));
+    for (const r of rows) {
+      const li = element("li");
+      if (r.img) { const img = element("img"); img.src = r.img; img.alt = ""; li.append(img); }
+      const text = element("div");
+      text.append(element("strong", r.label), element("small", t("{won} vittorie su {played} · {pct}%", { won: r.won, played: r.played, pct: pct(r.won, r.played) })));
+      const bar = element("i", undefined, "stat-bar");
+      bar.style.setProperty("--p", `${pct(r.won, r.played)}%`);
+      text.append(bar);
+      li.append(text);
+      ul.append(li);
+    }
+    return ul;
+  };
+  const factionRows = factions.map(f => ({ label: f, img: heroFor(f)?.portrait, ...(lt.byFaction[f] ?? { played: 0, won: 0 }) }));
+  const heroRows = Object.entries(lt.byHero).map(([id, r]) => ({ label: heroWithId(id)?.name ?? id, img: heroWithId(id)?.portrait, ...r })).sort((a, b) => b.played - a.played);
+  const kindNames = { normal: "Partite normali", story: "Storia", descent: "Discesa nel Velo", brawl: "Rissa della settimana" };
+  const kindRows = Object.entries(kindNames).map(([k, label]) => ({ label, ...(lt.byKind[k] ?? { played: 0, won: 0 }) }));
+  // carte più giocate
+  const top = Object.entries(lt.cards).map(([id, n]) => [Number(id), n]).filter(([id]) => byId.has(id) && id !== essenceShardId).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const topList = element("div", undefined, "stat-cards");
+  if (!top.length) topList.append(element("p", "Gioca qualche partita contro il computer per vedere le tue carte preferite.", "muted"));
+  for (const [id, n] of top) {
+    const c = byId.get(id);
+    const art = illustrationFor(id);
+    const b = button(undefined, () => showCard(c), "stat-card");
+    b.append(art ? cardFace(c, art, {}, { thumb: true }) : element("span", c.name), element("small", t("giocata {n} volte", { n })));
+    b.setAttribute("aria-label", `${c.name}: ${t("giocata {n} volte", { n })}`);
+    topList.append(b);
+  }
+  const { have, max } = collectionProgress();
+  const records = element("div", undefined, "stat-tiles");
+  records.append(
+    tile(descentBest(profile), "Record della Discesa"), tile(storyProgress(profile), "Capitoli della Storia"),
+    tile(lt.kills ?? 0, "Creature distrutte"), tile(lt.heroDamage ?? 0, "Danni agli eroi"),
+    tile(lt.spells ?? 0, "Incantesimi lanciati"), tile(lt.hardWins ?? 0, "Vittorie a Difficile"),
+    tile(`${have}/${max}`, "Collezione"), tile(currentAchievements(profile).filter(a => a.done).length + "/" + currentAchievements(profile).length, "Obiettivi"));
+  const titleList = element("p", profile.titles.length ? profile.titles.map(id => t(titles[id]?.name)).join(" · ") : "Nessun titolo ancora: completa il tutorial e la Storia.", profile.titles.length ? "stat-titles" : "muted");
+  panel.replaceChildren(head,
+    box("Riepilogo", tiles),
+    box("Fazioni", bars(factionRows)),
+    box("Eroi", bars(heroRows)),
+    box("Modalità", bars(kindRows)),
+    box("Carte più giocate", topList),
+    box("Record", records),
+    box("Titoli", titleList),
+    element("p", "Le statistiche dettagliate contano le partite contro il computer da questa versione in poi.", "muted"));
+  mountIcons(panel);
+}
+
 function openModes(kind) {
   showSection("modes-view");
   if (kind === "descent") renderDescent(); else renderBrawl();
+  firstVisit(kind);
+}
+
+// Presentazione che compare la prima volta che si apre una modalità.
+const introductions = {
+  descent: { icon: "skull", title: "Discesa nel Velo", lines: [
+    "Scegli una fazione e affronta una partita dopo l’altra con il suo mazzo.",
+    "Dopo ogni vittoria aggiungi al mazzo 1 carta su 3: il mazzo cresce con te.",
+    "Gli avversari diventano più forti e hanno più punti vita a ogni vittoria.",
+    "Alla terza sconfitta la discesa finisce: più vittorie, più Schegge (e buste dalle 5 vittorie). Puoi interromperla e riprenderla quando vuoi.",
+  ] },
+  brawl: { icon: "moon", title: "Rissa della settimana", lines: [
+    "Ogni settimana una regola speciale diversa cambia il modo di giocare.",
+    "Scegli una fazione e affronta il computer con quella regola.",
+    "Ogni vittoria dà Schegge; vincere le Risse fa avanzare anche gli Obiettivi.",
+  ] },
+};
+function firstVisit(kind) {
+  const info = introductions[kind];
+  const key = `veilbreak-visto-${kind}`;
+  try { if (!info || localStorage.getItem(key)) return; localStorage.setItem(key, "1"); } catch { return; }
+  const layer = element("div", undefined, "mode-intro");
+  layer.setAttribute("role", "dialog");
+  layer.setAttribute("aria-label", t(info.title));
+  const box = element("div", undefined, "mode-intro-box");
+  box.append(icon(info.icon), element("h3", info.title));
+  const list = element("ul");
+  for (const line of info.lines) list.append(element("li", line));
+  box.append(list, button("Ho capito", () => layer.remove(), "primary"));
+  layer.append(box);
+  layer.addEventListener("click", event => { if (event.target === layer) layer.remove(); });
+  document.body.append(layer);
+  mountIcons(layer);
 }
 
 function factionPicker(onPick, label) {

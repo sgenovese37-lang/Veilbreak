@@ -7,7 +7,7 @@ Riepilogo per riprendere il lavoro in una nuova sessione.
 - Gioco: cartella `veilbreak-app/` (HTML/JS, si avvia con `python3 -m http.server 8000` dalla radice e si apre `/veilbreak-app/`).
 - App Android: `app-android/` (Capacitor). GitHub Actions (`.github/workflows/apk.yml`) esegue i test, compila l'APK e lo pubblica nella release `apk-ultima`.
 - Firma APK: chiave fissa `app-android/android/app/veilbreak-prova.keystore` (password `android`), versionCode = numero della compilazione su GitHub, così ogni APK si installa sopra il precedente.
-- Ultimo APK inviato all'utente: **0.1.11** (versionCode 11).
+- Ultimo APK inviato all'utente: vedi `ultima-versione-inviata.txt` nella cartella di lavoro (0.1.29 prima della fase 4).
 
 ## Accordi con l'utente
 - A ogni aggiornamento: aspettare la compilazione su GitHub, scaricare l'APK, verificare firma fissa (SHA256 80:D3:EA:3B:C7:EE:4F:0D…) e versionCode più alto dell'ultimo inviato, poi mandarlo in chat. Deve sempre installarsi sopra la versione precedente.
@@ -68,6 +68,13 @@ Riepilogo per riprendere il lavoro in una nuova sessione.
 - Storia Atto II «La Marea sotto la Città»: capitoli 9-16 con dialoghi; 3 nuovi eroi (Kira Statica, Padre Lazzaro, Notaia Vittoria Sale) con ritratti provvisori; PDF con i prompt dei ritratti.
 - Entrata scenica delle Leggendarie e impatti degli attacchi diversi per fazione.
 - Copertina di avvio in `index.html`: niente lampo del modulo grezzo all'apertura.
+
+## Fase 4 (25 novembre)
+- Backup dei progressi (`backup.mjs`): Impostazioni → Salva backup / Ripristina backup. Nell'app Android il file si condivide con i plugin Capacitor Filesystem e Share; nel browser si scarica.
+- Opzioni (`options.mjs`): animazioni veloci, vibrazione (plugin Haptics nell'app), testo grande (in partita solo i testi da leggere).
+- Profilo e statistiche (Impostazioni → Profilo e statistiche): vittorie per fazione, eroe e modalità, carte più giocate, serie, record. I dati sono in `profile.lifetime` (`achievements.mjs`).
+- Chi inizia si tira a sorte; computer Difficile più forte; nuovi poteri di Ada ed Elena (vedi `BILANCIAMENTO.md`).
+- Tutorial aggiornato (13 lezioni) e presentazione alla prima apertura di Discesa nel Velo e Rissa.
 
 ## Prossimi passi
 - Ritratti definitivi dei 3 eroi dell'Atto II arrivati e inseriti.

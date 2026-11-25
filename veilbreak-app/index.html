@@ -37,9 +37,19 @@
     <div class="settings-body">
       <h2>Impostazioni</h2>
       <div class="settings-row"><button id="sound-toggle" type="button"></button><button id="music-toggle" type="button"></button></div>
+      <h3>Opzioni di gioco</h3>
+      <button id="fast-toggle" type="button"></button>
+      <button id="vibration-toggle" type="button"></button>
+      <button id="text-toggle" type="button"></button>
       <button id="intro-toggle" type="button"></button>
       <button id="saver-toggle" type="button"></button>
       <label>Lingua <select id="lang-select" class="lang" aria-label="Lingua"></select></label>
+      <button id="profile-open" type="button">Profilo e statistiche</button>
+      <h3>Backup dei progressi</h3>
+      <p class="settings-note">Salva in un file carte, Schegge, Storia, mazzi e obiettivi. Conservalo (per esempio su Drive o mandandolo a te stesso): se cambi telefono o reinstalli il gioco, lo ripristini da qui.</p>
+      <div class="settings-row"><button id="backup-save" type="button">Salva backup</button><button id="backup-load" type="button">Ripristina backup</button></div>
+      <input id="backup-file" type="file" accept=".json,application/json,text/plain" hidden>
+      <p id="backup-status" class="settings-note" aria-live="polite"></p>
       <button id="settings-close" class="primary" type="button">Chiudi</button>
     </div>
   </dialog>
@@ -82,6 +92,7 @@
     <section id="negozio" class="sheet wide" hidden aria-label="Negozio"><div id="shop" class="shop"></div></section>
     <section id="deck-editor" class="sheet" hidden aria-label="Costruisci un mazzo"></section>
     <section id="tutorial" class="sheet" hidden aria-label="Tutorial a missioni"></section>
+    <section id="profile-view" class="sheet wide" hidden aria-label="Profilo e statistiche"></section>
     <section id="catalogue" hidden aria-labelledby="catalogue-title">
       <div class="section-head">
         <h2 id="catalogue-title">Carte</h2>

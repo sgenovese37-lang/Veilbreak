@@ -11,10 +11,11 @@ export const heroes = {
       // { target: "ally", defense: 1 }. Cambiata perché la Corte vinceva solo il 30% delle partite.
       // Playtest 2 (novembre): era +1/+1 permanente; con la Provocazione corretta e il computer più
       // aggressivo la Corte vinceva il 60% delle partite.
+      // Fase 4: era +1 Attacco permanente; con il computer che guarda una mossa avanti la Corte scendeva al 43%.
       name: "Decreto di Investitura",
-      text: "Una creatura alleata ottiene +1 Attacco in modo permanente.",
+      text: "Una creatura alleata ottiene +2 Attacco in modo permanente.",
       target: "ally",
-      atk: 1,
+      atk: 2,
     },
   },
   "Patto Neon": {
@@ -39,10 +40,12 @@ export const heroes = {
       // Versione precedente: «Cura 2 punti vita al tuo eroe» ({ heal: 2 }). Con i mazzi da 30 carte
       // le partite non arrivano più all'esaurimento del mazzo e i Senza Santi vincevano meno del 20%.
       // Playtest 2: era +2 Difesa; con la Provocazione corretta i Senza Santi diventavano un muro (85% contro il Neon).
+      // Fase 4: era solo +1 Difesa; con il computer più forte i Senza Santi vincevano il 30%.
       name: "Liturgia del Sangue",
-      text: "Una creatura alleata ottiene +1 Difesa in modo permanente.",
+      text: "Una creatura alleata ottiene +1 Attacco e +1 Difesa in modo permanente.",
       target: "ally",
       health: 1,
+      atk: 1,
     },
   },
   "Sottocittà": {

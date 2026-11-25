@@ -26,7 +26,7 @@ function life(profile) {
 
 const valueOf = (lt, metric) => metric === "factions" ? lt.factions.length : lt[metric] ?? 0;
 
-// event: { won, level, faction, stats, chapterCleared, descentWins, brawl }
+// event: { won, level, faction, hero, kind, turns, stats, chapterCleared, descentWins, brawl }
 export function recordAchievements(event, profile = loadProfile()) {
   const lt = life(profile);
   const stats = event.stats ?? {};
@@ -37,6 +37,18 @@ export function recordAchievements(event, profile = loadProfile()) {
     if (event.faction && !lt.factions.includes(event.faction)) lt.factions.push(event.faction);
     if (event.brawl) lt.brawlWins++;
   }
+  // statistiche per il Profilo
+  lt.byFaction ??= {}; lt.byHero ??= {}; lt.byKind ??= {}; lt.cards ??= {};
+  lt.streak ??= 0; lt.bestStreak ??= 0;
+  const bump = (table, key) => { if (!key) return; table[key] ??= { played: 0, won: 0 }; table[key].played++; if (event.won) table[key].won++; };
+  bump(lt.byFaction, event.faction);
+  bump(lt.byHero, event.hero);
+  bump(lt.byKind, event.kind);
+  for (const [id, n] of Object.entries(stats.played ?? {})) lt.cards[id] = (lt.cards[id] ?? 0) + n;
+  lt.streak = event.won ? lt.streak + 1 : 0;
+  lt.bestStreak = Math.max(lt.bestStreak, lt.streak);
+  if (event.won && event.turns && (!lt.fastestWin || event.turns < lt.fastestWin)) lt.fastestWin = event.turns;
+  lt.turns = (lt.turns ?? 0) + (event.turns ?? 0);
   lt.kills += stats.kills ?? 0;
   lt.heroDamage += stats.heroDamage ?? 0;
   lt.spells += stats.spells ?? 0;
@@ -65,3 +77,9 @@ export function claimAchievement(id, profile = loadProfile()) {
 
 // Obiettivi pronti da riscattare (per il segnale sul pulsante Missioni)
 export const achievementsReady = (profile = loadProfile()) => currentAchievements(profile).filter(a => a.done && !a.claimed).length;
+
+// Dati per la schermata Profilo e statistiche.
+export function lifetimeStats(profile = loadProfile()) {
+  const lt = life(profile);
+  return { byFaction: {}, byHero: {}, byKind: {}, cards: {}, streak: 0, bestStreak: 0, fastestWin: 0, turns: 0, ...lt };
+}

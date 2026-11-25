@@ -20,7 +20,7 @@ const missions = [
   },
   {
     title: "La mano iniziale",
-    lesson: "Inizi con 6 carte. Con il mulligan puoi sostituirne fino a 2 prima che inizi la partita. Chi gioca per secondo pesca una carta in più e, dopo il cambio, riceve il Frammento di Essenza: costa 0 e dà 1 Essenza solo per quel turno.",
+    lesson: "Chi inizia si decide a sorte con il lancio della moneta. Inizi con 6 carte. Con il mulligan puoi sostituirne fino a 2 prima che inizi la partita. Chi inizia non pesca nel primo turno; chi gioca per secondo pesca una carta in più e, dopo il cambio, riceve il Frammento di Essenza: costa 0 e dà 1 Essenza solo per quel turno.",
     prompt: "Quante delle tue 6 carte puoi sostituire?",
     choices: ["Tutte e 6.", "Esattamente 3.", "Da 0 a 2."],
     answer: 2,
@@ -41,7 +41,7 @@ const missions = [
   },
   {
     title: "Gli eroi",
-    lesson: "Ogni fazione ha un eroe con un potere distintivo. Attivarlo costa 1 Essenza e puoi usarlo una volta durante il tuo turno. Altri quattro eroi si sbloccano vincendo i capitoli della Storia.",
+    lesson: "Ogni fazione ha un eroe con un potere distintivo. Attivarlo costa 1 Essenza e puoi usarlo una volta durante il tuo turno. Altri sette eroi si sbloccano vincendo i capitoli della Storia.",
     prompt: "Quanto costa usare un potere dell’eroe?",
     choices: ["Una carta.", "Un punto Attacco.", "1 Essenza."],
     answer: 2,
@@ -55,7 +55,7 @@ const missions = [
   },
   {
     title: "Modalità di gioco",
-    lesson: "Puoi sfidare il computer a tre difficoltà, giocare in due sullo stesso dispositivo o seguire la modalità Storia, un capitolo alla volta. Il gioco 1 contro 1 online arriverà in seguito.",
+    lesson: "Puoi sfidare il computer a tre difficoltà, giocare in due sullo stesso dispositivo o seguire la modalità Storia, un capitolo alla volta. Dalla schermata iniziale si aprono anche la Discesa nel Velo e la Rissa della settimana.",
     prompt: "Quale modalità scegli per esercitarti da solo?",
     choices: ["Due giocatori sullo stesso dispositivo.", "Contro il computer.", "Catalogo delle carte."],
     answer: 1,
@@ -72,6 +72,35 @@ const missions = [
     lesson: "Le carte a basso costo ti aiutano a partire. Le carte più costose entrano in gioco quando hai accumulato Essenza.",
     prompt: "Quale combinazione di costi ti lascia opzioni sia nei primi turni sia più avanti?",
     choices: ["Una combinazione di carte economiche e potenti.", "Soltanto carte da 7 o più Essenze.", "Soltanto carte da 1 Essenza."],
+    answer: 0,
+  },
+  // Missioni aggiunte nella fase 4 (in fondo, così i progressi già salvati restano validi)
+  {
+    title: "Mazzo vuoto e mano piena",
+    lesson: "Quando il tuo mazzo è finito, a ogni turno in cui dovresti pescare subisci danni: 1 la prima volta, poi 2, poi 3 e così via. Un avviso al centro dello schermo te lo ricorda. Se hai già 10 carte in mano, la carta pescata viene scartata.",
+    prompt: "Il tuo mazzo è vuoto e hai già subito 2 danni da esaurimento. Quanti danni subisci alla prossima pescata?",
+    choices: ["Nessuno.", "2.", "3."],
+    answer: 2,
+  },
+  {
+    title: "Giocare con le dita",
+    lesson: "Per giocare una carta toccala oppure trascinala dalla mano al tavolo (o sul bersaglio). Tieni premuta una carta per vederla in grande con la spiegazione delle sue abilità. Per attaccare tocca una tua creatura e poi il bersaglio.",
+    prompt: "Come vedi la spiegazione delle abilità di una carta?",
+    choices: ["Tenendo premuta la carta.", "Scuotendo il telefono.", "Non si può vedere."],
+    answer: 0,
+  },
+  {
+    title: "Discesa nel Velo",
+    lesson: "Nella Discesa nel Velo affronti una partita dopo l’altra con il mazzo della fazione che scegli. Dopo ogni vittoria aggiungi al mazzo 1 carta su 3. Gli avversari diventano sempre più forti; alla terza sconfitta la discesa finisce e ricevi Schegge (e buste, se vai lontano) in base alle vittorie.",
+    prompt: "Quando finisce la Discesa nel Velo?",
+    choices: ["Alla prima sconfitta.", "Alla terza sconfitta.", "Dopo 5 vittorie."],
+    answer: 1,
+  },
+  {
+    title: "Rissa della settimana",
+    lesson: "Ogni settimana la Rissa ha una regola speciale diversa: per esempio tutte le creature con Furia, doppia pescata o mazzi casuali. Vincere le Risse conta anche per gli Obiettivi, i traguardi permanenti che trovi in Missioni.",
+    prompt: "Che cosa cambia ogni settimana nella Rissa?",
+    choices: ["La regola speciale.", "Il numero di punti vita dell’eroe: sempre 1.", "Niente."],
     answer: 0,
   },
 ];

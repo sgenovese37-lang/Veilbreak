@@ -7,7 +7,7 @@ import {
 } from "../profile.mjs";
 import { currentMissions, recordEvent, claimMission, dayKey, weekKey } from "../missions.mjs";
 import { chapters, completeChapter, storyProgress, isUnlocked, finalReward, unlockedHeroes } from "../story.mjs";
-import { factions, createGame, mulligan, computerTurn, useHeroPower, stats, defaultDeck } from "../game.mjs";
+import { factions, createGame, mulligan, computerTurn, useHeroPower, stats, defaultDeck, rules } from "../game.mjs";
 import { smartTurn, runComputer } from "../ai.mjs";
 import { heroes } from "../heroes.mjs";
 
@@ -90,16 +90,39 @@ test("le ricompense di partita dipendono dalla difficoltà", () => {
   assert.equal(loadProfile().stats.played, 2);
 });
 
-test("il potere della Corte dà +1 Attacco permanente", () => {
-  assert.equal(heroes["Corte di Hollow"].power.atk, 1);
+test("il potere della Corte dà +2 Attacco permanente", () => {
+  assert.equal(heroes["Corte di Hollow"].power.atk, 2);
   const g = createGame(["Corte di Hollow", "Patto Neon"], seeded(2));
   mulligan(g, []); mulligan(g, []);
   g.players[0].board.push({ uid: 77, card: 8, damage: 0, weakened: 0, powerAttack: 0, guard: [0, 0], entered: 0, attacked: false, silenced: false, borrowed: null, haste: false });
   assert.ok(useHeroPower(g, { side: 0, uid: 77 }));
   const unit = g.players[0].board.find(u => u.uid === 77);
-  assert.deepEqual([stats(g, 0, unit).attack, stats(g, 0, unit).health], [2, 1]);
+  assert.deepEqual([stats(g, 0, unit).attack, stats(g, 0, unit).health], [3, 1]);
   endTurn(g); endTurn(g);
-  assert.equal(stats(g, 0, unit).attack, 2, "resta anche nei turni successivi");
+  assert.equal(stats(g, 0, unit).attack, 3, "resta anche nei turni successivi");
+});
+
+test("il potere dei Senza Santi dà +1/+1 permanente", () => {
+  const g = createGame(["Senza Santi", "Patto Neon"], seeded(2));
+  mulligan(g, []); mulligan(g, []);
+  g.players[0].board.push({ uid: 78, card: 8, damage: 0, weakened: 0, powerAttack: 0, guard: [0, 0], entered: 0, attacked: false, silenced: false, borrowed: null, haste: false });
+  assert.ok(useHeroPower(g, { side: 0, uid: 78 }));
+  const unit = g.players[0].board.find(u => u.uid === 78);
+  assert.deepEqual([stats(g, 0, unit).attack, stats(g, 0, unit).health], [2, 2]);
+});
+
+test("chi inizia si sceglie: il secondo ha una carta in più e il Frammento di Essenza", () => {
+  const g = createGame(["Corte di Hollow", "Patto Neon"], seeded(5), [], { first: 1 });
+  assert.equal(g.active, 1);
+  assert.equal(g.players[1].hand.length, rules.openingHand);
+  assert.equal(g.players[0].hand.length, rules.openingHand + 1);
+  mulligan(g, []);
+  assert.equal(g.active, 0);
+  mulligan(g, []);
+  assert.equal(g.phase, "play");
+  assert.equal(g.active, 1, "inizia il lato 1");
+  assert.equal(g.players[1].hand.length, rules.openingHand, "chi inizia non pesca nel primo turno");
+  assert.ok(g.players[0].hand.includes(100), "il secondo riceve il Frammento di Essenza");
 });
 
 test("le statistiche di partita alimentano le missioni", () => {

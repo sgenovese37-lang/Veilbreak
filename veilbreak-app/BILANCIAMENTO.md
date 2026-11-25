@@ -111,3 +111,11 @@ Risultati (Difficile contro Difficile, 50 partite per coppia su tre serie di sem
 | Partite finite all'esaurimento del mazzo | 35% | 11–12% |
 | Vittorie per fazione | — | 40–55% |
 | Vittorie di chi gioca per primo | — | circa 58% |
+
+## Fase 4 (25 novembre): chi inizia e computer Difficile più forte
+- **Chi inizia**: prima contro il computer iniziava sempre il giocatore (da qui il ~60% di vittorie). Ora si tira a sorte (`options.first` in `createGame`); chi gioca per secondo ha sempre la carta in più e il Frammento di Essenza. Tra computer, chi inizia vince il 52-56%.
+- **Computer Difficile** (`ai.mjs`): guarda una mossa più avanti per le 6 mosse migliori, cerca prima un colpo finale (al massimo 1500 posizioni), conserva gli incantesimi di rimozione e tiene conto dei danni che l'avversario può fargli al turno dopo. Contro la versione precedente vince il 68-70% (tempo medio per turno ~11 ms sul server).
+- Con il computer più forte l'equilibrio cambiava (Senza Santi 30%, Patto Neon 62%). Nuovi poteri:
+  - Prefetta Ada Vesper: +2 Attacco permanente (era +1).
+  - Elena Voss: +1 Attacco e +1 Difesa permanenti (era +1 Difesa).
+- Risultato su 3 serie da 480 partite (Difficile contro Difficile): Corte 53-58%, Patto Neon 50-53%, Senza Santi 42-46%, Sottocittà 48-52%. Durata mediana 9-10 turni per giocatore.

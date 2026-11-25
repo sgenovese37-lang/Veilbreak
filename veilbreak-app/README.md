@@ -21,9 +21,9 @@ Ogni metà del tavolo usa il tema del suo eroe, anche quando si affrontano fazio
 
 | Fazione | Eroe | Potere |
 | --- | --- | --- |
-| Corte di Hollow | Prefetta Ada Vesper | +1/+1 permanente a una creatura alleata (prima: +1 Difesa fino al proprio prossimo turno; cambiato per il bilanciamento) |
+| Corte di Hollow | Prefetta Ada Vesper | +2 Attacco permanente a una creatura alleata |
 | Patto Neon | Iona Volt, la Frequenza | 2 danni a una creatura nemica |
-| Senza Santi | Elena Voss, il Contratto | Cura di 2 punti vita al proprio eroe |
+| Senza Santi | Elena Voss, il Contratto | +1 Attacco e +1 Difesa permanenti a una creatura alleata |
 | Sottocittà | Mara Sottorotaia | +1 Attacco a una creatura alleata fino alla fine del turno |
 
 I nomi degli eroi e i poteri sono proposte per il playtest.

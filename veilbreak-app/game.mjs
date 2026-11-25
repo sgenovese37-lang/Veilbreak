@@ -33,7 +33,7 @@ export const has = (player, id) => player.board.some(unit => unit.card === id &&
 const rival = side => 1 - side;
 const damageText = n => n === 1 ? t("1 danno") : t("{n} danni", { n });
 const heal = (p, n) => { p.life = Math.min(p.maxLife, p.life + n); };
-const emptyStats = () => ({ cards: 0, creatures: 0, spells: 0, artifacts: 0, secrets: 0, heroDamage: 0, kills: 0, powers: 0, turns: 0 });
+const emptyStats = () => ({ cards: 0, creatures: 0, spells: 0, artifacts: 0, secrets: 0, heroDamage: 0, kills: 0, powers: 0, turns: 0, played: {} });
 
 function shuffle(items, random) {
   for (let i = items.length - 1; i > 0; i--) {
@@ -90,7 +90,9 @@ export function validDeck(name, deck, ally = deckAlly(deck)) {
 }
 
 // options.lives: punti vita iniziali per lato (Storia). options.decks: mazzi già decisi, senza i limiti dell'editor.
+// options.first: chi inizia (0 o 1, di solito tirato a sorte; senza indicazione inizia il lato 0).
 export function createGame(names, random = Math.random, customDecks = [], options = {}) {
+  const first = options.first === 1 ? 1 : 0;
   const players = names.map((name, side) => {
     const custom = customDecks[side];
     const forced = options.decks?.[side];
@@ -98,13 +100,13 @@ export function createGame(names, random = Math.random, customDecks = [], option
     const maxLife = options.lives?.[side] ?? rules.maxLife;
     const player = { name, ally: !forced?.length && validDeck(name, custom) ? deckAlly(custom) : null, hero: options.heroes?.[side] ?? null, life: maxLife, maxLife, capacity: 0, essence: 0, deck, hand: [], discard: [], powerUsed: false, board: [], artifacts: [], secrets: [], discount: 0, fatigue: 0, peek: null };
     // chi gioca per secondo pesca una carta in più (e dopo la sostituzione riceve il Frammento di Essenza)
-    draw(player, rules.openingHand + (side === 1 ? 1 : 0));
+    draw(player, rules.openingHand + (side !== first ? 1 : 0));
     return player;
   });
   // Rissa della settimana: una regola speciale (vedi brawls più sotto)
   const brawl = options.brawl ?? null;
   if (brawl === "rich") for (const p of players) p.capacity = 2;
-  return { players, active: 0, phase: "mulligan", round: 0, next: 1, winner: null, log: [], random, stats: [emptyStats(), emptyStats()], brawl };
+  return { players, first, active: first, phase: "mulligan", round: 0, next: 1, winner: null, log: [], random, stats: [emptyStats(), emptyStats()], brawl };
 }
 
 // Regole delle Risse della settimana. id → testo; la regola «chaos» usa mazzi casuali (vedi chaosDeck).
@@ -139,11 +141,12 @@ export function mulligan(g, indexes) {
   const returned = selected.map(i => p.hand.splice(i, 1)[0]);
   draw(p, selected.length, g);
   p.deck = shuffle([...p.deck, ...returned], g.random);
-  if (g.active === 0) g.active = 1;
+  const first = g.first ?? 0;
+  if (g.active === first) g.active = rival(first);
   else {
     g.phase = "play";
     p.hand.push(essenceShardId);
-    startTurn(g, 0);
+    startTurn(g, first);
   }
   return true;
 }
@@ -444,6 +447,7 @@ export function play(g, index, target) {
   tally.cards++;
   if (c.id !== essenceShardId) {
     tally[{ Creatura: "creatures", Incantesimo: "spells", Artefatto: "artifacts", Segreto: "secrets" }[c.type]]++;
+    tally.played[c.id] = (tally.played[c.id] ?? 0) + 1;
     if (c.type === "Incantesimo" && !isPact(c)) p.discount = 0;
     // Spirito nel Cavo: +1 Attacco a ogni incantesimo
     if (c.type === "Incantesimo") for (const u of p.board) if (u.card === 72 && !u.silenced) u.atkBonus = (u.atkBonus ?? 0) + 1;
@@ -545,7 +549,7 @@ function startTurn(g, side) {
   (g.turnStarts ??= []).push(g.log.length);
   note(g, t("Turno di {name}.", { name: p.name }));
   // chi gioca per primo (sempre il giocatore 0) non pesca nel suo primo turno: compensa il vantaggio di iniziare
-  if (g.round === 1 && side === 0) { /* niente pescata */ } else if (p.deck.length) draw(p, g.brawl === "double" ? 2 : 1, g);
+  if (g.round === 1 && side === (g.first ?? 0)) { /* niente pescata */ } else if (p.deck.length) draw(p, g.brawl === "double" ? 2 : 1, g);
   else {
     p.fatigue++;
     damageHero(g, side, p.fatigue, false);
