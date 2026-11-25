@@ -926,10 +926,28 @@ function showPeek(c, current) {
   if (art) box.append(cardFace(c, art, current ? { attack: current.attack, health: current.health, cost: current.cost } : {}, { className: "peek-face" }));
   else box.append(drawCard(c));
   const rulesBox = element("div", undefined, "peek-rules");
-  rulesBox.append(element("strong", `${c.name} · ${t("{n} Essenza", { n: c.cost })}`));
-  if (c.type === "Creatura") rulesBox.append(element("span", current ? t("Ora: Attacco {a} · Difesa {d}", { a: current.attack, d: current.health }) : t("Attacco {a} · Difesa {d}", { a: c.attack, d: c.health })));
-  rulesBox.append(element("p", c.text || "Nessun effetto."));
-  const notesPeek = keywordNotes(c); if (notesPeek) rulesBox.append(notesPeek);
+  rulesBox.append(element("strong", c.name, "peek-name"));
+  const cost = isPact(c) ? t("{n} punti vita (Patto)", { n: c.cost }) : t("{n} Essenza", { n: c.cost });
+  rulesBox.append(element("span", `${t(c.type)} · ${cost}`, "peek-meta"));
+  if (c.type === "Creatura") rulesBox.append(element("span", current ? t("Ora: Attacco {a} · Difesa {d}", { a: current.attack, d: current.health }) : t("Attacco {a} · Difesa {d}", { a: c.attack, d: c.health }), "peek-meta"));
+  rulesBox.append(element("h4", "Abilità"), element("p", c.text || "Nessun effetto.", "peek-text"));
+  // schede delle parole chiave, come nei giochi di carte
+  const notes = element("div", undefined, "peek-notes");
+  for (const [word, text] of Object.entries(glossary)) {
+    if (!(c.text ?? "").includes(word)) continue;
+    const kw = keywordOf(c);
+    const sym = { Provocazione: kw.taunt && "shield", Rapidità: kw.rush && "bolt", Velato: kw.veiled && "veil", Furia: kw.fury && "fury", Patto: "drop", Lascito: "skull", "Urlo di battaglia": "horn" }[word];
+    const note = element("div", undefined, "peek-note");
+    const head = element("b"); if (sym) head.append(icon(sym)); head.append(document.createTextNode(t(word)));
+    note.append(head, element("span", text));
+    notes.append(note);
+  }
+  if (typeNotes[c.type]) {
+    const note = element("div", undefined, "peek-note type");
+    note.append(element("b", c.type), element("span", typeNotes[c.type]));
+    notes.append(note);
+  }
+  rulesBox.append(notes);
   box.append(rulesBox, element("small", "Tocca lo schermo per chiudere", "peek-hint"));
   peekLayer.replaceChildren(box);
   peekLayer.hidden = false;
@@ -1104,6 +1122,18 @@ const glossary = {
   Velato: "Non può essere bersagliato da attacchi, incantesimi e poteri nemici finché non attacca.",
   Furia: "Può attaccare due volte in ogni turno.",
   Patto: "Si paga con punti vita invece che con Essenza.",
+  Silenzia: "Toglie alla creatura tutti i suoi effetti e le sue abilità.",
+  "Prendi il controllo": "La creatura passa dalla tua parte del tavolo.",
+  Rimanda: "La creatura torna nella mano del suo proprietario e perde i potenziamenti.",
+  Evoca: "Mette in campo una nuova creatura (se c’è posto: massimo 7).",
+  "Riporta in campo": "Rimette in gioco una creatura morta, come nuova.",
+};
+// Spiegazione del tipo di carta
+const typeNotes = {
+  Creatura: "Resta sul tavolo e può attaccare dal turno dopo (subito se ha Rapidità). Muore quando la Difesa arriva a 0.",
+  Incantesimo: "Si usa una volta sola: il suo effetto avviene subito, poi la carta va negli scarti.",
+  Artefatto: "Resta in gioco accanto al tuo eroe e il suo effetto continua a funzionare.",
+  Segreto: "Resta nascosto all’avversario e si attiva da solo quando succede quello che c’è scritto.",
 };
 function keywordNotes(c) {
   const box = element("dl", undefined, "keyword-notes");

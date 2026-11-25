@@ -873,5 +873,21 @@ export default {
  "Le creature costano 1 Essenza in meno.": "Creatures cost 1 less Essence.",
  "Mazzi del caos": "Chaos decks",
  "Ogni giocatore riceve un mazzo casuale di 30 carte di tutte le fazioni.": "Each player gets a random 30-card deck from all factions.",
- "Leggendaria dell’avversario": "Opponent's Legendary"
+ "Leggendaria dell’avversario": "Opponent's Legendary",
+ "Abilità": "Abilities",
+ "{n} punti vita (Patto)": "{n} health (Pact)",
+ "Toglie alla creatura tutti i suoi effetti e le sue abilità.": "Removes all of the creature's effects and abilities.",
+ "La creatura passa dalla tua parte del tavolo.": "The creature moves to your side of the table.",
+ "La creatura torna nella mano del suo proprietario e perde i potenziamenti.": "The creature returns to its owner's hand and loses its buffs.",
+ "Mette in campo una nuova creatura (se c’è posto: massimo 7).": "Puts a new creature into play (if there's room: 7 at most).",
+ "Rimette in gioco una creatura morta, come nuova.": "Brings a dead creature back into play, as new.",
+ "Resta sul tavolo e può attaccare dal turno dopo (subito se ha Rapidità). Muore quando la Difesa arriva a 0.": "Stays on the table and can attack from the next turn (immediately with Haste). It dies when its Defense reaches 0.",
+ "Si usa una volta sola: il suo effetto avviene subito, poi la carta va negli scarti.": "Used once: its effect happens immediately, then the card goes to the discard pile.",
+ "Resta in gioco accanto al tuo eroe e il suo effetto continua a funzionare.": "Stays in play next to your hero and its effect keeps working.",
+ "Resta nascosto all’avversario e si attiva da solo quando succede quello che c’è scritto.": "Stays hidden from the opponent and triggers by itself when what it says happens.",
+ "Silenzia": "Silence",
+ "Prendi il controllo": "Take control",
+ "Rimanda": "Return",
+ "Evoca": "Summon",
+ "Riporta in campo": "Resurrect"
 };

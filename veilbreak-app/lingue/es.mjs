@@ -873,5 +873,21 @@ export default {
  "Le creature costano 1 Essenza in meno.": "Las criaturas cuestan 1 de Esencia menos.",
  "Mazzi del caos": "Mazos del caos",
  "Ogni giocatore riceve un mazzo casuale di 30 carte di tutte le fazioni.": "Cada jugador recibe un mazo aleatorio de 30 cartas de todas las facciones.",
- "Leggendaria dell’avversario": "Legendaria del rival"
+ "Leggendaria dell’avversario": "Legendaria del rival",
+ "Abilità": "Habilidades",
+ "{n} punti vita (Patto)": "{n} puntos de vida (Pacto)",
+ "Toglie alla creatura tutti i suoi effetti e le sue abilità.": "Quita a la criatura todos sus efectos y habilidades.",
+ "La creatura passa dalla tua parte del tavolo.": "La criatura pasa a tu lado de la mesa.",
+ "La creatura torna nella mano del suo proprietario e perde i potenziamenti.": "La criatura vuelve a la mano de su dueño y pierde sus mejoras.",
+ "Mette in campo una nuova creatura (se c’è posto: massimo 7).": "Pone en juego una nueva criatura (si hay sitio: máximo 7).",
+ "Rimette in gioco una creatura morta, come nuova.": "Devuelve al juego una criatura muerta, como nueva.",
+ "Resta sul tavolo e può attaccare dal turno dopo (subito se ha Rapidità). Muore quando la Difesa arriva a 0.": "Se queda en la mesa y puede atacar desde el turno siguiente (enseguida si tiene Celeridad). Muere cuando su Defensa llega a 0.",
+ "Si usa una volta sola: il suo effetto avviene subito, poi la carta va negli scarti.": "Se usa una sola vez: su efecto ocurre al instante y luego la carta va al descarte.",
+ "Resta in gioco accanto al tuo eroe e il suo effetto continua a funzionare.": "Se queda en juego junto a tu héroe y su efecto sigue funcionando.",
+ "Resta nascosto all’avversario e si attiva da solo quando succede quello che c’è scritto.": "Permanece oculto al rival y se activa solo cuando ocurre lo que indica.",
+ "Silenzia": "Silenciar",
+ "Prendi il controllo": "Tomar el control",
+ "Rimanda": "Devolver",
+ "Evoca": "Invocar",
+ "Riporta in campo": "Devolver al campo"
 };

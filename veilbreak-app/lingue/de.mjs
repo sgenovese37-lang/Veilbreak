@@ -873,5 +873,21 @@ export default {
  "Le creature costano 1 Essenza in meno.": "Kreaturen kosten 1 Essenz weniger.",
  "Mazzi del caos": "Chaosdecks",
  "Ogni giocatore riceve un mazzo casuale di 30 carte di tutte le fazioni.": "Jeder Spieler erhält ein zufälliges Deck mit 30 Karten aus allen Fraktionen.",
- "Leggendaria dell’avversario": "Legendäre Karte des Gegners"
+ "Leggendaria dell’avversario": "Legendäre Karte des Gegners",
+ "Abilità": "Fähigkeiten",
+ "{n} punti vita (Patto)": "{n} Lebenspunkte (Pakt)",
+ "Toglie alla creatura tutti i suoi effetti e le sue abilità.": "Entfernt alle Effekte und Fähigkeiten der Kreatur.",
+ "La creatura passa dalla tua parte del tavolo.": "Die Kreatur wechselt auf deine Seite des Tisches.",
+ "La creatura torna nella mano del suo proprietario e perde i potenziamenti.": "Die Kreatur kehrt auf die Hand ihres Besitzers zurück und verliert ihre Verstärkungen.",
+ "Mette in campo una nuova creatura (se c’è posto: massimo 7).": "Bringt eine neue Kreatur ins Spiel (wenn Platz ist: höchstens 7).",
+ "Rimette in gioco una creatura morta, come nuova.": "Bringt eine tote Kreatur wie neu ins Spiel zurück.",
+ "Resta sul tavolo e può attaccare dal turno dopo (subito se ha Rapidità). Muore quando la Difesa arriva a 0.": "Bleibt auf dem Tisch und kann ab dem nächsten Zug angreifen (sofort mit Eile). Sie stirbt, wenn ihre Verteidigung 0 erreicht.",
+ "Si usa una volta sola: il suo effetto avviene subito, poi la carta va negli scarti.": "Wird einmal eingesetzt: Der Effekt tritt sofort ein, dann kommt die Karte auf den Ablagestapel.",
+ "Resta in gioco accanto al tuo eroe e il suo effetto continua a funzionare.": "Bleibt neben deinem Helden im Spiel und ihr Effekt wirkt weiter.",
+ "Resta nascosto all’avversario e si attiva da solo quando succede quello che c’è scritto.": "Bleibt dem Gegner verborgen und löst von selbst aus, wenn eintritt, was draufsteht.",
+ "Silenzia": "Verstummen",
+ "Prendi il controllo": "Kontrolle übernehmen",
+ "Rimanda": "Zurückschicken",
+ "Evoca": "Beschwören",
+ "Riporta in campo": "Zurückholen"
 };
