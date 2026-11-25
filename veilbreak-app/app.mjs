@@ -3,7 +3,7 @@ import {
   factions, byId, createGame, mulligan, canPlay, playTargets, play,
   attackTargets, attack, endTurn, stats, cardOf, price,
   defaultDeck, copyLimit, deckSize, validDeck, rules, powerTargets, canUseHeroPower, useHeroPower,
-  essenceShard, essenceShardId, isPact, isVeiled, maxAttacks,
+  essenceShard, essenceShardId, isPact, isVeiled, maxAttacks, deckCards, deckAlly, maxFactions,
 } from "./game.mjs";
 
 import { renderTutorial } from "./tutorial.mjs";
@@ -122,9 +122,11 @@ function deckOwned(deck) {
   for (const id of deck) counts.set(id, (counts.get(id) ?? 0) + 1);
   return [...counts].every(([id, n]) => n <= owned(id));
 }
+// Mazzo salvato per una fazione principale: { cards, ally } (i mazzi vecchi sono solo elenchi di carte).
 const playableDeck = name => {
-  const deck = savedDecks.get(name);
-  return validDeck(name, deck) && deckOwned(deck) ? deck : null;
+  const saved = savedDecks.get(name);
+  const list = deckCards(saved);
+  return validDeck(name, saved) && deckOwned(list) ? { cards: [...list], ally: deckAlly(saved) } : null;
 };
 
 for (const select of [form.elements.first, form.elements.second, filter]) {
@@ -346,6 +348,15 @@ function drawCatalogue() {
   get("cards").replaceChildren(...cards.filter(c => !filter.value || c.faction === filter.value).map(c => drawCard(c, { meta: true, art: "full", copies: owned(c.id), action: () => showCard(c) })));
 }
 
+let draftAlly = null;   // fazione alleata del mazzo in costruzione (al massimo 2 fazioni)
+let choosingAlly = false;
+function loadDraft() {
+  const saved = savedDecks.get(editing);
+  draft = [...(deckCards(saved) ?? defaultDeck(editing))];
+  draftAlly = deckAlly(saved);
+  choosingAlly = false;
+}
+
 function renderDeckEditor(message = "", focus) {
   const panel = get("deck-editor");
   const used = draft.length;
@@ -357,14 +368,50 @@ function renderDeckEditor(message = "", focus) {
   select.value = editing;
   select.onchange = () => {
     editing = select.value;
-    draft = [...(savedDecks.get(editing) ?? defaultDeck(editing))];
+    loadDraft();
     renderDeckEditor("", "faction");
   };
   header.append(select);
+
+  // Fazioni del mazzo: la principale (dà l'eroe) e al massimo una alleata, scelta con il pulsante.
+  const factionBox = element("div", undefined, "deck-factions");
+  factionBox.append(element("span", "Fazioni del mazzo", "deck-factions-title"));
+  const chips = element("div", undefined, "deck-chips");
+  chips.append(element("span", editing, "deck-chip main"));
+  if (draftAlly) {
+    const chip = element("span", undefined, "deck-chip ally");
+    chip.append(element("span", draftAlly));
+    const drop = button("✕", () => {
+      draft = draft.filter(id => byId.get(id)?.faction !== draftAlly);
+      draftAlly = null;
+      renderDeckEditor("Seconda fazione tolta: le sue carte sono uscite dal mazzo.", "add-ally");
+    }, "chip-x");
+    drop.id = "remove-ally";
+    drop.setAttribute("aria-label", t("Togli la fazione {name}", { name: draftAlly }));
+    chip.append(drop);
+    chips.append(chip);
+  } else {
+    const add = button("＋ Seconda fazione", () => { choosingAlly = !choosingAlly; renderDeckEditor("", "add-ally"); }, "deck-add-ally");
+    add.id = "add-ally";
+    add.setAttribute("aria-expanded", choosingAlly);
+    chips.append(add);
+  }
+  factionBox.append(chips);
+  if (choosingAlly && !draftAlly) {
+    const options = element("div", undefined, "ally-options");
+    for (const name of factions.filter(f => f !== editing)) {
+      const pick = button(name, () => { draftAlly = name; choosingAlly = false; renderDeckEditor(t("Ora puoi aggiungere anche le carte di {name}.", { name }), "remove-ally"); }, "ally-option");
+      pick.dataset.ally = name;
+      options.append(pick);
+    }
+    factionBox.append(options);
+  }
+  factionBox.append(element("small", t("Al massimo {n} fazioni. L’eroe è quello della fazione principale.", { n: maxFactions }), "muted"));
+
   const controls = element("div", undefined, "actions");
   controls.append(element("strong", t("{n}/{max} carte", { n: used, max: deckSize })));
   const save = button("Salva mazzo", () => {
-    savedDecks.set(editing, [...draft]);
+    savedDecks.set(editing, draftAlly ? { cards: [...draft], ally: draftAlly } : [...draft]);
     try {
       localStorage.setItem(decksKey, JSON.stringify(Object.fromEntries(savedDecks)));
       renderDeckEditor("Mazzo salvato.", "save");
@@ -372,38 +419,43 @@ function renderDeckEditor(message = "", focus) {
       renderDeckEditor("Mazzo disponibile per questa sessione.", "save");
     }
   }, "primary");
-  save.disabled = !validDeck(editing, draft) || !deckOwned(draft);
+  save.disabled = !validDeck(editing, draft, draftAlly) || !deckOwned(draft);
   controls.append(save);
-  controls.append(button("Ripristina predefinito", () => { draft = defaultDeck(editing); renderDeckEditor(); }));
+  controls.append(button("Ripristina predefinito", () => { draft = defaultDeck(editing); draftAlly = null; renderDeckEditor(); }));
   const status = element("p", message);
   status.setAttribute("role", "status");
   const list = element("ul", undefined, "deck-list");
-  for (const c of cards.filter(c => c.faction === editing)) {
-    const count = draft.filter(id => id === c.id).length;
-    const row = element("li");
-    const remove = button("−", () => {
-      draft.splice(draft.indexOf(c.id), 1);
-      renderDeckEditor("", `remove-${c.id}`);
-    });
-    const plus = button("+", () => {
-      draft.push(c.id);
-      renderDeckEditor("", `plus-${c.id}`);
-    });
-    remove.id = `remove-${c.id}`;
-    plus.id = `plus-${c.id}`;
-    remove.setAttribute("aria-label", t("Rimuovi {card}", { card: c.name }));
-    plus.setAttribute("aria-label", t("Aggiungi {card}", { card: c.name }));
-    remove.disabled = count === 0;
-    plus.disabled = count >= copyLimit(c) || count >= owned(c.id) || used >= deckSize;
-    const thumb = element("img", undefined, "deck-thumb");
-    thumb.src = illustrationFor(c.id)?.thumb ?? ""; thumb.alt = ""; thumb.loading = "lazy";
-    const label = element("span", undefined, "deck-name");
-    label.append(element("b", c.name), element("small", `${t("{n} Essenza", { n: c.cost })} · ${t("possiedi {n}", { n: owned(c.id) })}`));
-    row.dataset.rarity = c.rarity;
-    row.append(thumb, label, remove, element("span", count, "deck-count"), plus);
-    list.append(row);
+  for (const faction of [editing, draftAlly].filter(Boolean)) {
+    const head = element("li", undefined, "deck-group");
+    head.append(element("strong", faction), element("small", faction === editing ? "fazione principale" : "fazione alleata"));
+    list.append(head);
+    for (const c of cards.filter(c => c.faction === faction)) {
+      const count = draft.filter(id => id === c.id).length;
+      const row = element("li");
+      const remove = button("−", () => {
+        draft.splice(draft.indexOf(c.id), 1);
+        renderDeckEditor("", `remove-${c.id}`);
+      });
+      const plus = button("+", () => {
+        draft.push(c.id);
+        renderDeckEditor("", `plus-${c.id}`);
+      });
+      remove.id = `remove-${c.id}`;
+      plus.id = `plus-${c.id}`;
+      remove.setAttribute("aria-label", t("Rimuovi {card}", { card: c.name }));
+      plus.setAttribute("aria-label", t("Aggiungi {card}", { card: c.name }));
+      remove.disabled = count === 0;
+      plus.disabled = count >= copyLimit(c) || count >= owned(c.id) || used >= deckSize;
+      const thumb = element("img", undefined, "deck-thumb");
+      thumb.src = illustrationFor(c.id)?.thumb ?? placeholderArt(c); thumb.alt = ""; thumb.loading = "lazy";
+      const label = element("span", undefined, "deck-name");
+      label.append(element("b", c.name), element("small", `${t("{n} Essenza", { n: c.cost })} · ${t("possiedi {n}", { n: owned(c.id) })}`));
+      row.dataset.rarity = c.rarity;
+      row.append(thumb, label, remove, element("span", count, "deck-count"), plus);
+      list.append(row);
+    }
   }
-  panel.replaceChildren(header, controls, status, list);
+  panel.replaceChildren(header, factionBox, controls, status, list);
   if (focus === "faction") select.focus();
   else if (focus === "save") save.focus();
   else if (focus) (get(focus)?.disabled ? get(focus)?.parentElement?.querySelector("button:not(:disabled)") : get(focus))?.focus();
@@ -429,7 +481,7 @@ function showSection(name) {
   if (name === "library") drawCatalogue();
   if (name === "missions") renderTutorial(get("tutorial"));
   if (name === "decks") {
-    draft ??= [...(savedDecks.get(editing) ?? defaultDeck(editing))];
+    if (!draft) loadDraft();
     renderDeckEditor();
   }
 }
@@ -879,7 +931,7 @@ function heroStrip(side, own, allow) {
   const hero = heroFor(p);
   const strip = element("div", undefined, `hero-strip ${own ? "mine" : "enemy"}`);
   const info = element("div", undefined, "hero-info");
-  info.append(element("strong", hero?.name ?? p.name), element("small", `${p.name} · ${t("Mazzo {n}", { n: p.deck.length })} · ${t("Mano {n}", { n: p.hand.length })}`));
+  info.append(element("strong", hero?.name ?? p.name), element("small", `${p.ally ? `${p.name} + ${p.ally}` : p.name} · ${t("Mazzo {n}", { n: p.deck.length })} · ${t("Mano {n}", { n: p.hand.length })}`));
   if (!own) {
     const backs = element("div", undefined, "card-backs");
     backs.setAttribute("aria-hidden", "true");

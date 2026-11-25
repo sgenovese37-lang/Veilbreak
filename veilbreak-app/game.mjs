@@ -67,14 +67,24 @@ function fallbackDeck(name) {
 }
 export const defaultDeck = name => validDeck(name, starterDecks[name]) ? [...starterDecks[name]] : fallbackDeck(name);
 
-export function validDeck(name, deck) {
-  if (!Array.isArray(deck) || deck.length !== deckSize) return false;
+// Un mazzo usa al massimo 2 fazioni: la principale (che sceglie l'eroe) e, se vuoi, una fazione alleata.
+// Il mazzo può essere un elenco di carte oppure { cards, ally } con la fazione alleata.
+export const maxFactions = 2;
+export const deckCards = deck => (Array.isArray(deck) ? deck : deck?.cards);
+export const deckAlly = deck => (Array.isArray(deck) ? null : deck?.ally ?? null);
+
+export function validDeck(name, deck, ally = deckAlly(deck)) {
+  const list = deckCards(deck);
+  if (!Array.isArray(list) || list.length !== deckSize) return false;
+  if (ally !== null && (ally === name || !factions.includes(ally))) return false;
+  const allowed = new Set([name, ally].filter(Boolean));
+  if (allowed.size > maxFactions) return false;
   const counts = new Map();
-  return deck.every(id => {
+  return list.every(id => {
     const c = byId.get(id);
     const count = (counts.get(id) ?? 0) + 1;
     counts.set(id, count);
-    return c?.faction === name && count <= copyLimit(c);
+    return c && allowed.has(c.faction) && count <= copyLimit(c);
   });
 }
 
@@ -83,9 +93,9 @@ export function createGame(names, random = Math.random, customDecks = [], option
   const players = names.map((name, side) => {
     const custom = customDecks[side];
     const forced = options.decks?.[side];
-    const deck = shuffle(forced?.length ? [...forced] : validDeck(name, custom) ? [...custom] : defaultDeck(name), random);
+    const deck = shuffle(forced?.length ? [...forced] : validDeck(name, custom) ? [...deckCards(custom)] : defaultDeck(name), random);
     const maxLife = options.lives?.[side] ?? rules.maxLife;
-    const player = { name, hero: options.heroes?.[side] ?? null, life: maxLife, maxLife, capacity: 0, essence: 0, deck, hand: [], discard: [], powerUsed: false, board: [], artifacts: [], secrets: [], discount: 0, fatigue: 0, peek: null };
+    const player = { name, ally: !forced?.length && validDeck(name, custom) ? deckAlly(custom) : null, hero: options.heroes?.[side] ?? null, life: maxLife, maxLife, capacity: 0, essence: 0, deck, hand: [], discard: [], powerUsed: false, board: [], artifacts: [], secrets: [], discount: 0, fatigue: 0, peek: null };
     // chi gioca per secondo pesca una carta in più (e dopo la sostituzione riceve il Frammento di Essenza)
     draw(player, rules.openingHand + (side === 1 ? 1 : 0));
     return player;

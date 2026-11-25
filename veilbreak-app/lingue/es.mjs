@@ -436,5 +436,14 @@ export default {
  "Patto. Riporta in campo l’ultima creatura alleata non Leggendaria morta in questa partita.": "Pacto. Devuelve al campo la última criatura aliada no Legendaria muerta en esta partida.",
  "Bloccata": "Bloqueada",
  "Silenziata": "Silenciada",
- "Provocazione: scegli come bersaglio una creatura con lo scudo": "Guardia: elige como objetivo una criatura con el escudo"
+ "Provocazione: scegli come bersaglio una creatura con lo scudo": "Guardia: elige como objetivo una criatura con el escudo",
+ "Fazioni del mazzo": "Facciones del mazo",
+ "＋ Seconda fazione": "＋ Segunda facción",
+ "Togli la fazione {name}": "Quitar la facción {name}",
+ "Seconda fazione tolta: le sue carte sono uscite dal mazzo.": "Segunda facción quitada: sus cartas han salido del mazo.",
+ "Ora puoi aggiungere anche le carte di {name}.": "Ahora también puedes añadir cartas de {name}.",
+ "Al massimo {n} fazioni. L’eroe è quello della fazione principale.": "Como máximo {n} facciones. El héroe es el de la facción principal.",
+ "fazione principale": "facción principal",
+ "fazione alleata": "facción aliada",
+ "Corte di Hollow, Patto Neon, Senza Santi e Sottocittà hanno ciascuna le proprie carte. Un mazzo contiene 30 carte della fazione del tuo eroe e, se vuoi, di una seconda fazione alleata (al massimo 2 fazioni): fino a 3 copie di ogni carta, 1 sola per le Leggendarie.": "Corte di Hollow, Patto Neon, Senza Santi y Sottocittà tienen cada una sus propias cartas. Un mazo contiene 30 cartas de la facción de tu héroe y, si quieres, de una segunda facción aliada (como máximo 2 facciones): hasta 3 copias de cada carta, solo 1 para las Legendarias."
 };

@@ -436,5 +436,14 @@ export default {
  "Patto. Riporta in campo l’ultima creatura alleata non Leggendaria morta in questa partita.": "Pakt. Hole die letzte in dieser Partie gestorbene nicht legendäre verbündete Kreatur aufs Spielfeld zurück.",
  "Bloccata": "Blockiert",
  "Silenziata": "Zum Schweigen gebracht",
- "Provocazione: scegli come bersaglio una creatura con lo scudo": "Wache: Wähle eine Kreatur mit dem Schild als Ziel"
+ "Provocazione: scegli come bersaglio una creatura con lo scudo": "Wache: Wähle eine Kreatur mit dem Schild als Ziel",
+ "Fazioni del mazzo": "Fraktionen des Decks",
+ "＋ Seconda fazione": "＋ Zweite Fraktion",
+ "Togli la fazione {name}": "Fraktion {name} entfernen",
+ "Seconda fazione tolta: le sue carte sono uscite dal mazzo.": "Zweite Fraktion entfernt: Ihre Karten wurden aus dem Deck genommen.",
+ "Ora puoi aggiungere anche le carte di {name}.": "Jetzt kannst du auch Karten von {name} hinzufügen.",
+ "Al massimo {n} fazioni. L’eroe è quello della fazione principale.": "Höchstens {n} Fraktionen. Der Held gehört zur Hauptfraktion.",
+ "fazione principale": "Hauptfraktion",
+ "fazione alleata": "verbündete Fraktion",
+ "Corte di Hollow, Patto Neon, Senza Santi e Sottocittà hanno ciascuna le proprie carte. Un mazzo contiene 30 carte della fazione del tuo eroe e, se vuoi, di una seconda fazione alleata (al massimo 2 fazioni): fino a 3 copie di ogni carta, 1 sola per le Leggendarie.": "Corte di Hollow, Patto Neon, Senza Santi und Sottocittà haben jeweils eigene Karten. Ein Deck enthält 30 Karten aus der Fraktion deines Helden und, wenn du willst, aus einer zweiten verbündeten Fraktion (höchstens 2 Fraktionen): bis zu 3 Exemplare jeder Karte, nur 1 bei Legendären."
 };

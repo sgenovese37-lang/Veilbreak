@@ -1191,3 +1191,18 @@ body.in-match { background: var(--ink); }
 }
 @media (prefers-reduced-motion: reduce) { .kw-pop { animation-duration: .6s; } }
 .token .face img.ph-crest { width: 58%; height: auto; margin: 0; top: 40%; left: 50%; object-fit: contain; }
+
+/* ---------- Mazzi con due fazioni ---------- */
+.deck-factions { display: grid; gap: .45rem; margin: .4rem 0 .8rem; padding: .8rem; border-radius: 1rem; background: #07060a80; box-shadow: inset 0 0 0 1px #f0c27b33; }
+.deck-factions-title { font: 700 .74rem var(--display); letter-spacing: .16em; text-transform: uppercase; color: var(--gold); }
+.deck-chips { display: flex; flex-wrap: wrap; gap: .45rem; align-items: center; }
+.deck-chip { display: inline-flex; align-items: center; gap: .35rem; padding: .4rem .75rem; border-radius: 99rem; font: 700 .85rem var(--display); }
+.deck-chip.main { color: #fff; background: linear-gradient(180deg, #5a1a24, #2a0d14); box-shadow: inset 0 0 0 1px #ff9a7a; }
+.deck-chip.ally { color: #fff; background: linear-gradient(180deg, #2a2340, #141026); box-shadow: inset 0 0 0 1px #b9a0ff; padding-right: .3rem; }
+.chip-x { width: 1.6rem; height: 1.6rem; padding: 0; border-radius: 50%; font-size: .8rem; }
+.deck-add-ally { border-radius: 99rem; padding: .4rem .85rem; font: 700 .82rem var(--display); color: var(--gold-hi); }
+.ally-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .4rem; }
+.ally-option { padding: .55rem .3rem; font: 600 .8rem/1.15 "EB Garamond", serif; }
+.deck-list li.deck-group { display: flex; align-items: baseline; gap: .5rem; margin-top: .5rem; padding: .35rem .2rem; background: none; box-shadow: none; border-bottom: 1px solid #f0c27b44; border-radius: 0; }
+.deck-list li.deck-group strong { font: 700 .95rem var(--display); color: var(--gold-hi); }
+.deck-list li.deck-group small { color: var(--muted); }

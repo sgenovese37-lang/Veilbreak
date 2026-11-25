@@ -326,3 +326,16 @@ test("Resurrezione, Santa Lucrezia, Riflesso, Leviatano e Madre della Muffa", ()
   put(s, 0, 88, 590); endTurn(s);
   assert.ok(s.players[0].board.some(u => u.card === 60), "Madre della Muffa evoca un Frammento di Veil");
 });
+
+test("mazzi con al massimo due fazioni: la principale e una alleata", () => {
+  const corte = defaultDeck("Corte di Hollow");
+  const misto = [...corte.slice(0, 25), 17, 17, 23, 24, 24];
+  assert.equal(validDeck("Corte di Hollow", misto), false, "senza fazione alleata le carte del Patto non valgono");
+  assert.ok(validDeck("Corte di Hollow", { cards: misto, ally: "Patto Neon" }));
+  assert.equal(validDeck("Corte di Hollow", { cards: [...misto.slice(0, 29), 33], ally: "Patto Neon" }), false, "una terza fazione non è ammessa");
+  assert.equal(validDeck("Corte di Hollow", { cards: corte, ally: "Corte di Hollow" }), false, "la fazione alleata deve essere diversa");
+  const g = createGame(["Corte di Hollow", "Senza Santi"], seeded(31), [{ cards: misto, ally: "Patto Neon" }, null]);
+  assert.equal(g.players[0].ally, "Patto Neon");
+  const all = [...g.players[0].deck, ...g.players[0].hand];
+  assert.ok(all.includes(17) && all.includes(1), "il mazzo misto entra in partita");
+});

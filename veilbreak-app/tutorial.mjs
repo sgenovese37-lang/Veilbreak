@@ -48,7 +48,7 @@ const missions = [
   },
   {
     title: "Le quattro fazioni",
-    lesson: "Corte di Hollow, Patto Neon, Senza Santi e Sottocittà hanno 15 carte diverse a testa. Un mazzo contiene 30 carte di una fazione: fino a 3 copie di ogni carta, 1 sola per le Leggendarie.",
+    lesson: "Corte di Hollow, Patto Neon, Senza Santi e Sottocittà hanno ciascuna le proprie carte. Un mazzo contiene 30 carte della fazione del tuo eroe e, se vuoi, di una seconda fazione alleata (al massimo 2 fazioni): fino a 3 copie di ogni carta, 1 sola per le Leggendarie.",
     prompt: "Quante carte contiene un mazzo?",
     choices: ["15.", "30.", "60."],
     answer: 1,
