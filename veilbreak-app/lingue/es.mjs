@@ -433,5 +433,8 @@ export default {
  "Provocazione. Lascito: Evoca un’Infermiera Stanca.": "Guardia. Legado: invoca una Infermiera Stanca.",
  "Alla fine del tuo turno, cura 3 punti vita alla creatura alleata più ferita.": "Al final de tu turno, restaura 3 de vida a la criatura aliada más herida.",
  "Urlo di battaglia: Riporta in campo le 2 creature alleate non Leggendarie più costose morte in questa partita.": "Grito de batalla: devuelve al campo las 2 criaturas aliadas no Legendarias más caras muertas en esta partida.",
- "Patto. Riporta in campo l’ultima creatura alleata non Leggendaria morta in questa partita.": "Pacto. Devuelve al campo la última criatura aliada no Legendaria muerta en esta partida."
+ "Patto. Riporta in campo l’ultima creatura alleata non Leggendaria morta in questa partita.": "Pacto. Devuelve al campo la última criatura aliada no Legendaria muerta en esta partida.",
+ "Bloccata": "Bloqueada",
+ "Silenziata": "Silenciada",
+ "Provocazione: scegli come bersaglio una creatura con lo scudo": "Guardia: elige como objetivo una criatura con el escudo"
 };

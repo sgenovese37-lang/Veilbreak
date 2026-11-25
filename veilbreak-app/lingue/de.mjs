@@ -433,5 +433,8 @@ export default {
  "Provocazione. Lascito: Evoca un’Infermiera Stanca.": "Wache. Vermächtnis: Beschwöre eine Infermiera Stanca.",
  "Alla fine del tuo turno, cura 3 punti vita alla creatura alleata più ferita.": "Am Ende deines Zuges: Stelle 3 Leben deiner am stärksten verletzten verbündeten Kreatur wieder her.",
  "Urlo di battaglia: Riporta in campo le 2 creature alleate non Leggendarie più costose morte in questa partita.": "Schlachtruf: Hole die 2 teuersten nicht legendären verbündeten Kreaturen, die in dieser Partie gestorben sind, aufs Spielfeld zurück.",
- "Patto. Riporta in campo l’ultima creatura alleata non Leggendaria morta in questa partita.": "Pakt. Hole die letzte in dieser Partie gestorbene nicht legendäre verbündete Kreatur aufs Spielfeld zurück."
+ "Patto. Riporta in campo l’ultima creatura alleata non Leggendaria morta in questa partita.": "Pakt. Hole die letzte in dieser Partie gestorbene nicht legendäre verbündete Kreatur aufs Spielfeld zurück.",
+ "Bloccata": "Blockiert",
+ "Silenziata": "Zum Schweigen gebracht",
+ "Provocazione: scegli come bersaglio una creatura con lo scudo": "Wache: Wähle eine Kreatur mit dem Schild als Ziel"
 };

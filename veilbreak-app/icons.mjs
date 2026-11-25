@@ -14,6 +14,14 @@ const paths = {
   gem: '<path d="M12 2 20 9 12 22 4 9z" fill="currentColor" fill-opacity=".25"/><path d="M4 9h16M12 2 9 9l3 13 3-13z"/>',
   pack: '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M5 7.5h14M5 16.5h14"/><path d="m12 9.5 1 2 2 .3-1.5 1.4.4 2-1.9-1-1.9 1 .4-2L9 11.8l2-.3z"/>',
   moon: '<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/>',
+  shield: '<path d="M12 2.5 20 5.5v6c0 5-3.4 8.6-8 10-4.6-1.4-8-5-8-10v-6z" fill="currentColor" fill-opacity=".22"/><path d="M12 6v12M8 10h8"/>',
+  bolt: '<path d="M13 2 4.5 13.5H11L10 22l8.5-11.5H12z" fill="currentColor" fill-opacity=".3"/>',
+  veil: '<path d="M2 12s3.6-6.5 10-6.5c2 0 3.7.6 5.1 1.5M22 12s-3.6 6.5-10 6.5c-2 0-3.7-.6-5.1-1.5"/><path d="M9.5 14.5a3.5 3.5 0 0 1 4.9-4.9"/><path d="M3 21 21 3"/>',
+  fury: '<path d="M4 20 15 9M15 9l1.5-4.5L21 3l-1.5 4.5zM7 17l-2-2M5 21l-2-2"/><path d="M20 20 9 9M9 9 7.5 4.5 3 3l1.5 4.5zM17 17l2-2M19 21l2-2"/>',
+  horn: '<path d="M3 10v4h3l7 5V5L6 10z" fill="currentColor" fill-opacity=".22"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/>',
+  drop: '<path d="M12 2.5C9 7 6 10.2 6 14a6 6 0 0 0 12 0c0-3.8-3-7-6-11.5z" fill="currentColor" fill-opacity=".3"/>',
+  chain: '<rect x="2.5" y="8.5" width="10" height="7" rx="3.5" transform="rotate(-35 7.5 12)"/><rect x="11.5" y="8.5" width="10" height="7" rx="3.5" transform="rotate(-35 16.5 12)"/>',
+  mute: '<path d="M3 10v4h3l6 4.5v-13L6 10z"/><path d="m16 9 5 6M21 9l-5 6"/>',
   play: '<path d="M7 4.5v15l12-7.5z" fill="currentColor" fill-opacity=".2"/>',
 };
 

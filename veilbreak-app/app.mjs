@@ -547,6 +547,7 @@ async function playComputer() {
 async function showAction(action) {
   if (action.kind === "play") {
     cardSound(byId.get(action.card), "enter");
+    if (isPact(byId.get(action.card))) popSymbols(document.querySelector(`.hero-portrait[data-side="${action.side}"]`), ["pact"]);
     await castPreview(byId.get(action.card), "L’avversario gioca", 1100);
   } else if (action.kind === "attack") {
     await lunge(action.side, action.uid, action.target);
@@ -616,6 +617,7 @@ function chooseCard(index) {
 }
 
 function playedFx(c) {
+  if (isPact(c)) popSymbols(document.querySelector(`.hero-portrait[data-side="${game.active}"]`), ["pact"]);
   sound("mana");
   cardSound(c, "enter");
   if (c.type !== "Creatura") { sound("cast"); castPreview(c, "Hai giocato", 800); }
@@ -712,7 +714,40 @@ const keywordOf = c => ({
   taunt: /Provocazione/.test(c.text ?? ""),
   rush: /Rapidità/.test(c.text ?? ""),
   fury: /Furia/.test(c.text ?? ""),
+  legacy: /Lascito/.test(c.text ?? ""),
+  battlecry: /Urlo di battaglia/.test(c.text ?? ""),
+  veiled: /Velato/.test(c.text ?? ""),
 });
+
+// Simboli delle meccaniche: icona, nome (per chi legge lo schermo) e classe di colore.
+const mechanicSymbols = {
+  taunt: ["shield", "Provocazione"], rush: ["bolt", "Rapidità"], veiled: ["veil", "Velato"], fury: ["fury", "Furia"],
+  legacy: ["skull", "Lascito"], battlecry: ["horn", "Urlo di battaglia"], pact: ["drop", "Patto"],
+  stunned: ["chain", "Bloccata"], silenced: ["mute", "Silenziata"],
+};
+function symbolBadge(kind, extra) {
+  const [name, label] = mechanicSymbols[kind];
+  const b = element("span", undefined, `kw kw-${kind}`);
+  b.title = t(label);
+  b.append(icon(name));
+  if (extra !== undefined) b.append(element("b", extra));
+  return b;
+}
+// Simboli che compaiono in grande sopra un elemento quando una meccanica si attiva.
+function popSymbols(anchor, kinds) {
+  if (!anchor || !kinds.length) return;
+  const show = () => {
+    const rect = anchor.getBoundingClientRect();
+    if (!rect.width) return;
+    const layer = element("div", undefined, "kw-pop");
+    layer.setAttribute("aria-hidden", "true");
+    Object.assign(layer.style, { left: `${rect.left + rect.width / 2}px`, top: `${rect.top + rect.height / 2}px` });
+    for (const kind of kinds) layer.append(symbolBadge(kind));
+    document.body.append(layer);
+    setTimeout(() => layer.remove(), 1300);
+  };
+  if (anchor.isConnected) show(); else requestAnimationFrame(() => requestAnimationFrame(show));
+}
 
 // Spiegazione delle parole chiave che compaiono nel testo di una carta (anteprima e scheda).
 const glossary = {
@@ -878,12 +913,25 @@ function token(side, unit, own, allow) {
   if (art) { const img = element("img"); img.src = art.thumb; img.alt = ""; img.decoding = "async"; face.append(img); }
   else { face.classList.add("placeholder"); face.style.setProperty("--ph", `url("${placeholderArt(c)}")`); face.append(crestOf(c), element("span", c.name, "face-name")); }
   tok.append(face);
-  if (kw.rush) tok.append(element("span", "⚡", "badge-rush"));
   if (isVeiled(unit)) tok.classList.add("veiled");
-  if (kw.fury) tok.append(element("span", maxAttacks(unit) - (unit.attacks ?? 0) > 1 ? "⚔⚔" : "⚔", "badge-fury"));
+  // fila di simboli in alto: meccaniche della carta e stati della creatura
+  const badges = element("span", undefined, "kw-row");
+  if (kw.taunt) badges.append(symbolBadge("taunt"));
+  if (kw.rush) badges.append(symbolBadge("rush"));
+  if (isVeiled(unit)) badges.append(symbolBadge("veiled"));
+  if (kw.fury) badges.append(symbolBadge("fury", Math.max(0, maxAttacks(unit) - (unit.attacks ?? 0))));
+  if (kw.legacy) badges.append(symbolBadge("legacy"));
+  if (unit.stunned) badges.append(symbolBadge("stunned"));
+  if (unit.silenced && unit.card) badges.append(symbolBadge("silenced"));
+  if (badges.childElementCount) tok.append(badges);
   tok.append(element("span", current.attack, "att"), element("span", current.health, `dif${current.health < current.maxHealth ? " wounded" : ""}`));
   tok.dataset.card = unit.card;
-  if (track(unit.uid, current.health, tok, unit.card ? c : null)) tok.classList.add("summoned");
+  if (track(unit.uid, current.health, tok, unit.card ? c : null)) {
+    tok.classList.add("summoned");
+    // appena entrata in gioco: i simboli delle sue meccaniche compaiono in grande
+    const kinds = ["battlecry", "taunt", "rush", "veiled", "fury", "legacy"].filter(k => kw[k]);
+    popSymbols(tok, kinds);
+  }
   return tok;
 }
 
@@ -975,6 +1023,7 @@ function fadeDestroyed(before) {
     // ogni carta ha il suo suono di morte (al massimo due insieme, per non coprire tutto)
     const card = byId.get(Number(node.dataset.card));
     if (card && voiced < 2) { cardSound(card, "death"); voiced++; }
+    if (card && /Lascito/.test(card.text ?? "") && !node.classList.contains("silenced")) setTimeout(() => popSymbols(node, ["legacy"]), 60);
     Object.assign(node.style, { position: "fixed", left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px`, margin: 0 });
     document.body.append(node);
     setTimeout(() => node.remove(), 750);
@@ -1024,7 +1073,9 @@ function renderTable() {
   let message = mull ? t("Scegli fino a {n} carte da cambiare", { n: rules.mulliganLimit }) : cpu ? "Turno avversario" : t("Turno di {name}", { name: game.players[active].name });
   if (mode === "cpu" && !cpu && !mull) message = "Il tuo turno";
   if (selected) message = selected.kind === "attack"
-    ? t(selected.uids.length === 1 ? "{n} creatura pronta: scegli il bersaglio" : "{n} creature pronte: scegli il bersaglio", { n: selected.uids.length })
+    ? (game.players[1 - game.active].board.some(u => !u.silenced && keywordOf(cardOf(u)).taunt && !isVeiled(u))
+      ? t("Provocazione: scegli come bersaglio una creatura con lo scudo")
+      : t(selected.uids.length === 1 ? "{n} creatura pronta: scegli il bersaglio" : "{n} creature pronte: scegli il bersaglio", { n: selected.uids.length }))
     : "Scegli un bersaglio";
   if (finished) {
     settleOutcome();

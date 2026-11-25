@@ -433,5 +433,8 @@ export default {
  "Provocazione. Lascito: Evoca un’Infermiera Stanca.": "Guard. Legacy: Summon an Infermiera Stanca.",
  "Alla fine del tuo turno, cura 3 punti vita alla creatura alleata più ferita.": "At the end of your turn, restore 3 health to your most damaged allied creature.",
  "Urlo di battaglia: Riporta in campo le 2 creature alleate non Leggendarie più costose morte in questa partita.": "Battlecry: Return to the board the 2 most expensive non-Legendary allied creatures that died this game.",
- "Patto. Riporta in campo l’ultima creatura alleata non Leggendaria morta in questa partita.": "Pact. Return to the board the last non-Legendary allied creature that died this game."
+ "Patto. Riporta in campo l’ultima creatura alleata non Leggendaria morta in questa partita.": "Pact. Return to the board the last non-Legendary allied creature that died this game.",
+ "Bloccata": "Stunned",
+ "Silenziata": "Silenced",
+ "Provocazione: scegli come bersaglio una creatura con lo scudo": "Guard: target a creature with the shield"
 };

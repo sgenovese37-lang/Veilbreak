@@ -1137,3 +1137,57 @@ body.in-match { background: var(--ink); }
 .ph-crest { position: absolute; top: 38%; left: 50%; width: 42%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; box-shadow: 0 0 0 1px #f0c27b88, 0 0 1rem #000; opacity: .95; }
 .card .art.placeholder .ph-crest { width: 34%; }
 .face.placeholder { position: relative; }
+
+/* ---------- Simboli delle meccaniche sulle creature ---------- */
+.token .badge-rush, .token .badge-fury { display: none; }
+.kw-row { position: absolute; z-index: 3; top: -.55rem; left: 50%; transform: translateX(-50%); display: flex; gap: .12rem; pointer-events: none; }
+.kw {
+  --c: #f0c27b;
+  position: relative; display: grid; place-items: center; width: 1.15rem; height: 1.15rem; border-radius: 50%;
+  color: var(--c); background: radial-gradient(circle at 40% 35%, #2a1f2c, #0b080e);
+  box-shadow: 0 0 0 1px var(--c), 0 0 .35rem color-mix(in srgb, var(--c) 60%, transparent), 0 .1rem .25rem #000;
+}
+.kw .ico { width: .78rem; height: .78rem; }
+.kw b { position: absolute; right: -.3rem; bottom: -.3rem; min-width: .7rem; height: .7rem; display: grid; place-items: center; border-radius: 50%; background: #000; color: #fff; font: 800 .5rem/1 var(--display); box-shadow: 0 0 0 1px var(--c); }
+.kw-taunt { --c: #e8d3a6; }
+.kw-rush { --c: #ffd84a; }
+.kw-veiled { --c: #b9a0ff; }
+.kw-fury { --c: #ff5fd6; }
+.kw-legacy { --c: #d9e4ea; }
+.kw-battlecry { --c: #ff9a4a; }
+.kw-pact { --c: #ff3b3b; }
+.kw-stunned { --c: #9aa4b0; }
+.kw-silenced { --c: #8a8a8a; }
+
+/* Provocazione: scudo di pietra e metallo attorno alla creatura, come in Hearthstone */
+.token.taunt { isolation: isolate; border-radius: 45% 45% 40% 40% / 38% 38% 30% 30%; border-width: 2px; }
+.token.taunt::before {
+  content: ""; position: absolute; z-index: -1; inset: -.5rem -.55rem -.75rem;
+  clip-path: polygon(50% 0, 100% 9%, 100% 52%, 92% 74%, 50% 100%, 8% 74%, 0 52%, 0 9%);
+  background:
+    linear-gradient(180deg, #0000 0 60%, #0006),
+    repeating-linear-gradient(90deg, #ffffff0d 0 2px, transparent 2px 7px),
+    linear-gradient(160deg, #e9dcc0, #8d7b62 35%, #5a4a38 60%, #c9b48d 85%, #6e5b44);
+  filter: drop-shadow(0 0 .25rem #000);
+}
+.token.taunt::after {
+  content: ""; position: absolute; z-index: -1; inset: -.35rem -.4rem -.58rem;
+  clip-path: polygon(50% 0, 100% 9%, 100% 52%, 92% 74%, 50% 100%, 8% 74%, 0 52%, 0 9%);
+  background: #1a130d;
+}
+.token.taunt.veiled::after { background: #1a130d; }
+.token.taunt.target::before { background: linear-gradient(160deg, #ffe6b0, #ff8a5e 45%, #8a2a18 70%, #ffc79a); animation: glow-red 1s ease-in-out infinite; }
+.token.taunt .kw-row { top: -1rem; }
+
+/* Simboli in grande quando una meccanica si attiva */
+.kw-pop { position: fixed; z-index: 60; display: flex; gap: .4rem; transform: translate(-50%, -50%); pointer-events: none; animation: kw-pop 1.25s ease-out forwards; }
+.kw-pop .kw { width: 2.6rem; height: 2.6rem; }
+.kw-pop .kw .ico { width: 1.7rem; height: 1.7rem; }
+@keyframes kw-pop {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.3); }
+  20% { opacity: 1; transform: translate(-50%, -70%) scale(1.15); }
+  60% { opacity: 1; transform: translate(-50%, -80%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -120%) scale(.9); }
+}
+@media (prefers-reduced-motion: reduce) { .kw-pop { animation-duration: .6s; } }
+.token .face img.ph-crest { width: 58%; height: auto; margin: 0; top: 40%; left: 50%; object-fit: contain; }
