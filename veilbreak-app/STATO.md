@@ -12,6 +12,7 @@ Riepilogo per riprendere il lavoro in una nuova sessione.
 ## Accordi con l'utente
 - A ogni aggiornamento: aspettare la compilazione su GitHub, scaricare l'APK, verificare firma fissa (SHA256 80:D3:EA:3B:C7:EE:4F:0D…) e versionCode più alto dell'ultimo inviato, poi mandarlo in chat. Deve sempre installarsi sopra la versione precedente.
 - Lingua delle risposte: italiano, semplice e chiaro.
+- Volti tutti diversi dal terzo set in poi (richiesta dell'utente): nei prompt per le illustrazioni ogni personaggio ha una descrizione del volto unica (età, etnia, forma del viso, naso, occhi, capelli, cicatrici, segni) e una riga «non deve somigliare a…» per i personaggi dello stesso tipo già esistenti (per esempio suora ≠ infermiera, giudice ≠ frate). Tenere un elenco dei volti già usati.
 - Stile grafico: quello delle carte (cornici di rame, EB Garamond). Niente elementi copiati da Hearthstone: solo la struttura del genere.
 
 ## Fatto finora (in breve)
