@@ -3,7 +3,7 @@ import {
   factions, byId, createGame, mulligan, canPlay, playTargets, play,
   attackTargets, attack, endTurn, stats, cardOf, price,
   defaultDeck, copyLimit, deckSize, validDeck, rules, powerTargets, canUseHeroPower, useHeroPower,
-  essenceShard, essenceShardId, isPact, isVeiled, maxAttacks, deckCards, deckAlly, maxFactions,
+  essenceShard, essenceShardId, isPact, isVeiled, maxAttacks, deckCards, deckAlly, maxFactions, brawls, chaosDeck,
 } from "./game.mjs";
 
 import { renderTutorial } from "./tutorial.mjs";
@@ -13,8 +13,10 @@ import { runComputer } from "./ai.mjs";
 import {
   loadProfile, owned, buyPack, openPack, packPrice, collectionProgress, rewardMatch, titles,
   packOffers, buyOffer, cardBacks, ownedBacks, currentBack, buyBack, setBack,
+  craftCost, canCraft, craftCard, addShards, addPacks,
 } from "./profile.mjs";
 import { currentMissions, recordEvent, claimMission } from "./missions.mjs";
+import { currentAchievements, recordAchievements, claimAchievement } from "./achievements.mjs";
 import { chapters, storyTitle, storyProgress, isUnlocked, completeChapter, finalReward, unlockedHeroes } from "./story.mjs";
 import { sound, soundEnabled, setSound, buzz, cardSound, startAmbience, stopAmbience } from "./audio.mjs";
 import { environments, environmentFor } from "./environments.mjs";
@@ -23,6 +25,8 @@ import { t, languages, currentLang, setLang, translatePage } from "./i18n.mjs";
 import { icon, mountIcons } from "./icons.mjs";
 import { voiceOf } from "./voci.mjs";
 import { playIntro } from "./intro.mjs";
+import { descentState, descentBest, startDescent, recordDescent, pickDescentCard, skipDescentCard, abandonDescent, maxLosses } from "./descent.mjs";
+import { weekKey } from "./missions.mjs";
 import { suggestDeck, analyzeDeck, curveLabels } from "./advisor.mjs";
 import { scenes, cast } from "./scene.mjs";
 import { startEmbers } from "./embers.mjs";
@@ -369,6 +373,17 @@ function showCard(c) {
     });
     rules.append(toggle);
   }
+  // Creare una copia con le Schegge (solo carte del catalogo che non hai al completo)
+  if (byId.get(c.id) === c && owned(c.id) < copyLimit(c)) {
+    const cost = craftCost[c.rarity];
+    rules.append(element("p", t("Ne possiedi {n} su {max}.", { n: owned(c.id), max: copyLimit(c) }), "muted"));
+    const craft = button(t("Crea una copia · {n} Schegge", { n: cost }), () => {
+      if (craftCard(c.id)) { sound("reward"); updateWallet(); showCard(c); viewer.querySelector(".viewer-rules")?.append(element("p", "Copia creata: ora puoi metterla nei tuoi mazzi.", "reward-line")); }
+    }, "craft");
+    craft.disabled = !canCraft(c.id);
+    if (craft.disabled) craft.title = t("Ti servono {n} Schegge.", { n: cost });
+    rules.append(craft);
+  }
   const close = button("Chiudi", () => viewer.close(), "primary");
   rules.append(close);
   body.append(rules);
@@ -591,6 +606,7 @@ function showSection(name) {
   document.body.classList.toggle("in-match", name === "match" && Boolean(game));
   playMusic(musicTheme());
   get("story").hidden = name !== "story-nav";
+  get("modes-view").hidden = name !== "modes-view";
   get("quests").hidden = name !== "quests-nav";
   catalogue.hidden = name !== "library";
   get("negozio").hidden = name !== "shop-nav";
@@ -624,7 +640,10 @@ form.onsubmit = event => {
 };
 
 let lastMatch = null;   // per la rivincita
+let matchKind = null;   // null, "descent" (Discesa nel Velo) o "brawl" (Rissa della settimana)
 function startMatch(names, decks, options = {}) {
+  matchKind = options.kind ?? null;
+  if (!matchKind) matchExtras = null;
   lastMatch = { names: [...names], decks, options: { ...options }, mode, level, chapter: storyChapter };
   replayRun++;
   replaying = false;
@@ -659,8 +678,13 @@ function reset() {
   stopAmbience();
   hidePeek();
   const fromStory = storyChapter !== null;
+  const fromMode = matchKind;
+  // lasciare a metà una partita della Discesa conta come sconfitta
+  if (matchKind === "descent" && game && game.phase !== "finished") recordDescent(false);
   game = null;
   storyChapter = null;
+  matchKind = null;
+  if (fromMode) return openModes(fromMode);
   showSection(fromStory ? "story-nav" : "match");
 }
 
@@ -686,9 +710,12 @@ function settleOutcome() {
     if (granted?.hero) outcome.lines.push(t("Nuovo eroe sbloccato: {hero}. Sceglilo prima della partita!", { hero: heroWithId(granted.hero).name }));
     if (granted?.final) outcome.lines.push(t("Premio finale della Storia: {reward} e il titolo {title}", { reward: rewardText(granted.final), title: t(titles[finalReward.title].name) }));
   }
+  Object.assign(event, matchExtras?.(won) ?? {});   // Discesa nel Velo e Rissa aggiungono i loro dati
   recordEvent(event);
+  recordAchievements(event);
   updateWallet();
 }
+let matchExtras = null;
 
 function rewardText(reward) {
   return [reward.shards ? t("{n} Schegge", { n: reward.shards }) : "", reward.packs ? t(reward.packs === 1 ? "{n} busta" : "{n} buste", { n: reward.packs }) : ""].filter(Boolean).join(t(" e "));
@@ -1482,7 +1509,7 @@ function renderTable() {
   }
   if (mull && !cpu) {
     arena.append(element("p", view === 0
-      ? "Giochi per primo."
+      ? "Giochi per primo: nel tuo primo turno non peschi."
       : "Giochi per secondo: hai una carta in più e, dopo il cambio, ricevi il Frammento di Essenza (0 Essenza: +1 Essenza per un turno).", "order-note"));
   }
   const top = element("div", undefined, "topbar");
@@ -1546,6 +1573,10 @@ function renderTable() {
       if (game.winner === 0 && next < chapters.length) actions.append(button("Prossimo capitolo", () => playChapter(next), "primary"));
       else if (game.winner !== 0) actions.append(button("Riprova il capitolo", rematch, "primary"));
       actions.append(button("Torna alla Storia", reset));
+    } else if (matchKind === "descent") {
+      actions.append(button(descentState() ? "Continua la discesa" : "Torna alla Discesa", reset, "primary"));
+    } else if (matchKind === "brawl") {
+      actions.append(button("Gioca ancora la Rissa", () => { const f = lastMatch.names[0]; reset(); startBrawl(f); }, "primary"), button("Torna alle modalità", reset));
     } else {
       actions.append(button("Rivincita", rematch, "primary"), button("Cambia eroe", reset));
     }
@@ -1642,7 +1673,7 @@ function playScene(lines, chapter) {
       const narrator = who === "narratore";
       box.classList.toggle("narrator", narrator);
       box.classList.toggle("player", who === "tu");
-      name.textContent = who === "tu" ? (me?.name ?? t("Tu")) : person.name;
+      name.textContent = who === "tu" ? (me?.name ?? t("Tu")) : t(person.name);
       face.replaceChildren();
       face.style.backgroundImage = "";
       if (!narrator) {
@@ -1651,7 +1682,7 @@ function playScene(lines, chapter) {
         else if (person.card) { face.style.backgroundImage = `url("${illustrationFor(person.card)?.src}")`; face.classList.add("from-card"); }
       }
       face.classList.toggle("from-card", Boolean(person.card) && !narrator);
-      full = line;
+      full = t(line);
       text.textContent = "";
       let n = 0;
       clearInterval(typing);
@@ -1727,7 +1758,7 @@ function renderQuests(message = "") {
   head.append(element("h2", "Missioni"));
   const status = element("p", message, "reward-line");
   status.setAttribute("role", "status");
-  const block = (title, note, list) => {
+  const block = (title, note, list, claimFn = claimMission) => {
     const box = element("section", undefined, "quest-block");
     box.append(element("h3", title), element("p", note, "muted"));
     const ul = element("ul", undefined, "quest-list");
@@ -1739,7 +1770,7 @@ function renderQuests(message = "") {
       bar.max = m.goal; bar.value = m.value;
       bar.setAttribute("aria-label", `${t(m.text, m.vars)}: ${t("{n} su {max}", { n: m.value, max: m.goal })}`);
       const claim = button(m.claimed ? "Riscattata" : m.done ? "Riscatta" : `${m.value}/${m.goal}`, () => {
-        const got = claimMission(m.id);
+        const got = claimFn(m.id);
         if (got) { sound("reward"); updateWallet(); renderQuests(t("Hai ottenuto {reward}.", { reward: rewardText(got) })); }
       }, m.done && !m.claimed ? "primary" : "");
       claim.disabled = !m.done || m.claimed;
@@ -1766,7 +1797,138 @@ function renderQuests(message = "") {
   panel.replaceChildren(head, status,
     block("Giornaliere", "Si rinnovano a mezzanotte. Contano le partite contro il computer e la Storia.", all.daily),
     block("Settimanali", "Si rinnovano ogni lunedì.", all.weekly),
+    block("Obiettivi", "Traguardi permanenti: il premio si riscatta una volta sola.", currentAchievements(), claimAchievement),
     profileBox);
+}
+
+// ---------- Altre modalità: Discesa nel Velo e Rissa della settimana ----------
+function hashText(text) { let h = 2166136261; for (const ch of text) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return h >>> 0; }
+const weeklyBrawl = () => brawls[hashText(weekKey()) % brawls.length];
+
+function renderExtraModes() {
+  const box = get("extra-modes");
+  box.replaceChildren(element("h2", "Altre modalità"));
+  const tile = (kind, iconName, title, text, extra) => {
+    const b = button(undefined, () => openModes(kind), `mode-tile ${kind}`);
+    b.append(icon(iconName), element("strong", title), element("small", text));
+    if (extra) b.append(element("span", extra, "mode-tag"));
+    return b;
+  };
+  const run = descentState();
+  box.append(
+    tile("descent", "skull", "Discesa nel Velo", "Vittorie di fila contro avversari sempre più forti. Tre sconfitte e finisce.",
+      run ? t("In corso: {w} vittorie", { w: run.wins }) : descentBest() ? t("Record: {n} vittorie", { n: descentBest() }) : ""),
+    tile("brawl", "moon", "Rissa della settimana", t("Questa settimana: {name}", { name: t(weeklyBrawl().name) }),
+      loadProfile().brawlWeek === weekKey() ? t("Premio della settimana ottenuto") : t("Prima vittoria: 1 busta + 100 Schegge")),
+  );
+}
+
+function openModes(kind) {
+  showSection("modes-view");
+  if (kind === "descent") renderDescent(); else renderBrawl();
+}
+
+function factionPicker(onPick, label) {
+  const grid = element("div", undefined, "mode-factions");
+  for (const faction of factions) {
+    const b = button(undefined, () => onPick(faction), "mode-faction");
+    const img = element("img"); img.src = heroFor(faction)?.portrait ?? ""; img.alt = "";
+    b.append(img, element("strong", faction), element("small", t(label)));
+    b.dataset.faction = faction;
+    grid.append(b);
+  }
+  return grid;
+}
+
+function renderDescent(message = "") {
+  const panel = get("modes-view");
+  const run = descentState();
+  const head = element("div", undefined, "section-head");
+  head.append(element("h2", "Discesa nel Velo"), button("‹ Indietro", () => showSection("match")));
+  const status = element("p", message, "reward-line"); status.setAttribute("role", "status");
+  const parts = [head, status];
+  if (!run) {
+    parts.push(element("p", "Scegli una fazione: parti dal suo mazzo predefinito. Dopo ogni vittoria scegli una carta su tre da aggiungere al mazzo. Gli avversari diventano più forti a ogni vittoria. Alla terza sconfitta la discesa finisce e ricevi Schegge (e buste dalle 5 vittorie in su).", "muted"));
+    if (descentBest()) parts.push(element("p", t("Il tuo record: {n} vittorie.", { n: descentBest() })));
+    parts.push(factionPicker(faction => { startDescent(faction); sound("select"); renderDescent(); }, "Inizia la discesa"));
+  } else if (run.choices) {
+    parts.push(element("h3", t("Vittoria n. {n}! Scegli una carta da aggiungere al mazzo", { n: run.wins })));
+    const grid = element("div", undefined, "descent-choices");
+    for (const id of run.choices) {
+      const c = byId.get(id); const art = illustrationFor(id);
+      const b = button(undefined, () => { pickDescentCard(id); sound("reward"); renderDescent(t("{card} aggiunta al mazzo.", { card: c.name })); }, "descent-choice");
+      b.setAttribute("aria-label", c.name);
+      b.dataset.card = id;
+      b.append(art ? cardFace(c, art, {}, { thumb: true }) : drawCard(c));
+      grid.append(b);
+    }
+    parts.push(grid, button("Non aggiungere nulla", () => { skipDescentCard(); renderDescent(); }));
+  } else {
+    const info = element("div", undefined, "descent-status");
+    const hearts = element("span", undefined, "descent-hearts");
+    for (let i = 0; i < maxLosses; i++) hearts.append(element("i", i < maxLosses - run.losses ? "♥" : "♡"));
+    info.append(element("strong", t("{f} · {w} vittorie", { f: run.faction, w: run.wins })), hearts, element("small", t("Mazzo di {n} carte", { n: run.deck.length })));
+    const rival = run.rival;
+    const next = element("div", undefined, "descent-next");
+    next.append(element("h3", "Prossimo avversario"), element("p", t("{f} · {level} · {life} punti vita", { f: rival.faction, level: t(rival.level), life: rival.life })));
+    const actions = element("div", undefined, "actions");
+    actions.append(button("Combatti", () => playDescent(), "primary"), button("Vedi mazzo", () => showDeck(run.faction, run.deck, null)),
+      button("Abbandona", () => { if (confirm(t("Vuoi davvero chiudere la discesa? Riceverai il premio per le vittorie ottenute."))) { const r = abandonDescent(); renderDescent(r?.reward ? descentRewardText(r.reward) : ""); renderExtraModes(); } }));
+    parts.push(info, next, actions);
+  }
+  panel.replaceChildren(...parts);
+}
+
+const descentRewardText = r => t("Discesa finita con {w} vittorie: {reward}.", { w: r.wins, reward: rewardText(r) });
+
+function playDescent() {
+  const run = descentState();
+  if (!run) return renderDescent();
+  mode = "cpu"; level = run.rival.level; storyChapter = null;
+  startMatch([run.faction, run.rival.faction], [null, null], { kind: "descent", decks: [run.deck, null], lives: [rules.maxLife, run.rival.life] });
+  matchExtras = won => {
+    const result = recordDescent(won);
+    const extra = { descentWins: (descentState()?.wins ?? result?.reward?.wins ?? 0) };
+    if (result?.ended) outcome.lines.push(descentRewardText(result.reward));
+    else if (won) outcome.lines.push(t("Discesa: {w} vittorie. Scegli la tua nuova carta!", { w: descentState().wins }));
+    else outcome.lines.push(t("Discesa: ti restano {n} vite.", { n: maxLosses - descentState().losses }));
+    renderExtraModes();
+    return extra;
+  };
+}
+
+function renderBrawl(message = "") {
+  const panel = get("modes-view");
+  const rule = weeklyBrawl();
+  const head = element("div", undefined, "section-head");
+  head.append(element("h2", "Rissa della settimana"), button("‹ Indietro", () => showSection("match")));
+  const status = element("p", message, "reward-line"); status.setAttribute("role", "status");
+  const card = element("div", undefined, "brawl-rule");
+  card.append(icon("moon"), element("strong", rule.name), element("p", rule.text));
+  const done = loadProfile().brawlWeek === weekKey();
+  card.append(element("small", done ? "Hai già ottenuto il premio di questa settimana: puoi continuare a giocare per divertimento." : "Prima vittoria della settimana: 1 busta e 100 Schegge.", "muted"));
+  const note = element("p", "La regola cambia ogni lunedì. Si gioca contro il computer a livello Normale.", "muted");
+  panel.replaceChildren(head, status, card, note, factionPicker(startBrawl, rule.id === "chaos" ? "Mazzo casuale" : "Gioca la Rissa"));
+}
+
+function startBrawl(faction) {
+  const rule = weeklyBrawl();
+  const rivals = factions.filter(f => f !== faction);
+  const rival = rivals[Math.floor(Math.random() * rivals.length)];
+  mode = "cpu"; level = "Normale"; storyChapter = null;
+  const decks = rule.id === "chaos" ? [chaosDeck(), chaosDeck()] : [playableDeck(faction)?.cards ?? null, null];
+  startMatch([faction, rival], [null, null], { kind: "brawl", brawl: rule.id, decks });
+  matchExtras = won => {
+    const profile = loadProfile();
+    if (won && profile.brawlWeek !== weekKey()) {
+      profile.brawlWeek = weekKey();
+      const reason = t("Rissa della settimana");
+      addPacks(1, reason, profile); addShards(100, reason, profile);
+      outcome.lines.push(t("Premio della Rissa: 1 busta e 100 Schegge"));
+    }
+    renderExtraModes();
+    return { brawl: true };
+  };
 }
 
 // ---------- Buste ----------
@@ -1867,5 +2029,11 @@ function drawShop() {
 if (!window.Capacitor && "serviceWorker" in navigator && location.protocol.startsWith("http")) {
   navigator.serviceWorker.register("./sw.js").catch(() => {});
 }
+renderExtraModes();
 showSection("match");
 if (introEnabled() && !navigator.webdriver) playIntro({ onEnter: () => playMusic(musicTheme()) });
+// interfaccia pronta (e introduzione già sopra): via la copertina di avvio
+{
+  const boot = document.getElementById("boot");
+  if (boot) requestAnimationFrame(() => { boot.classList.add("gone"); setTimeout(() => boot.remove(), 400); });
+}

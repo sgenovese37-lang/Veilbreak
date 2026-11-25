@@ -1547,3 +1547,34 @@ body.energy-save #embers { display: none; }
 .deck-view-count { position: absolute; right: -.2rem; bottom: -.3rem; z-index: 2; padding: .05rem .4rem; font-weight: 800; font-size: .9rem;
   color: #1b120c; background: #f0c27b; border-radius: 1rem; box-shadow: 0 .15rem .4rem #000a; }
 .deck-view-count { right: auto; bottom: auto; left: -.25rem; top: -.3rem; }
+
+/* ---------- Altre modalità ---------- */
+.extra-modes { display: grid; gap: .6rem; margin-top: 1.2rem; }
+.extra-modes h2 { margin: 0; font-size: 1.3rem; text-align: center; }
+.mode-tile { display: grid; grid-template-columns: 2.6rem 1fr; grid-template-rows: auto auto auto; column-gap: .8rem; row-gap: .15rem; align-items: center;
+  text-align: left; padding: .8rem 1rem; border-radius: 1rem; color: #f5e6cf;
+  background: linear-gradient(135deg, #2a1730ee, #120d16f2); box-shadow: inset 0 0 0 1px #f0c27b40, 0 .4rem 1rem #000a; }
+.mode-tile svg { grid-row: 1 / span 3; width: 2.4rem; height: 2.4rem; color: #f0c27b; }
+.mode-tile.descent svg { color: #ff7b7b; }
+.mode-tile strong { font: 700 1.2rem/1.1 var(--display); }
+.mode-tile small { font-size: .9rem; color: #d8c8b2; }
+.mode-tag { justify-self: start; padding: .1rem .55rem; font-size: .78rem; font-weight: 700; color: #1b120c; background: #f0c27b; border-radius: 1rem; }
+.mode-factions { display: grid; grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); gap: .6rem; margin-top: .6rem; }
+.mode-faction { display: grid; justify-items: center; gap: .3rem; padding: .8rem .5rem; border-radius: 1rem; text-align: center;
+  background: linear-gradient(180deg, #241a28, #120e15); box-shadow: inset 0 0 0 1px #f0c27b33; }
+.mode-faction img { width: 4.4rem; height: 4.4rem; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px #c9a06a; }
+.mode-faction strong { font: 700 1rem/1.15 var(--display); }
+.mode-faction small { font-size: .8rem; color: #8dffa8; }
+.descent-choices { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; margin: .5rem 0 .8rem; }
+.descent-choice { padding: 0; border: 0; background: none; border-radius: .5rem; transition: transform .15s; }
+.descent-choice:hover, .descent-choice:focus-visible { transform: translateY(-.3rem) scale(1.03); box-shadow: 0 0 1rem #f0c27b88; }
+.descent-choice .card-face { --ring: 20cqw; }
+.descent-status { display: grid; gap: .3rem; padding: .8rem 1rem; border-radius: 1rem; background: #0007; box-shadow: inset 0 0 0 1px #f0c27b33; }
+.descent-status strong { font: 700 1.2rem/1.1 var(--display); }
+.descent-hearts i { font-style: normal; font-size: 1.5rem; color: #ff5b6b; margin-right: .2rem; text-shadow: 0 0 .5rem #ff2a3a88; }
+.descent-next h3 { margin: .8rem 0 .2rem; }
+.brawl-rule { display: grid; justify-items: center; gap: .35rem; padding: 1.1rem; text-align: center; border-radius: 1rem;
+  background: radial-gradient(circle at 50% 0%, #3d2a5cee, #120d18f2 70%); box-shadow: inset 0 0 0 1px #b48cff66, 0 .5rem 1.2rem #000a; }
+.brawl-rule svg { width: 2.6rem; height: 2.6rem; color: #d4b8ff; }
+.brawl-rule strong { font: 900 1.5rem/1.1 var(--display); color: #fff; }
+.brawl-rule p { margin: 0; font-size: 1.05rem; }

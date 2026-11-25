@@ -10,6 +10,8 @@ export const packPrice = 100;
 export const packSize = 5;
 export const rarityWeights = { Common: 50, Uncommon: 28, Rare: 15, Epic: 5, Legendary: 2 };
 export const duplicateValue = { Common: 5, Uncommon: 10, Rare: 25, Epic: 50, Legendary: 100 };
+// Creare una copia di una carta che non hai ancora al completo costa Schegge, secondo la rarità.
+export const craftCost = { Common: 40, Uncommon: 80, Rare: 200, Epic: 400, Legendary: 800 };
 export const matchRewards = { Facile: 15, Normale: 25, Difficile: 40, sconfitta: 5 };
 export const titles = {
   "primo-binder": { name: "Primo Binder", text: "Hai completato il tutorial." },
@@ -208,6 +210,21 @@ export function rewardOnce(key, apply, profile = loadProfile()) {
   if (profile.rewardsSeen[key]) return false;
   profile.rewardsSeen[key] = true;
   apply(profile);
+  saveProfile(profile);
+  return true;
+}
+
+export function canCraft(id, profile = loadProfile()) {
+  const card = byId.get(id);
+  return Boolean(card) && owned(id, profile) < copyLimit(card) && profile.shards >= craftCost[card.rarity];
+}
+
+export function craftCard(id, profile = loadProfile()) {
+  const card = byId.get(id);
+  if (!canCraft(id, profile)) return false;
+  profile.shards -= craftCost[card.rarity];
+  profile.extra[id] = (profile.extra[id] ?? 0) + 1;
+  note(profile, t("Carta creata · {card} (−{n} Schegge)", { card: card.name, n: craftCost[card.rarity] }));
   saveProfile(profile);
   return true;
 }

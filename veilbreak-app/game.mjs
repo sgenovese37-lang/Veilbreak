@@ -25,7 +25,7 @@ const targetRule = { 1: "enemy", 9: "any", 12: "enemy", 17: "any", 23: "any", 55
 const targeted = new Set(Object.keys(targetRule).map(Number));
 export const isPact = card => Boolean(card?.pact);       // Patto: si paga con punti vita
 export const isVeiled = unit => Boolean(unit.veiled && !unit.silenced);
-export const maxAttacks = unit => (!unit.silenced && fury.has(unit.card) ? 2 : 1);
+export const maxAttacks = unit => (!unit.silenced && (fury.has(unit.card) || unit.fury) ? 2 : 1);
 export const keywords = { rush, taunt, fury, veiled: veiledCards };
 export const cardOf = unit => byId.get(unit.card) ?? fragment;
 export const boardFull = player => player.board.length >= rules.boardLimit;
@@ -101,7 +101,30 @@ export function createGame(names, random = Math.random, customDecks = [], option
     draw(player, rules.openingHand + (side === 1 ? 1 : 0));
     return player;
   });
-  return { players, active: 0, phase: "mulligan", round: 0, next: 1, winner: null, log: [], random, stats: [emptyStats(), emptyStats()] };
+  // Rissa della settimana: una regola speciale (vedi brawls più sotto)
+  const brawl = options.brawl ?? null;
+  if (brawl === "rich") for (const p of players) p.capacity = 2;
+  return { players, active: 0, phase: "mulligan", round: 0, next: 1, winner: null, log: [], random, stats: [emptyStats(), emptyStats()], brawl };
+}
+
+// Regole delle Risse della settimana. id → testo; la regola «chaos» usa mazzi casuali (vedi chaosDeck).
+export const brawls = [
+  { id: "fury", name: "Furia per tutti", text: "Tutte le creature hanno Furia: attaccano due volte per turno." },
+  { id: "rush", name: "Assalto notturno", text: "Tutte le creature hanno Rapidità: attaccano subito." },
+  { id: "double", name: "Doppia pescata", text: "Ogni giocatore pesca 2 carte a ogni turno." },
+  { id: "rich", name: "Rituale accelerato", text: "Si parte con 2 Essenza in più." },
+  { id: "cheap", name: "Mercato nero", text: "Le creature costano 1 Essenza in meno." },
+  { id: "chaos", name: "Mazzi del caos", text: "Ogni giocatore riceve un mazzo casuale di 30 carte di tutte le fazioni." },
+];
+export function chaosDeck(random = Math.random) {
+  const pool = cards.filter(c => c.rarity !== "Legendary");
+  const legends = cards.filter(c => c.rarity === "Legendary");
+  const deck = [legends[Math.floor(random() * legends.length)].id];
+  while (deck.length < deckSize) {
+    const c = pool[Math.floor(random() * pool.length)];
+    if (deck.filter(id => id === c.id).length < 2) deck.push(c.id);
+  }
+  return deck;
 }
 
 export function note(g, text) {
@@ -143,7 +166,8 @@ export function stats(g, side, unit) {
 
 function summon(g, side, card) {
   if (boardFull(g.players[side])) return null;
-  const unit = { uid: g.next++, card, damage: 0, weakened: 0, powerAttack: 0, guard: [0, 0], entered: g.round, attacked: false, attacks: 0, silenced: false, borrowed: null, haste: false };
+  const unit = { uid: g.next++, card, damage: 0, weakened: 0, powerAttack: 0, guard: [0, 0], entered: g.round, attacked: false, attacks: 0, silenced: false, borrowed: null, haste: g.brawl === "rush" };
+  if (g.brawl === "fury") unit.fury = true;   // Rissa «Furia per tutti»
   if (veiledCards.has(card)) unit.veiled = true;
   g.players[side].board.push(unit);
   return unit;
@@ -220,7 +244,7 @@ export function price(g, side, card) {
   const enemy = g.players[rival(side)];
   if (isPact(card)) return card.cost;
   if (card.id === 90) return Math.max(0, card.cost - p.board.length - enemy.board.length) + aura(enemy, 2);
-  if (card.type === "Creatura") return card.cost + aura(enemy, 2);
+  if (card.type === "Creatura") return Math.max(0, card.cost + aura(enemy, 2) - (g.brawl === "cheap" ? 1 : 0));
   if (card.type === "Incantesimo") return Math.max(0, card.cost - p.discount);
   return card.cost;
 }
@@ -520,7 +544,8 @@ function startTurn(g, side) {
   }
   (g.turnStarts ??= []).push(g.log.length);
   note(g, t("Turno di {name}.", { name: p.name }));
-  if (p.deck.length) draw(p, 1, g);
+  // chi gioca per primo (sempre il giocatore 0) non pesca nel suo primo turno: compensa il vantaggio di iniziare
+  if (g.round === 1 && side === 0) { /* niente pescata */ } else if (p.deck.length) draw(p, g.brawl === "double" ? 2 : 1, g);
   else {
     p.fatigue++;
     damageHero(g, side, p.fatigue, false);

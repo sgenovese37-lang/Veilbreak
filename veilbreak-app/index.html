@@ -8,10 +8,18 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./assets/icone/icona-192.png">
   <link rel="apple-touch-icon" href="./assets/icone/icona-192.png">
+  <!-- copertina di avvio: copre la pagina finché il gioco non ha costruito l'interfaccia (niente lampo del modulo grezzo) -->
+  <style>
+    #boot { position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; background: radial-gradient(circle at 50% 40%, #1d1022, #07060a 70%); transition: opacity .35s; }
+    #boot b { font: 900 2.4rem/1 Georgia, serif; letter-spacing: .18em; color: #d9a35f; text-shadow: 0 0 1.2rem #b06a2a88; }
+    #boot.gone { opacity: 0; pointer-events: none; }
+  </style>
   <link rel="stylesheet" href="./style.css">
   <script type="module" src="./app.mjs"></script>
 </head>
 <body>
+  <div id="boot" aria-hidden="true"><b>VEILBREAK</b></div>
+  <script>setTimeout(function () { var b = document.getElementById("boot"); if (b) b.remove(); }, 8000);</script>
   <div class="backdrop" aria-hidden="true">
     <div class="slide" style="--img: url('assets/sfondi/home-hollow.webp'); --n: 0"></div>
     <div class="slide" style="--img: url('assets/sfondi/home-neon.webp'); --n: 1"></div>
@@ -65,9 +73,11 @@
         </select></label>
         <button class="primary">Inizia partita</button>
       </form>
+      <div id="extra-modes" class="extra-modes"></div>
     </section>
     <section id="table" hidden aria-label="Tavolo di gioco"></section>
     <section id="story" class="sheet wide" hidden aria-label="Modalità Storia"></section>
+    <section id="modes-view" class="sheet wide" hidden aria-label="Altre modalità"></section>
     <section id="quests" class="sheet wide" hidden aria-label="Missioni e premi"></section>
     <section id="negozio" class="sheet wide" hidden aria-label="Negozio"><div id="shop" class="shop"></div></section>
     <section id="deck-editor" class="sheet" hidden aria-label="Costruisci un mazzo"></section>
