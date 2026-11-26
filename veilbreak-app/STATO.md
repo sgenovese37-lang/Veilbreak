@@ -77,7 +77,17 @@ Riepilogo per riprendere il lavoro in una nuova sessione.
 - Chi inizia si tira a sorte; computer Difficile più forte; nuovi poteri di Ada ed Elena (vedi `BILANCIAMENTO.md`).
 - Tutorial aggiornato (13 lezioni) e presentazione alla prima apertura di Discesa nel Velo e Rissa.
 
-## Fase 5 (da fare, concordata il 25 novembre)
+## Fase 5 (fatta il 26 novembre, in attesa dell'ok dell'utente sui tipi prima dell'APK)
+- Collezione: contatore N/250 con barra, contatore della fazione, filtri «Tipo» e «Solo carte incomplete».
+- Negozio: acquisto dei dorsi verificato; buste disegnate dal gioco (`packVisual`), diverse per set, fazione e Reliquiario.
+- Tavolo: creature più grandi (si stringono con 5+ creature), plancia del campo, punti vita grandi (rossi pulsanti sotto 9), decorazioni per ambientazione (`zoneDecor`: filigrane, fregio, lanterne/neon/candele/gocce), altezza totale ~750 px su telefono.
+- Animazioni: entrata con caduta e anello di luce, bagliore sulle creature pronte, attacco con carica/rinculo/tremore, morte che si sbriciola. Suoni di attacco nuovi per fazione (`sfx.mjs`).
+- Mano piena: il giocatore sceglie la carta da scartare (`chooseDiscard`, `mustDiscard`, `discardFromHand`); il computer perde ancora la carta pescata.
+- Sentiero settimanale (`passState`, `claimPassReward` in `missions.mjs`): 15 passi, uno per missione riscattata; premi ai passi 5, 10 e 15 (finale).
+- Motore: Rubavita (`hasLifesteal`), Scambio (`tradeCard`, pulsante nell'anteprima), poteri che si evolvono (`power.evolve = { after, power }`, `currentPower`, puntini sul potere), `power.maxAttack` e `power.transform` per il Dottore della Peste.
+- Tipi di creatura in `tribes.mjs` (proposta da far approvare); fascia del tipo disegnata dal gioco sopra quella stampata, posizioni trovate da `tools/trova_fasce.py` → `fasce.mjs`.
+
+## Fase 5 (piano originale)
 0. **Per primo (promesso all'utente)**: contatore in cima alla Collezione: «Collezione: N/250 copie» con barra, contatore della fazione filtrata («Corte di Hollow: 40/62») e filtro «Solo carte incomplete». Il calcolo esiste già (`collectionProgress` in `profile.mjs`). Stesso APK dei tipi di creatura. Aggiungere anche qui le decisioni sulla pubblicazione (vedi sotto, se mancano).
 0b. **Richieste dell'utente del 26 novembre (solo in roadmap, da fare nella fase 5)**:
    - Negozio: verificare che l'acquisto dei dorsi delle carte funzioni davvero.

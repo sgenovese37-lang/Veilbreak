@@ -45,6 +45,13 @@ function shuffle(items, random) {
 
 function draw(p, count, g) {
   const drawn = p.deck.splice(0, count);
+  // Fase 5: il giocatore umano sceglie quale carta scartare quando supera il limite della mano
+  if (p.chooseDiscard) {
+    p.hand.push(...drawn);
+    p.mustDiscard = Math.max(0, p.hand.length - rules.handLimit);
+    if (p.mustDiscard && g) note(g, t("{name} ha la mano piena: deve scartare {n} carta.", { name: p.name, n: p.mustDiscard }));
+    return;
+  }
   const room = Math.max(0, rules.handLimit - p.hand.length);
   p.hand.push(...drawn.slice(0, room));
   const overflow = drawn.slice(room);
@@ -98,7 +105,7 @@ export function createGame(names, random = Math.random, customDecks = [], option
     const forced = options.decks?.[side];
     const deck = shuffle(forced?.length ? [...forced] : validDeck(name, custom) ? [...deckCards(custom)] : defaultDeck(name), random);
     const maxLife = options.lives?.[side] ?? rules.maxLife;
-    const player = { name, ally: !forced?.length && validDeck(name, custom) ? deckAlly(custom) : null, hero: options.heroes?.[side] ?? null, life: maxLife, maxLife, capacity: 0, essence: 0, deck, hand: [], discard: [], powerUsed: false, board: [], artifacts: [], secrets: [], discount: 0, fatigue: 0, peek: null };
+    const player = { chooseDiscard: Boolean(options.chooseDiscard?.[side]), mustDiscard: 0, name, ally: !forced?.length && validDeck(name, custom) ? deckAlly(custom) : null, hero: options.heroes?.[side] ?? null, life: maxLife, maxLife, capacity: 0, essence: 0, deck, hand: [], discard: [], powerUsed: false, board: [], artifacts: [], secrets: [], discount: 0, fatigue: 0, peek: null };
     // chi gioca per secondo pesca una carta in più (e dopo la sostituzione riceve il Frammento di Essenza)
     draw(player, rules.openingHand + (side !== first ? 1 : 0));
     return player;
@@ -279,12 +286,23 @@ function unitAt(g, target) {
   return target && g.players[target.side].board.find(unit => unit.uid === target.uid);
 }
 
+// Potere attuale dell'eroe. Fase 5: un potere con «evolve» migliora dopo un certo numero di usi
+// (power.evolve = { after: 3, power: { …campi che cambiano } }).
+export function currentPower(p) {
+  const base = heroFor(p)?.power;
+  if (!base) return null;
+  if (base.evolve && (p.powerUses ?? 0) >= base.evolve.after) return { ...base, ...base.evolve.power, evolved: true };
+  return base;
+}
+export const powerCost = p => currentPower(p)?.cost ?? heroPowerCost;
+
 export function powerTargets(g) {
   const side = g.active;
-  const power = heroFor(g.players[side])?.power;
+  const power = currentPower(g.players[side]);
   if (!power?.target) return [];
   const owner = power.target === "ally" ? side : rival(side);
-  const list = g.players[owner].board.filter(unit => owner === side || !isVeiled(unit)).map(unit => ({ side: owner, uid: unit.uid }));
+  const list = g.players[owner].board.filter(unit => (owner === side || !isVeiled(unit)) && (power.maxAttack === undefined || stats(g, owner, unit).attack <= power.maxAttack))
+    .map(unit => ({ side: owner, uid: unit.uid }));
   // "foe": una creatura nemica oppure l'eroe nemico
   if (power.target === "foe") list.push({ side: owner, uid: null });
   return list;
@@ -292,8 +310,9 @@ export function powerTargets(g) {
 
 export function canUseHeroPower(g) {
   const p = g.players[g.active];
-  const power = heroFor(p)?.power;
-  return Boolean(g.phase === "play" && power && !p.powerUsed && p.essence >= heroPowerCost
+  if (p.mustDiscard) return false;
+  const power = currentPower(p);
+  return Boolean(g.phase === "play" && power && !p.powerUsed && p.essence >= powerCost(p)
     && (!power.target || powerTargets(g).length) && (!power.heal || p.life < p.maxLife)
     && (!power.summon || !boardFull(p)) && (!power.selfDamage || p.life > power.selfDamage));
 }
@@ -303,11 +322,12 @@ export function useHeroPower(g, target) {
   const side = g.active;
   const p = g.players[side];
   const hero = heroFor(p);
-  const power = hero.power;
+  const power = currentPower(p);
   if (power.target && !powerTargets(g).some(choice => matchTarget(choice, target))) return false;
   const unit = unitAt(g, target);
-  p.essence -= heroPowerCost;
+  p.essence -= powerCost(p);
   p.powerUsed = true;
+  p.powerUses = (p.powerUses ?? 0) + 1;
   g.stats[side].powers++;
   if (power.defense) unit.guard[side] = power.defense;
   if (power.attack) unit.powerAttack += power.attack;
@@ -321,8 +341,33 @@ export function useHeroPower(g, target) {
   if (power.atk) unit.atkBonus = (unit.atkBonus ?? 0) + power.atk;   // +Attacco permanente
   if (power.selfDamage) damageHero(g, side, power.selfDamage, false);
   if (power.draw) draw(p, power.draw, g);
+  if (power.transform && unit) {   // trasforma la creatura in una pedina (es. Marionetta 1/1)
+    Object.assign(unit, { card: power.transform, damage: 0, bonus: 0, atkBonus: 0, healthBonus: 0, powerAttack: 0, weakened: 0, silenced: false, veiled: false });
+  }
   note(g, t("{hero} usa {power}.", { hero: hero.name, power: t(power.name) }));
+  if (hero.power.evolve && !power.evolved && p.powerUses >= hero.power.evolve.after) note(g, t("Il potere di {hero} si evolve!", { hero: hero.name }));
   settle(g);
+  return true;
+}
+
+// Fase 5 · Rubavita: i danni inflitti dalla carta curano il suo eroe (fino al massimo).
+export const hasLifesteal = (unit) => Boolean(unit && !unit.silenced && /Rubavita/.test(cardOf(unit).text ?? ""));
+function lifesteal(g, side, amount) { if (amount > 0) heal(g.players[side], amount); }
+
+// Fase 5 · Scambio: dalla mano, paghi 1 Essenza, la carta torna nel mazzo e ne peschi un'altra.
+export const isTradeable = c => /Scambio/.test(c?.text ?? "");
+export function canTrade(g, index) {
+  const p = g.players[g.active];
+  return g.phase === "play" && !p.mustDiscard && isTradeable(byId.get(p.hand[index])) && p.essence >= 1 && p.deck.length > 0;
+}
+export function tradeCard(g, index) {
+  if (!canTrade(g, index)) return false;
+  const p = g.players[g.active];
+  p.essence -= 1;
+  const [id] = p.hand.splice(index, 1);
+  p.deck.splice(Math.floor(g.random() * (p.deck.length + 1)), 0, id);
+  draw(p, 1, g);
+  note(g, t("{name} scambia una carta.", { name: p.name }));
   return true;
 }
 
@@ -421,8 +466,21 @@ function bounce(g, side, unit) {
   if (p.hand.length < rules.handLimit) p.hand.push(unit.card); else p.discard.push(unit.card);
 }
 
+// Scarta una carta scelta dalla mano (mano oltre il limite). Restituisce true se lo scarto è valido.
+export function discardFromHand(g, side, index) {
+  const p = g.players[side];
+  if (!p.mustDiscard || index < 0 || index >= p.hand.length) return false;
+  const [id] = p.hand.splice(index, 1);
+  if (id !== essenceShardId) p.discard.push(id);
+  p.mustDiscard--;
+  p.burned = (p.burned ?? 0) + 1;
+  note(g, t("{name} scarta {card}.", { name: p.name, card: byId.get(id)?.name ?? "" }));
+  return true;
+}
+
 export function canPlay(g, index) {
   const p = g.players[g.active];
+  if (p.mustDiscard) return false;
   const c = byId.get(p.hand[index]);
   const affordable = isPact(c) ? p.life > c.cost : p.essence >= price(g, g.active, c);
   const needsRoom = c.type === "Creatura" || [74, 81, 84].includes(c.id);
@@ -469,7 +527,7 @@ export function play(g, index, target) {
 export const isGuard = unit => !unit.silenced && taunt.has(unit.card) && !isVeiled(unit);
 
 export function attackTargets(g, uid) {
-  if (g.phase !== "play") return [];
+  if (g.phase !== "play" || g.players[g.active].mustDiscard) return [];
   const side = g.active;
   const p = g.players[side];
   const unit = p.board.find(u => u.uid === uid);
@@ -514,12 +572,15 @@ export function attack(g, uid, target) {
     const retaliation = stats(g, target.side, defender).attack;
     defender.damage += power;
     unit.damage += retaliation;
+    if (hasLifesteal(unit)) lifesteal(g, side, power);
+    if (hasLifesteal(defender)) lifesteal(g, target.side, retaliation);
     note(g, t("{card} attacca {target}.", { card: cardOf(unit).name, target: cardOf(defender).name }));
     const died = settle(g);
     if (died.has(defender.uid) && unit.card === 56 && !unit.silenced) draw(p, 1, g);
     if (died.has(defender.uid) && unit.card === 86 && !unit.silenced && !died.has(unit.uid)) unit.bonus = (unit.bonus ?? 0) + 1;
   } else {
     damageHero(g, target.side, power);
+    if (hasLifesteal(unit)) lifesteal(g, side, power);
     if (!unit.silenced && unit.card === 18) discard(g.players[target.side], g);
     note(g, t("{card} infligge {damage} all’eroe.", { card: cardOf(unit).name, damage: damageText(power) }));
     settle(g);
@@ -564,7 +625,7 @@ function startTurn(g, side) {
 }
 
 export function endTurn(g) {
-  if (g.phase !== "play") return false;
+  if (g.phase !== "play" || g.players[g.active].mustDiscard) return false;
   const side = g.active;
   const opponent = rival(side);
   const p = g.players[side];
@@ -608,7 +669,7 @@ export function shardHelps(g, p) {
   return p.hand.some(id => {
     const c = byId.get(id);
     return id !== essenceShardId && price(g, g.active, c) === p.essence + 1 && !(c.type === "Creatura" && boardFull(p));
-  }) || (!p.powerUsed && p.essence === heroPowerCost - 1);
+  }) || (!p.powerUsed && p.essence === powerCost(p) - 1);
 }
 
 // onStep(azione), facoltativo: chiamato dopo ogni mossa per animarla nell'interfaccia.
@@ -638,7 +699,7 @@ export function computerTurn(g, level, onStep = () => {}) {
   }
   if (canUseHeroPower(g)) {
     const options = powerTargets(g);
-    const power = heroFor(p).power;
+    const power = currentPower(p);
     const best = options.find(t => power.damage
       ? stats(g, t.side, unitAt(g, t)).health <= power.damage
       : attackTargets(g, t.uid).length);

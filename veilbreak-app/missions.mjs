@@ -92,6 +92,7 @@ export function claimMission(id, date = new Date(), profile = loadProfile()) {
     const mission = list.find(m => m.id === id);
     if (!mission || !mission.done || mission.claimed) continue;
     profile.missions[slot].claimed.push(id);
+    passOf(profile, weekKey(date)).steps++;   // il Sentiero settimanale avanza
     const reason = t("missione «{name}»", { name: t(mission.text, mission.vars) });
     addShards(mission.shards, reason, profile);
     if (mission.packs) addPacks(mission.packs, reason, profile);
@@ -99,3 +100,39 @@ export function claimMission(id, date = new Date(), profile = loadProfile()) {
   }
   return null;
 }
+
+// ---------- Sentiero settimanale (fase 5): un pass gratuito ----------
+// Ogni missione riscattata (giornaliera o settimanale) fa avanzare di un passo. Ogni 5 passi c'è un premio
+// più grande, al passo 15 il premio finale. Si azzera ogni lunedì.
+export const passLength = 15;
+export const passRewards = {
+  5: { shards: 100, packs: 1 },
+  10: { shards: 200, packs: 1 },
+  15: { shards: 500, packs: 3, final: true },
+};
+
+function passOf(profile, key) {
+  if (profile.pass?.key !== key) profile.pass = { key, steps: 0, claimed: [] };
+  return profile.pass;
+}
+
+export function passState(date = new Date(), profile = loadProfile()) {
+  const pass = passOf(profile, weekKey(date));
+  return { steps: Math.min(pass.steps, passLength), claimed: [...pass.claimed], length: passLength,
+    rewards: Object.entries(passRewards).map(([step, r]) => ({ step: Number(step), ...r, ready: pass.steps >= Number(step) && !pass.claimed.includes(Number(step)), claimed: pass.claimed.includes(Number(step)) })) };
+}
+
+export function claimPassReward(step, date = new Date(), profile = loadProfile()) {
+  const pass = passOf(profile, weekKey(date));
+  const reward = passRewards[step];
+  if (!reward || pass.steps < step || pass.claimed.includes(step)) return null;
+  pass.claimed.push(step);
+  const reason = t(reward.final ? "premio finale del Sentiero settimanale" : "Sentiero settimanale · passo {n}", { n: step });
+  if (reward.shards) addShards(reward.shards, reason, profile);
+  if (reward.packs) addPacks(reward.packs, reason, profile);
+  saveProfile(profile);
+  return reward;
+}
+
+// Premi del Sentiero pronti da riscattare (per il segnale sul pulsante Missioni)
+export const passReady = (date = new Date(), profile = loadProfile()) => passState(date, profile).rewards.filter(r => r.ready).length;

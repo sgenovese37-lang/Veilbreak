@@ -1,7 +1,7 @@
 import { cards } from "./cards.mjs";
 import {
-  factions, byId, createGame, mulligan, canPlay, playTargets, play,
-  attackTargets, attack, endTurn, stats, cardOf, price,
+  factions, byId, createGame, mulligan, canPlay, discardFromHand, playTargets, play,
+  attackTargets, attack, endTurn, stats, cardOf, price, currentPower, powerCost, canTrade, tradeCard, hasLifesteal,
   defaultDeck, copyLimit, deckSize, validDeck, rules, powerTargets, canUseHeroPower, useHeroPower,
   essenceShard, essenceShardId, isPact, isVeiled, maxAttacks, deckCards, deckAlly, maxFactions, brawls, chaosDeck,
 } from "./game.mjs";
@@ -15,10 +15,12 @@ import {
   packOffers, buyOffer, cardBacks, ownedBacks, currentBack, buyBack, setBack,
   craftCost, canCraft, craftCard, addShards, addPacks,
 } from "./profile.mjs";
-import { currentMissions, recordEvent, claimMission } from "./missions.mjs";
+import { currentMissions, recordEvent, claimMission, passState, claimPassReward } from "./missions.mjs";
 import { currentAchievements, recordAchievements, claimAchievement, lifetimeStats } from "./achievements.mjs";
 import { chapters, storyTitle, storyProgress, isUnlocked, completeChapter, finalReward, unlockedHeroes, actTwoReward, actOneLength } from "./story.mjs";
 import { option, setOption, speed } from "./options.mjs";
+import { tribes, tribeOf } from "./tribes.mjs";
+import { bands } from "./fasce.mjs";
 import { createBackup, readBackup, restoreBackup, saveBackupFile } from "./backup.mjs";
 import { sound, soundEnabled, setSound, buzz, cardSound, startAmbience, stopAmbience } from "./audio.mjs";
 import { environments, environmentFor } from "./environments.mjs";
@@ -80,6 +82,12 @@ const wait = ms => new Promise(resolve => setTimeout(resolve, ms * speed()));
 const decksKey = "veilbreak-custom-decks";
 try { savedDecks = new Map(Object.entries(JSON.parse(localStorage.getItem(decksKey) ?? "{}"))); }
 catch { savedDecks = new Map(); }
+
+// Riga del tipo: «Creatura Non Morta» (fase 5), per le altre carte solo il tipo.
+const tribeAdjective = { Umano: "Creatura Umana", "Non Morto": "Creatura Non Morta", Spettro: "Creatura Spettrale", Bestia: "Creatura Bestiale",
+  Costrutto: "Creatura Meccanica", Demone: "Creatura Demoniaca", Aberrazione: "Creatura Aberrante", Annegato: "Creatura Annegata" };
+const tribeLabel = c => t(tribeAdjective[tribeOf(c)] ?? c.type);
+const typeLine = c => tribeOf(c) ? tribeLabel(c) : t(c.type);
 
 // I testi passano da t(): se la frase ha una traduzione nella lingua scelta, compare tradotta.
 function element(tag, text, cls) {
@@ -346,7 +354,7 @@ function drawCard(c, options = {}) {
   head.append(element("strong", c.name));
   if (c.cost !== undefined && options.cost !== false) head.append(element("span", options.cost ?? c.cost, "cost"));
   e.append(head);
-  e.append(element("small", [options.remaining ?? t(c.type), options.meta ? t(rarity[c.rarity]) : ""].filter(Boolean).join(" · ")));
+  e.append(element("small", [options.remaining ?? typeLine(c), options.meta ? t(rarity[c.rarity]) : ""].filter(Boolean).join(" · ")));
   if (options.meta) e.append(element("small", c.faction));
   if (options.text !== false && c.text) e.append(element("p", c.text));
   if (c.type === "Creatura") {
@@ -432,9 +440,34 @@ function showCard(c) {
 }
 viewer.addEventListener("click", event => { if (event.target === viewer) viewer.close(); });
 
+// Collezione: contatore delle copie (totale e della fazione scelta), filtri per fazione, tipo e carte incomplete.
 function drawCatalogue() {
-  get("cards").replaceChildren(...cards.filter(c => !filter.value || c.faction === filter.value).map(c => drawCard(c, { meta: true, art: "full", copies: owned(c.id), action: () => showCard(c) })));
+  const tribe = get("tribe-filter").value;
+  const missing = get("missing-filter").checked;
+  const shown = cards.filter(c => (!filter.value || c.faction === filter.value) && (!tribe || tribeOf(c) === tribe) && (!missing || owned(c.id) < copyLimit(c)));
+  const { have, max } = collectionProgress();
+  const bar = (label, n, total) => {
+    const row = element("div", undefined, "progress-row");
+    const pct = total ? Math.round(n / total * 100) : 0;
+    row.append(element("span", label), element("b", `${n}/${total}`), element("i", undefined, "stat-bar"));
+    row.lastChild.style.setProperty("--p", `${pct}%`);
+    row.setAttribute("aria-label", `${label}: ${n}/${total}`);
+    return row;
+  };
+  const box = get("collection-progress");
+  box.replaceChildren(bar(t("Collezione"), have, max));
+  if (filter.value) {
+    const list = cards.filter(c => c.faction === filter.value);
+    box.append(bar(filter.value, list.reduce((s, c) => s + owned(c.id), 0), list.reduce((s, c) => s + copyLimit(c), 0)));
+  }
+  const complete = cards.filter(c => owned(c.id) >= copyLimit(c)).length;
+  box.append(element("small", t("Carte complete {n} su {max} · tocca una carta per crearne una copia con le Schegge", { n: complete, max: cards.length }), "muted"));
+  get("cards").replaceChildren(...(shown.length ? shown.map(c => drawCard(c, { meta: true, art: "full", copies: owned(c.id), action: () => showCard(c) }))
+    : [element("p", "Nessuna carta con questi filtri: hai già tutte le copie!", "muted")]));
 }
+for (const name of tribes) get("tribe-filter").append(new Option(t(name), name));
+get("tribe-filter").onchange = drawCatalogue;
+get("missing-filter").onchange = drawCatalogue;
 
 let draftAlly = null;   // fazione alleata del mazzo in costruzione (al massimo 2 fazioni)
 let choosingAlly = false;
@@ -691,7 +724,7 @@ function startMatch(names, decks, options = {}) {
   lastTurnKey = null;
   // chi inizia si tira a sorte (chi gioca per secondo ha una carta in più e il Frammento di Essenza)
   const first = options.first ?? (navigator.webdriver ? (window.__vbFirst ?? 0) : Math.random() < .5 ? 0 : 1);   // nelle prove automatiche si sceglie
-  game = createGame(names, Math.random, decks, { ...options, first });
+  game = createGame(names, Math.random, decks, { ...options, first, chooseDiscard: mode === "cpu" ? [true, false] : [true, true] });
   // ambientazione: scelta nella partita, altrimenti quella della fazione avversaria
   matchEnv = environmentFor(options.env) ?? environmentFor(heroFor(names[1])?.theme) ?? environmentFor(heroFor(names[0])?.theme);
   startAmbience(matchEnv);
@@ -965,13 +998,27 @@ async function lunge(side, uid, targetChoice) {
   const dx = (b.left + b.width / 2 - (a.left + a.width / 2)) * 0.82;
   const dy = (b.top + b.height / 2 - (a.top + a.height / 2)) * 0.82;
   from.style.zIndex = 20;
-  const go = from.animate([{ transform: "none" }, { transform: `translate(${dx}px, ${dy}px) scale(1.12)` }], { duration: 230 * speed(), easing: "cubic-bezier(.5,0,.9,.5)", fill: "forwards" });
+  // Fase 5: carica all'indietro, scatto con scia, rinculo del bersaglio e, per i colpi forti, tremore dello schermo
+  const power = attacker ? stats(game, side, attacker).attack : 1;
+  const back = `translate(${-dx * 0.12}px, ${-dy * 0.12}px) scale(1.05) rotate(${dx > 0 ? -4 : 4}deg)`;
+  const hitPos = `translate(${dx}px, ${dy}px) scale(1.14) rotate(${dx > 0 ? 3 : -3}deg)`;
+  from.classList.add("lunging");
+  await from.animate([{ transform: "none" }, { transform: back }], { duration: 140 * speed(), easing: "ease-out", fill: "forwards" }).finished;
+  const go = from.animate([{ transform: back }, { transform: hitPos }], { duration: 190 * speed(), easing: "cubic-bezier(.6,0,.9,.4)", fill: "forwards" });
   await go.finished;
   if (targetChoice?.uid == null) sound("hit"); // le creature colpite hanno il loro suono (vedi track)
   impactFx(to, attacker?.card ? byId.get(attacker.card)?.faction : null);
   buzz(25, targetChoice?.uid == null && targetChoice?.side === 0 && mode === "cpu" ? "heavy" : "medium");
-  to.animate([{ transform: "none" }, { transform: "translateX(-5px)" }, { transform: "translateX(5px)" }, { transform: "none" }], { duration: 240 * speed() });
-  await from.animate([{ transform: `translate(${dx}px, ${dy}px) scale(1.12)` }, { transform: "none" }], { duration: 200 * speed(), easing: "ease-out", fill: "forwards" }).finished;
+  const push = Math.min(14, 4 + power * 1.5);
+  const ux = dx / (Math.hypot(dx, dy) || 1), uy = dy / (Math.hypot(dx, dy) || 1);
+  to.animate([{ transform: "none" }, { transform: `translate(${ux * push}px, ${uy * push}px) rotate(${ux * 4}deg)`, filter: "brightness(1.8)" },
+    { transform: `translate(${-ux * 3}px, ${-uy * 3}px)` }, { transform: "none" }], { duration: 300 * speed(), easing: "ease-out" });
+  if (power >= 5 && !document.body.classList.contains("energy-save")) {
+    const arena = document.querySelector(".arena");
+    arena?.animate([{ transform: "none" }, { transform: "translate(-4px, 3px)" }, { transform: "translate(4px, -2px)" }, { transform: "translate(-2px, 1px)" }, { transform: "none" }], { duration: 260 * speed() });
+  }
+  await from.animate([{ transform: hitPos }, { transform: "none" }], { duration: 220 * speed(), easing: "ease-out", fill: "forwards" }).finished;
+  from.classList.remove("lunging");
 }
 
 // Tenere premuto: anteprima ingrandita della carta con le regole del catalogo.
@@ -983,20 +1030,21 @@ document.body.append(peekLayer);
 function showPeek(c, current) {
   const art = illustrationFor(c.id);
   const box = element("div", undefined, "peek-card");
-  if (art) box.append(cardFace(c, art, current ? { attack: current.attack, health: current.health, cost: current.cost } : {}, { className: "peek-face" }));
+  const statsNow = current && current.attack !== undefined ? current : null;
+  if (art) box.append(cardFace(c, art, statsNow ? { attack: statsNow.attack, health: statsNow.health, cost: statsNow.cost } : {}, { className: "peek-face" }));
   else box.append(drawCard(c));
   const rulesBox = element("div", undefined, "peek-rules");
   rulesBox.append(element("strong", c.name, "peek-name"));
   const cost = isPact(c) ? t("{n} punti vita (Patto)", { n: c.cost }) : t("{n} Essenza", { n: c.cost });
-  rulesBox.append(element("span", `${t(c.type)} · ${cost}`, "peek-meta"));
-  if (c.type === "Creatura") rulesBox.append(element("span", current ? t("Ora: Attacco {a} · Difesa {d}", { a: current.attack, d: current.health }) : t("Attacco {a} · Difesa {d}", { a: c.attack, d: c.health }), "peek-meta"));
+  rulesBox.append(element("span", `${typeLine(c)} · ${cost}`, "peek-meta"));
+  if (c.type === "Creatura") rulesBox.append(element("span", statsNow ? t("Ora: Attacco {a} · Difesa {d}", { a: current.attack, d: current.health }) : t("Attacco {a} · Difesa {d}", { a: c.attack, d: c.health }), "peek-meta"));
   rulesBox.append(element("h4", "Abilità"), element("p", c.text || "Nessun effetto.", "peek-text"));
   // schede delle parole chiave, come nei giochi di carte
   const notes = element("div", undefined, "peek-notes");
   for (const [word, text] of Object.entries(glossary)) {
     if (!(c.text ?? "").includes(word)) continue;
     const kw = keywordOf(c);
-    const sym = { Provocazione: kw.taunt && "shield", Rapidità: kw.rush && "bolt", Velato: kw.veiled && "veil", Furia: kw.fury && "fury", Patto: "drop", Lascito: "skull", "Urlo di battaglia": "horn" }[word];
+    const sym = { Provocazione: kw.taunt && "shield", Rapidità: kw.rush && "bolt", Velato: kw.veiled && "veil", Furia: kw.fury && "fury", Patto: "drop", Lascito: "skull", "Urlo di battaglia": "horn", Rubavita: "heart", Scambio: "cards" }[word];
     const note = element("div", undefined, "peek-note");
     const head = element("b"); if (sym) head.append(icon(sym)); head.append(document.createTextNode(t(word)));
     note.append(head, element("span", text));
@@ -1008,6 +1056,14 @@ function showPeek(c, current) {
     notes.append(note);
   }
   rulesBox.append(notes);
+  // Scambio: dalla mano si può rimettere la carta nel mazzo per 1 Essenza
+  if (current?.tradeIndex !== undefined) {
+    const trade = button(t("Scambia (1 Essenza)"), () => {
+      if (tradeCard(game, current.tradeIndex)) { sound("play"); hidePeek(); render(); }
+    }, "primary peek-trade");
+    trade.disabled = !canTrade(game, current.tradeIndex);
+    rulesBox.append(trade);
+  }
   box.append(rulesBox, element("small", "Tocca lo schermo per chiudere", "peek-hint"));
   peekLayer.replaceChildren(box);
   peekLayer.hidden = false;
@@ -1015,12 +1071,12 @@ function showPeek(c, current) {
 function hidePeek() { peekLayer.hidden = true; peekLayer.dataset.open = ""; }
 // Resta aperta dopo aver alzato il dito: si chiude con un nuovo tocco in qualunque punto.
 peekLayer.addEventListener("pointerdown", e => {
-  if (peekLayer.dataset.open !== "ready") return;
+  if (peekLayer.dataset.open !== "ready" || e.target.closest?.(".peek-trade")) return;
   e.preventDefault();
   e.stopPropagation();
   hidePeek();
 });
-peekLayer.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); });
+peekLayer.addEventListener("click", e => { if (e.target.closest?.(".peek-trade")) return; e.preventDefault(); e.stopPropagation(); });
 function attachPeek(el, c, current) {
   let timerId = null, shown = false, x = 0, y = 0;
   el.addEventListener("pointerdown", e => {
@@ -1122,12 +1178,15 @@ const keywordOf = c => ({
   legacy: /Lascito/.test(c.text ?? ""),
   battlecry: /Urlo di battaglia/.test(c.text ?? ""),
   veiled: /Velato/.test(c.text ?? ""),
+  lifesteal: /Rubavita/.test(c.text ?? ""),
+  trade: /Scambio/.test(c.text ?? ""),
 });
 
 // Simboli delle meccaniche: icona, nome (per chi legge lo schermo) e classe di colore.
 const mechanicSymbols = {
   taunt: ["shield", "Provocazione"], rush: ["bolt", "Rapidità"], veiled: ["veil", "Velato"], fury: ["fury", "Furia"],
   legacy: ["skull", "Lascito"], battlecry: ["horn", "Urlo di battaglia"], pact: ["drop", "Patto"],
+  lifesteal: ["heart", "Rubavita"], trade: ["cards", "Scambio"],
   stunned: ["chain", "Bloccata"], silenced: ["mute", "Silenziata"],
 };
 function symbolBadge(kind, extra) {
@@ -1187,6 +1246,8 @@ const glossary = {
   Rimanda: "La creatura torna nella mano del suo proprietario e perde i potenziamenti.",
   Evoca: "Mette in campo una nuova creatura (se c’è posto: massimo 7).",
   "Riporta in campo": "Rimette in gioco una creatura morta, come nuova.",
+  Rubavita: "I danni inflitti da questa carta curano il tuo eroe della stessa quantità (fino al massimo dei punti vita).",
+  Scambio: "Mentre è nella tua mano puoi pagare 1 Essenza per rimetterla nel mazzo e pescare un’altra carta.",
 };
 // Spiegazione del tipo di carta
 const typeNotes = {
@@ -1248,7 +1309,7 @@ function heroPortrait(side, allow) {
   } else {
     portrait.append(element("span", p.name.slice(0, 1), "emblem initial"));
   }
-  const life = element("span", p.life, "life");
+  const life = element("span", p.life, p.life <= 8 ? "life low" : "life");
   portrait.append(life);
   track(`hero-${side}`, p.life, portrait);
   return portrait;
@@ -1268,6 +1329,9 @@ function powerIcon(power) {
 function powerButton(side, own, allow) {
   const hero = heroFor(game.players[side]);
   if (!hero) return element("span");
+  const p = game.players[side];
+  const power = currentPower(p) ?? hero.power;
+  const cost = powerCost(p);
   const usable = allow && own && !selected && canUseHeroPower(game);
   const used = game.players[side].powerUsed;
   const b = button(undefined, () => {
@@ -1276,9 +1340,19 @@ function powerButton(side, own, allow) {
     render();
   }, `hero-power${used ? " used" : ""}${usable ? " ready" : ""}`);
   b.disabled = !usable;
-  b.title = `${t(hero.power.name)}: ${t(hero.power.text)}`;
-  b.setAttribute("aria-label", `${t(hero.power.name)}, ${t("{n} Essenza", { n: heroPowerCost })}: ${t(hero.power.text)}`);
-  b.append(element("span", heroPowerCost, "gem"), icon(powerIcon(hero.power), "ico glyph"));
+  const text = power.evolved ? power.evolvedText ?? power.text : power.text;
+  b.title = `${t(power.name)}: ${t(text)}`;
+  b.setAttribute("aria-label", `${t(power.name)}, ${t("{n} Essenza", { n: cost })}: ${t(text)}`);
+  b.append(element("span", cost, "gem"), icon(powerIcon(power), "ico glyph"));
+  // potere che si evolve: puntini che mostrano quanti usi mancano, poi una corona
+  if (hero.power.evolve) {
+    const after = hero.power.evolve.after;
+    const pips = element("span", undefined, `evolve-pips${power.evolved ? " evolved" : ""}`);
+    if (power.evolved) pips.append(icon("crown"));
+    else for (let i = 0; i < after; i++) pips.append(element("i", undefined, i < (p.powerUses ?? 0) ? "on" : ""));
+    b.append(pips);
+    b.classList.toggle("evolved", Boolean(power.evolved));
+  }
   return b;
 }
 
@@ -1389,6 +1463,7 @@ function token(side, unit, own, allow) {
   if (isVeiled(unit)) badges.append(symbolBadge("veiled"));
   if (kw.fury) badges.append(symbolBadge("fury", Math.max(0, maxAttacks(unit) - (unit.attacks ?? 0))));
   if (kw.legacy) badges.append(symbolBadge("legacy"));
+  if (kw.lifesteal && !unit.silenced) badges.append(symbolBadge("lifesteal"));
   if (unit.stunned) badges.append(symbolBadge("stunned"));
   if (unit.silenced && unit.card) badges.append(symbolBadge("silenced"));
   if (badges.childElementCount) tok.append(badges);
@@ -1397,7 +1472,7 @@ function token(side, unit, own, allow) {
   if (track(unit.uid, current.health, tok, unit.card ? c : null)) {
     tok.classList.add("summoned");
     // appena entrata in gioco: i simboli delle sue meccaniche compaiono in grande
-    const kinds = ["battlecry", "taunt", "rush", "veiled", "fury", "legacy"].filter(k => kw[k]);
+    const kinds = ["battlecry", "taunt", "rush", "veiled", "fury", "legacy", "lifesteal"].filter(k => kw[k]);
     popSymbols(tok, kinds);
     if (unit.card) speak(tok, voiceOf(unit.card), side);
   }
@@ -1420,9 +1495,22 @@ function selectAllAttackers() {
   render();
 }
 
+// Decorazioni della metà del tavolo, diverse per ambientazione: filigrane di rame agli angoli,
+// fregio sul bordo e un dettaglio vivo (candele, tubi al neon, gocce, lanterne).
+function zoneDecor(theme) {
+  const box = element("div", undefined, `zone-decor decor-${theme}`);
+  box.setAttribute("aria-hidden", "true");
+  box.append(element("i", undefined, "orn orn-l"), element("i", undefined, "orn orn-r"), element("i", undefined, "frieze"));
+  const live = element("span", undefined, "decor-live");
+  for (let i = 0; i < 4; i++) live.append(element("b"));
+  box.append(live);
+  return box;
+}
+
 function boardRow(side, own, allow) {
   const row = element("div", undefined, `board ${own ? "mine" : "enemy"}`);
   row.setAttribute("aria-label", t(own ? "Il tuo campo" : "Campo avversario"));
+  row.dataset.count = game.players[side].board.length;   // con tante creature le carte si stringono
   for (const unit of game.players[side].board) row.append(token(side, unit, own, allow));
   if (!game.players[side].board.length) row.append(element("span", own ? "Il tuo campo è vuoto" : "", "empty"));
   if (game.players[side].board.length >= rules.boardLimit) row.append(element("span", t("Campo pieno · {n}/{n}", { n: rules.boardLimit }), "board-full"));
@@ -1445,6 +1533,15 @@ function cardFace(c, art, values = {}, { thumb = false, className = "" } = {}) {
     face.append(r);
     return r;
   };
+  // fascia del tipo (fase 5): copre quella stampata e mostra fazione e tipo, tradotti
+  const band = bands[c.id];
+  if (band && c.type === "Creatura") {
+    const tag = element("span", undefined, `type-band${c.id <= 30 ? " wide" : ""}`);   // la prima serie ha fasce più larghe
+    tag.style.top = `${band[0]}%`;
+    tag.style.height = `${Math.max(band[1] * 1.35, 3.2)}%`;
+    tag.append(element("b", `${t(c.faction)} • ${tribeLabel(c)}`));
+    face.append(tag);
+  }
   const cmp = (now, base, lowerIsBetter = false) => now === base ? undefined : (lowerIsBetter ? now < base : now > base);
   if (at.cost && c.cost !== undefined) {
     const cost = values.cost ?? c.cost;
@@ -1470,13 +1567,16 @@ function handCard(side, id, i) {
   const mull = game.phase === "mulligan";
   const wrap = element("div", undefined, "hand-slot");
   const playable = !mull && canPlay(game, i);
+  // mano oltre il limite: toccare una carta la scarta
+  const discarding = !mull && game.players[side].mustDiscard > 0 && game.active === side && !(mode === "cpu" && side === 1);
   const card = button(undefined, () => {
+    if (discarding) { discardFromHand(game, side, i); sound("death"); buzz(20, "light"); render(); return; }
     if (!mull) return chooseCard(i);
     if (replacements.has(i)) replacements.delete(i);
     else if (replacements.size < rules.mulliganLimit) replacements.add(i);
     render();
-  }, `hand-card ${c.rarity}${playable ? " playable" : ""}`);
-  card.disabled = !mull && !playable;
+  }, `hand-card ${c.rarity}${playable ? " playable" : ""}${discarding ? " discardable" : ""}`);
+  card.disabled = !mull && !playable && !discarding;
   card.setAttribute("aria-pressed", mull ? replacements.has(i) : selected?.index === i);
   card.setAttribute("aria-label", t("{card}, costo {n}", { card: c.name, n: mull ? c.cost : price(game, side, c) }));
   const art = illustrationFor(id);
@@ -1496,7 +1596,7 @@ function handCard(side, id, i) {
     else card.append(element("span", t(c.type), "mini-type"));
   }
   if (mull && replacements.has(i)) card.append(element("span", "Da cambiare", "swap-mark"));
-  attachPeek(card, c);
+  attachPeek(card, c, !mull && keywordOf(c).trade && game.active === side ? { tradeIndex: i } : undefined);
   if (playable) attachDrag(card, i, c);
   // niente pulsante «i»: i dettagli si vedono tenendo premuta la carta
   wrap.append(card);
@@ -1506,7 +1606,7 @@ function handCard(side, id, i) {
 
 function handRow(side) {
   const p = game.players[side];
-  const hand = element("div", undefined, `hand${game.phase === "mulligan" ? " mulligan" : ""}`);
+  const hand = element("div", undefined, `hand${game.phase === "mulligan" ? " mulligan" : ""}${p.mustDiscard && game.active === side ? " discarding" : ""}`);
   hand.setAttribute("aria-label", t("La tua mano"));
   p.hand.forEach((id, i) => hand.append(handCard(side, id, i)));
   return hand;
@@ -1588,9 +1688,14 @@ function matchAlerts() {
     } else if (!p.deck.length && !alertState.empty[side] && mine) {
       centerAlert(t("Ultima carta pescata"), t("Il tuo mazzo è finito: da ora, a ogni turno senza carte da pescare subirai danni crescenti (1, poi 2, poi 3…)."), "");
     }
-    else if ((p.burned ?? 0) > alertState.burned[side] && mine) {
+    else if (p.mustDiscard && mine && game.active === side && !alertState.asked?.[side]) {
+      centerAlert(t("Mano piena"), t("Puoi tenere al massimo {max} carte: tocca la carta da scartare ({n}).", { max: rules.handLimit, n: p.mustDiscard }), "alert-hand");
+      alertState.asked = { ...alertState.asked, [side]: true };
+    }
+    else if ((p.burned ?? 0) > alertState.burned[side] && mine && !p.chooseDiscard) {
       centerAlert(t("Mano piena"), t("Puoi tenere al massimo {max} carte in mano: la carta pescata è andata persa.", { max: rules.handLimit }), "alert-hand");
     }
+    if (!p.mustDiscard && alertState.asked?.[side]) alertState.asked = { ...alertState.asked, [side]: false };
     alertState.fatigue[side] = p.fatigue ?? 0;
     alertState.burned[side] = p.burned ?? 0;
     alertState.empty[side] = !p.deck.length;
@@ -1615,6 +1720,7 @@ function renderTable() {
   let message = mull ? t("Scegli fino a {n} carte da cambiare", { n: rules.mulliganLimit }) : cpu ? "Turno avversario" : t("Turno di {name}", { name: game.players[active].name });
   if (mode === "cpu" && !cpu && !mull) message = "Il tuo turno";
   if (mode === "cpu" && cpu && mull) message = "L’avversario sceglie le carte da cambiare";
+  if (!cpu && !mull && game.players[active].mustDiscard) message = t("Mano piena: scegli {n} carta da scartare", { n: game.players[active].mustDiscard });
   if (selected) message = selected.kind === "attack"
     ? (game.players[1 - game.active].board.some(u => !u.silenced && keywordOf(cardOf(u)).taunt && !isVeiled(u))
       ? t("Provocazione: scegli come bersaglio una creatura con lo scudo")
@@ -1664,6 +1770,8 @@ function renderTable() {
   enemyZone.dataset.theme = enemyTheme;
   const myZone = element("section", undefined, "zone mine");
   myZone.dataset.theme = myTheme;
+  enemyZone.append(zoneDecor(enemyTheme));
+  myZone.append(zoneDecor(myTheme));
   if (!mull) {
     enemyZone.append(heroStrip(1 - view, false, allow), boardRow(1 - view, false, allow));
     myZone.append(boardRow(view, true, allow), heroStrip(view, true, allow));
@@ -1723,7 +1831,9 @@ function renderTable() {
   else if (!cpu) {
     const anyMove = game.players[active].hand.some((_, i) => canPlay(game, i)) || canUseHeroPower(game)
       || game.players[active].board.some(u => attackTargets(game, u.uid).length);
-    side.append(button("Fine turno", () => { endTurn(game); afterTurn(); }, `end-turn primary${anyMove ? "" : " done"}`));
+    const endBtn = button("Fine turno", () => { if (endTurn(game)) afterTurn(); }, `end-turn primary${anyMove ? "" : " done"}`);
+    endBtn.disabled = Boolean(game.players[active].mustDiscard);
+    side.append(endBtn);
   } else side.append(button("Turno avversario", () => {}, "end-turn waiting"));
   side.querySelector("button")?.toggleAttribute("disabled", cpu);
   if (game.players[view].peek !== null && game.players[view].peek === game.players[view].deck[0] && !mull) {
@@ -1884,6 +1994,39 @@ function renderStory() {
 }
 
 // ---------- Missioni e profilo ----------
+// Sentiero settimanale: 15 passi, uno per ogni missione riscattata; premi grandi ogni 5 passi e premio finale.
+function passTrack(refresh) {
+  const pass = passState();
+  const box = element("section", undefined, "quest-block pass-block");
+  const title = element("div", undefined, "pass-head");
+  title.append(element("h3", "Sentiero settimanale"), element("b", `${pass.steps}/${pass.length}`));
+  box.append(title, element("p", "Ogni missione riscattata è un passo. Ogni 5 passi un premio più grande, al passo 15 il premio finale. Gratis, si rinnova ogni lunedì.", "muted"));
+  const track = element("ol", undefined, "pass-track");
+  track.style.setProperty("--done", pass.steps / pass.length);
+  for (let i = 1; i <= pass.length; i++) {
+    const reward = pass.rewards.find(r => r.step === i);
+    const node = element("li", undefined, ["pass-node", i <= pass.steps ? "reached" : "", reward ? "milestone" : "", reward?.final ? "final" : "", reward?.claimed ? "claimed" : "", reward?.ready ? "ready" : ""].filter(Boolean).join(" "));
+    if (reward) node.append(icon(reward.final ? "crown" : reward.packs ? "pack" : "gem"));
+    else node.append(element("span", String(i)));
+    track.append(node);
+  }
+  box.append(track);
+  const rewards = element("div", undefined, "pass-rewards");
+  for (const r of pass.rewards) {
+    const card = element("div", undefined, `pass-reward${r.final ? " final" : ""}${r.claimed ? " claimed" : ""}`);
+    card.append(element("strong", r.final ? t("Passo {n} · premio finale", { n: r.step }) : t("Passo {n}", { n: r.step })), element("small", rewardText(r)));
+    const b = button(r.claimed ? "Riscattato" : r.ready ? "Riscatta" : t("{n} passi", { n: Math.max(0, r.step - pass.steps) }), () => {
+      const got = claimPassReward(r.step);
+      if (got) { sound("reward"); updateWallet(); refresh(t("Hai ottenuto {reward}.", { reward: rewardText(got) })); }
+    }, r.ready ? "primary" : "");
+    b.disabled = !r.ready;
+    card.append(b);
+    rewards.append(card);
+  }
+  box.append(rewards);
+  return box;
+}
+
 function renderQuests(message = "") {
   const panel = get("quests");
   const profile = loadProfile();
@@ -1928,7 +2071,7 @@ function renderQuests(message = "") {
     details.append(ol);
     profileBox.append(details);
   }
-  panel.replaceChildren(head, status,
+  panel.replaceChildren(head, status, passTrack(renderQuests),
     block("Giornaliere", "Si rinnovano a mezzanotte. Contano le partite contro il computer e la Storia.", all.daily),
     block("Settimanali", "Si rinnovano ogni lunedì.", all.weekly),
     block("Obiettivi", "Traguardi permanenti: il premio si riscatta una volta sola.", currentAchievements(), claimAchievement),
@@ -2169,6 +2312,25 @@ function startBrawl(faction) {
 
 // ---------- Buste ----------
 let shopTab = "buste";
+// Busta decorata: ogni set e ogni fazione ha la sua confezione (colori, simbolo, nome del set).
+const packStyles = {
+  busta: { cls: "pack-velo", set: "Il Velo Spezzato", icon: "veil" },
+  scorta: { cls: "pack-velo", set: "Il Velo Spezzato", icon: "veil" },
+  archivi: { cls: "pack-archivi", set: "Gli Archivi del Velo", icon: "book" },
+  leggenda: { cls: "pack-reliquia", set: "Reliquiario Leggendario", icon: "crown" },
+};
+function packVisual(offer, size = "") {
+  const theme = offer?.faction ? heroFor(offer.faction)?.theme : null;
+  const style = offer?.faction ? { cls: `pack-faction pack-${theme}`, set: offer.faction, crest: `assets/eroi/${theme}.webp` } : packStyles[offer?.id] ?? packStyles.busta;
+  const pack = element("div", undefined, `pack ${style.cls} ${size}`.trim());
+  pack.setAttribute("aria-hidden", "true");
+  pack.append(element("span", "VEILBREAK", "pack-brand"));
+  const seal = element("div", undefined, "pack-seal");
+  if (style.crest) { const img = element("img"); img.src = style.crest; img.alt = ""; seal.append(img); } else seal.append(icon(style.icon));
+  pack.append(seal, element("span", style.set, "pack-set"), element("i", undefined, "pack-shine"));
+  return pack;
+}
+
 function drawShop() {
   const shop = get("shop");
   const profile = loadProfile();
@@ -2202,8 +2364,7 @@ function drawShop() {
     // scorta di buste da aprire
     const packArt = element("div", undefined, `pack-art${profile.packs ? " ready" : ""}`);
     packArt.setAttribute("aria-hidden", "true");
-    const back = element("img"); back.src = backSrc(currentBack(profile), true); back.alt = "";
-    packArt.append(back, element("span", profile.packs, "pack-count"));
+    packArt.append(packVisual({ id: "busta" }, "big"), element("span", profile.packs, "pack-count"));
     const open = button(t("Apri una busta ({n})", { n: profile.packs }), () => { const r = openPack(); if (r) showResult(r); }, "primary");
     open.disabled = profile.packs < 1;
     children.push(packArt, open);
@@ -2220,10 +2381,7 @@ function drawShop() {
     for (const offer of packOffers) {
       const tile = element("div", undefined, `offer${offer.legendary ? " legendary" : ""}${offer.faction ? " faction" : ""}`);
       if (offer.faction) tile.dataset.faction = offer.faction;
-      const art = element("img", undefined, "offer-art");
-      art.src = offer.faction ? backSrc({ "Corte di Hollow": "corte", "Patto Neon": "neon", "Senza Santi": "santi", "Sottocittà": "sottocitta" }[offer.faction] ?? "velo")
-        : offer.legendary ? backSrc("santi") : offer.id === "archivi" ? backSrc("ossa") : backSrc(currentBack(profile));
-      art.alt = "";
+      const art = packVisual(offer, "offer-art");
       const name = offer.faction ? `${t("Busta")}: ${offer.faction}` : t(offer.name);
       const buy = button(t("{n} Schegge", { n: offer.price }), () => {
         const r = buyOffer(offer.id);

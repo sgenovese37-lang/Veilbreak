@@ -194,12 +194,27 @@ export function cardVoice(ctx, d, card, event, at) {
     else if (faction === "Sottocittà") { growl(ctx, d, at, base - 12, 0.6, { vol: 0.16 }); drip(ctx, d, at + 0.35, 86 + seed % 6); }
     else effects.summon(ctx, d, at);
   } else if (event === "attack") {
-    // il fendente: l'impatto arriva con il colpo ("hurt" della creatura colpita o "hit" sull'eroe)
-    slash(ctx, d, at, big ? 0.28 : 0.22);
-    if (faction === "Corte di Hollow") bell(ctx, d, base + 24, at + 0.05, { vol: 0.018, length: 1.2 });
-    else if (faction === "Patto Neon") crackle(ctx, d, at, 0.12, 0.04);
-    else if (faction === "Senza Santi") chime(ctx, d, at + 0.05, base + 31, 0.02);
-    else if (faction === "Sottocittà") thump(ctx, d, at, { vol: 0.15, from: 70, to: 45, length: 0.3 });
+    // Fase 5: attacchi più "fisici" e diversi per fazione. Prima lo slancio (aria che sale), poi la firma
+    // della fazione; l'impatto vero arriva con il colpo ("hurt" della creatura colpita o "hit" sull'eroe).
+    whoosh(ctx, d, at, 0.24, { from: 220, to: 1300, vol: big ? 0.2 : 0.15, q: 1.6 });
+    if (big) thump(ctx, d, at, { vol: 0.3, from: 60, to: 34, length: 0.5 });   // tamburo di guerra
+    if (faction === "Corte di Hollow") {
+      // lama sguainata: stridio metallico che scorre, poi un rintocco grave
+      noise(ctx, d, at + 0.04, 0.22, { type: "bandpass", from: 3200, to: 5200, q: 9, vol: 0.06, attack: 0.03, release: 0.15 });
+      bell(ctx, d, base + 7, at + 0.12, { vol: 0.03, length: 1.4 });
+    } else if (faction === "Patto Neon") {
+      // scarica che sale di tono e schiocca
+      zap(ctx, d, at, base + 5, 0.22, { vol: 0.07, glide: 3.2 });
+      crackle(ctx, d, at + 0.12, 0.16, 0.08);
+    } else if (faction === "Senza Santi") {
+      // grido corale breve e catene
+      choir(ctx, d, [base + 12, base + 19], at + 0.04, 0.32, { vol: 0.05, vowel: "a" });
+      for (let i = 0; i < 4; i++) noise(ctx, d, at + 0.05 + i * 0.045, 0.03, { type: "bandpass", from: 2600 + i * 300, to: 2200, q: 7, vol: 0.05, attack: 0.002, release: 0.025 });
+    } else if (faction === "Sottocittà") {
+      // ringhio corto e artigli che graffiano
+      growl(ctx, d, at, base - 10, 0.3, { vol: 0.14, drop: 0.7 });
+      for (let i = 0; i < 3; i++) noise(ctx, d, at + 0.08 + i * 0.05, 0.06, { type: "bandpass", from: 1800, to: 3600, q: 5, vol: 0.07, attack: 0.004, release: 0.05 });
+    } else slash(ctx, d, at, big ? 0.28 : 0.22);
   } else if (event === "hurt") {
     impact(ctx, d, at, { weight: big ? 0.9 : 0.7 });
   } else if (event === "death") {
