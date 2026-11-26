@@ -1,0 +1,66 @@
+/* PROVA (non nel gioco): partita in orizzontale, impaginata come i giochi di carte per tablet/telefono ruotato */
+@media (orientation: landscape) and (max-height: 600px) {
+  html, body { overflow: hidden; }
+  .speech, .turn-splash { display: none !important; }
+  .arena { position: fixed; inset: 0; max-width: none; min-height: 0; height: 100dvh; padding: .3rem .5rem;
+    display: grid; grid-template-columns: 1fr; grid-template-rows: 1fr auto 1fr; gap: 0; overflow: hidden; }
+  /* barra in alto: piccola, in un angolo */
+  .arena > .topbar { position: absolute; top: .3rem; left: .5rem; right: auto; z-index: 30; padding: 0; gap: .3rem; }
+  .arena > .topbar .banner { display: none; }
+  .arena > .topbar button { min-height: 1.9rem; padding: .2rem .55rem; font-size: .75rem; }
+  /* metà del tavolo: eroe al centro verso il bordo, campo verso il centro */
+  .zone { display: grid; grid-template-columns: 1fr; padding: .15rem 7.5rem .15rem 7.5rem; }
+  .zone.enemy { grid-template-rows: auto 1fr; }
+  .zone.mine { grid-template-rows: 1fr auto; padding-bottom: 3.4rem; }
+  .zone .board { min-height: 0; margin: .1rem 0; padding: .2rem; align-self: center; }
+  .token { width: 3.6rem; height: 4.7rem; }
+  .token .att, .token .dif { width: 1.35rem; height: 1.35rem; font-size: .8rem; bottom: -.4rem; }
+  /* striscia dell'eroe compatta e centrata */
+  .hero-strip.mine, .hero-strip.enemy { justify-self: center; grid-template-columns: auto auto auto; grid-template-areas: "power portrait info"; gap: .5rem; }
+  .hero-strip .hero-portrait { width: 3.3rem !important; height: 3.3rem !important; }
+  .hero-strip .hero-portrait .life { min-width: 1.8rem; height: 1.8rem; font-size: 1rem; right: -.5rem; bottom: -.35rem; }
+  .hero-strip .hero-power { width: 2.2rem; height: 2.2rem; }
+  .hero-strip .hero-info { font-size: .72rem; }
+  .hero-strip .hero-info strong { font-size: .8rem; }
+  .hero-strip .hero-info small, .hero-strip .card-backs, .hero-strip .perms { display: none; }
+  .hero-strip .pile { padding: .05rem .4rem; font-size: .7rem; }
+  /* Essenza: a destra, in verticale accanto al campo */
+  .hero-strip .crystals { position: absolute; right: .6rem; flex-direction: column; align-items: flex-end; gap: .1rem; }
+  .zone.enemy .hero-strip .crystals { top: .8rem; } .zone.mine .hero-strip .crystals { bottom: 4rem; }
+  .crystals i { width: .55rem; height: .55rem; }
+  /* linea del Velo con il pulsante Fine turno a destra */
+  .veil-line { margin: 0; }
+  .veil-line .turn-bar { right: .3rem; }
+  .veil-line .end-turn { min-height: 2.4rem; padding: .3rem 1rem; font-size: .85rem; }
+  /* mano: a ventaglio in basso, metà fuori dallo schermo come nei giochi di carte */
+  .arena > .hand { position: absolute; left: 50%; bottom: -2.6rem; transform: translateX(-50%); z-index: 20; min-height: 0; padding: 0; overflow: visible; width: auto; }
+  .hand-slot { margin: 0 -.9rem; }
+  .hand-slot:nth-child(1) { transform: rotate(-12deg) translateY(.9rem); } .hand-slot:nth-child(2) { transform: rotate(-7deg) translateY(.35rem); }
+  .hand-slot:nth-child(3) { transform: rotate(-2deg); } .hand-slot:nth-child(4) { transform: rotate(2deg); }
+  .hand-slot:nth-child(5) { transform: rotate(7deg) translateY(.35rem); } .hand-slot:nth-child(6) { transform: rotate(12deg) translateY(.9rem); }
+  .hand-slot:nth-child(n+7) { transform: rotate(15deg) translateY(1.4rem); }
+  .hand-card { width: 4.2rem; height: 6.3rem; }
+  .zone-decor .orn { width: 4rem; height: 1.8rem; }
+}
+@media (orientation: landscape) and (max-height: 600px) {
+  .zone { position: relative; }
+  .hero-strip { position: static; }
+  .hero-strip .hero-info strong { display: none; }
+  .hero-strip .pile-counts { display: flex; flex-direction: column; gap: .15rem; }
+  .zone.mine { grid-template-rows: 1fr auto; padding-bottom: 2.2rem; }
+  .token { width: 3.4rem; height: 4.45rem; }
+  .arena > .hand { bottom: -3.1rem; }
+  .hand-card { width: 3.9rem; height: 5.85rem; }
+  .hero-strip .crystals { position: absolute; right: .7rem; top: auto; bottom: auto; flex-direction: row; flex-wrap: wrap; width: 5.4rem; justify-content: flex-end; }
+  .zone.enemy .hero-strip .crystals { top: .6rem; }
+  .zone.mine .hero-strip .crystals { bottom: .6rem; }
+  .crystals .count { width: 100%; text-align: right; font-size: 1.1rem; }
+}
+@media (orientation: landscape) and (max-height: 600px) {
+  .zone > .hero-strip { position: static; }
+  .zone.mine { padding-bottom: 1.5rem; }
+  .zone .board { min-height: 0 !important; padding: .1rem; }
+  .token { width: 3.2rem; height: 4.2rem; }
+  .arena > .hand { bottom: -3.5rem; }
+  .zone.mine .hero-strip { margin-top: .5rem; }
+}
