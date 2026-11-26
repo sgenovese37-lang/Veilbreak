@@ -79,6 +79,15 @@ Riepilogo per riprendere il lavoro in una nuova sessione.
 
 ## Fase 5 (da fare, concordata il 25 novembre)
 0. **Per primo (promesso all'utente)**: contatore in cima alla Collezione: «Collezione: N/250 copie» con barra, contatore della fazione filtrata («Corte di Hollow: 40/62») e filtro «Solo carte incomplete». Il calcolo esiste già (`collectionProgress` in `profile.mjs`). Stesso APK dei tipi di creatura. Aggiungere anche qui le decisioni sulla pubblicazione (vedi sotto, se mancano).
+0b. **Richieste dell'utente del 26 novembre (solo in roadmap, da fare nella fase 5)**:
+   - Negozio: verificare che l'acquisto dei dorsi delle carte funzioni davvero.
+   - Buste con una decorazione diversa per ogni set/espansione (set 1, Archivi del Velo, terzo set, fazioni, Reliquiario).
+   - Animazioni delle carte in gioco ancora migliori; suoni di attacco delle creature nuovi.
+   - Tavolo: le due metà sono troppo grandi rispetto alle carte in campo → rimpicciolire la schermata in partita o solo le carte, per un aspetto più proporzionato.
+   - Punti vita dei due eroi più grandi.
+   - Limite di carte in mano: verificare il limite di 10 e valutare di far scegliere al giocatore quale scartare quando si supera.
+   - Ambientazioni in partita più belle: abbellire tutto il tavolo (cornici, bordi, decorazioni, luci, particelle), non solo lo sfondo.
+   - Missioni a percorso: un pass settimanale gratuito (senza soldi veri), con un premio più grande ogni 5 missioni e un premio finale.
 1. **Tipi di creatura**: Umano, Non Morto, Spettro, Bestia, Costrutto, Demone, Aberrazione (Annegato per la futura fazione). Riga «CREATURA NON MORTA · Rara» scritta dal gioco (tolta dalle illustrazioni come per i cerchi, e tradotta), tipo nell'anteprima, filtro per tipo nella Collezione. Prima: elenco dei tipi per le 52 creature da far approvare all'utente.
 2. **Regole per rarità**: Comune 1-3 mana statistiche oneste; Non comune 2-4 piccolo effetto; Rara 3-5; Epica 4-6 effetti forti; Leggendaria 6-9 mana con effetti «wow» che ribaltano la partita, spesso con una condizione o un rischio. Poche Leggendarie per fazione.
 3. **Rubavita**: i danni inflitti dalla carta curano il proprio eroe (danno scritto, fino al massimo). Poche carte, soprattutto Senza Santi e qualcuna Sottocittà, statistiche un po' più basse; controllare che la durata delle partite e l'equilibrio non cambino. Simbolo: cuore rosso.
