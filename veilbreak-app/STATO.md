@@ -84,6 +84,7 @@ Riepilogo per riprendere il lavoro in una nuova sessione.
 3. **Rubavita**: i danni inflitti dalla carta curano il proprio eroe (danno scritto, fino al massimo). Poche carte, soprattutto Senza Santi e qualcuna Sottocittà, statistiche un po' più basse; controllare che la durata delle partite e l'equilibrio non cambino. Simbolo: cuore rosso.
 4. **Poteri che si evolvono** per i nuovi eroi (niente potere doppio, scartato dall'utente): più forti dei poteri attuali, migliorano dopo alcuni usi.
 5. Poi: terzo set (91-120) con tipi, sinergie di tipo e Rubavita; Atto III; nuovi eroi; PDF dei prompt per le illustrazioni.
+- Spunti meccanici dati dall'utente (26 novembre, da carte di Hearthstone: solo le meccaniche, mai nomi/testi/grafica) per il terzo set e per il Carnevale: Missione (obiettivo da completare → ricompensa Leggendaria), risorsa che si accumula (per il Carnevale «Acqua alta»: sale quando muoiono creature, carte che la consumano e diventano più forti), Scambio (paghi 1 e rimetti la carta nel mazzo pescandone un'altra), costo variabile (es. pari alle carte nel mazzo), potenziare le creature ancora nel mazzo, riempire la mano avversaria di carte inutili, resuscitare le creature di un tipo, copiare creature di tipi diversi dalla mano, rendere gratis gli incantesimi per un turno.
 - Idea approvata per il futuro: quinta fazione «Il Carnevale degli Annegati» (Venezia sommersa, maschere, inganno, parola chiave Maschera, eroe Dottore della Peste).
 
 ## Prossimi passi
